@@ -89,7 +89,7 @@ class RegexParser extends JavaTokenParsers {
       negated.fold[RegexPart](CharClass(chars))(x => NegatedCharClass(chars))
   }
 
-  // There is the special case of a characted class with only one character: the dash. This is valid, but
+  // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
   def dashClass = "[" ~ "^".? ~ "-" ~ "]" ^^ { case _ ~ negated ~ _ ~ _ =>
     negated.fold[RegexPart](CharClass(Seq(Lit('-'))))(x => NegatedCharClass(Seq(Lit('-'))))
