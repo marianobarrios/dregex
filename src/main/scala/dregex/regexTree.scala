@@ -14,7 +14,7 @@ object Lit {
   }
 }
 
-case class Wildcard extends RegexPart
+case class Wildcard() extends RegexPart
 
 case class CharClass(chars: Seq[Lit]) extends RegexPart
 case class NegatedCharClass(chars: Seq[Lit]) extends RegexPart
