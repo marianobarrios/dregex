@@ -1,7 +1,0 @@
-package dregex
-
-object RegexParserTest {
-
-  
-  
-}

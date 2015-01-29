@@ -1,8 +1,13 @@
-package dregex
+package dregex.impl
 
 import scala.util.parsing.combinator.JavaTokenParsers
+import com.typesafe.scalalogging.slf4j.StrictLogging
 
 class RegexParser extends JavaTokenParsers {
+
+  override def skipWhitespace = false
+
+  import RegexTree._
 
   val backslash = """\"""
   def number = """\d""".r.+ ^^ (_.mkString.toInt)
@@ -54,9 +59,9 @@ class RegexParser extends JavaTokenParsers {
   def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
 
   def anyEscape = specialEscape | unicodeEscape | hexEscape | longUnicodeEscape | octalEscape | controlEscape
-      
+
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(x)))
-  
+
   def charLit = anchor | anythingExcept(charSpecial) | anyEscape
   def characterClassLit = anythingExcept(charSpecialInsideClasses) | anyEscape
 
@@ -86,15 +91,16 @@ class RegexParser extends JavaTokenParsers {
         charClass :+ Lit("-")
       else
         charClass
-      negated.fold[RegexPart](CharClass(chars))(x => NegatedCharClass(chars))
+      negated.fold[Node](CharClass(chars))(x => NegatedCharClass(chars))
   }
 
   // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
-  def dashClass = "[" ~ "^".? ~ "-" ~ "]" ^^ { case _ ~ negated ~ _ ~ _ =>
-    negated.fold[RegexPart](CharClass(Seq(Lit('-'))))(x => NegatedCharClass(Seq(Lit('-'))))
+  def dashClass = "[" ~ "^".? ~ "-" ~ "]" ^^ {
+    case _ ~ negated ~ _ ~ _ =>
+      negated.fold[Node](CharClass(Seq(Lit('-'))))(x => NegatedCharClass(Seq(Lit('-'))))
   }
-  
+
   /*
    * Parse: "\d", "\w", "\s"
    * Production: "\d" -> {:type char-class :args ["0", "1", "2", ..., "9"]}
@@ -135,7 +141,7 @@ class RegexParser extends JavaTokenParsers {
   }
 
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
-  def quantifiedBranch = regexAtom ~ quantifier ~ "?".? ^^ { case atom ~ quant ~ _ => Quantified(quant, atom) }
+  def quantifiedBranch = regexAtom ~ quantifier ~ "?".? ^^ { case atom ~ quant ~ _ => Quant(quant, atom) }
 
   def generalQuantifier = "{" ~ number ~ ("," ~ number.?).? ~ "}" ~ "?".? ^^ {
     case _ ~ minVal ~ Some(comma ~ Some(maxVal)) ~ _ ~ _ =>
@@ -153,23 +159,37 @@ class RegexParser extends JavaTokenParsers {
   }
 
   def generallyQuantifiedBranch = regexAtom ~ generalQuantifier ^^ {
-    case atom ~ ((min, max)) => Repetition(min, max, atom)
+    case atom ~ ((min, max)) => Rep(min, max, atom)
   }
 
-  def branch = (quantifiedBranch | generallyQuantifiedBranch | regexAtom).+ ^^ { parts =>
-    parts match {
-      case Seq() => throw new AssertionError
-      case Seq(first) => first
-      case _ => Juxtaposition(parts)
+  def branch = (quantifiedBranch | generallyQuantifiedBranch | regexAtom).+ ^^ {
+    case Seq() => throw new AssertionError
+    case Seq(first) => first
+    case parts => Juxt(parts)
+  }
+
+  def emptyRegex = "" ^^^ EmptyLit()
+
+  def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~ regex).? ^^ {
+    case left ~ Some(_ ~ right) => Disj(Seq(left, right))
+    case left ~ None => left
+  }
+
+  def regex = nonEmptyRegex | emptyRegex
+
+}
+
+object RegexParser extends StrictLogging {
+
+  def parse(regex: String) = {
+    val parser = new RegexParser()
+    parser.parseAll(parser.regex, regex) match {
+      case parser.Success(ast, next) =>
+        logger.trace("ast: " + ast)
+        ast
+      case parser.NoSuccess((msg, next)) =>
+        throw new Exception("Invalid regex: " + msg)
     }
-  }
-
-  def regex: Parser[RegexPart] = branch ~ ("|" ~ regex).? ^^ {
-    case left ~ optRight =>
-      optRight match {
-        case Some(_ ~ right) => Disjunction(Seq(left, right))
-        case None => left
-      }
   }
 
 }

@@ -1,0 +1,26 @@
+<configuration scan="true">
+
+	<property name="isoDate" value="%date{&quot;yyyy-MM-dd'T'HH:mm:ss.SSS'Z'&quot;,GMT}" />
+
+	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+		<file>dregex-test.log</file>
+		<encoder>
+			<pattern>${isoDate} %-5level [%.-40thread] %logger{55} - %replace(%msg){'\n', '\\n'}%ex%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>${isoDate} %-5level [%.-40thread] %logger{55} - %msg%n</pattern>
+		</encoder>
+<!-- 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        	<level>TRACE</level>
+    	</filter> -->
+	</appender>
+	
+	<root level="debug">
+		<!-- <appender-ref ref="FILE" /> -->
+		<appender-ref ref="STDOUT"/>
+	</root>
+	
+</configuration>
