@@ -4,6 +4,8 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import dregex.impl.RegexParser
 import dregex.impl.Dfa
 import dregex.impl.NormTree
+import scala.util.Try
+import scala.util.Success
 
 trait Regex {
 
@@ -82,6 +84,13 @@ object Regex {
     new CompiledRegex(tree, new Universe(Seq(tree)))
   }
 
+  def tryCompile(regexs: Seq[String]): Seq[(String, Try[CompiledRegex])] = {
+    val results = regexs.map(r => (r, Try(RegexParser.parse(r))))
+    val parsedRegexs = results.unzip._2.collect { case Success(r) => r }
+    val universe = new Universe(parsedRegexs)
+    for ((regex, tree) <- results) yield regex -> tree.map(t => new CompiledRegex(t, universe))
+  }
+  
   def compile(regexs: Seq[String]): Seq[(String, CompiledRegex)] = {
     val trees = regexs.map(r => (r, RegexParser.parse(r)))
     val universe = new Universe(trees.unzip._2)
