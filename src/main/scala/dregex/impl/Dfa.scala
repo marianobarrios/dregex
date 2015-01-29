@@ -1,6 +1,7 @@
 package dregex.impl
 
 import scala.collection.mutable
+import scala.annotation.tailrec
 
 class Dfa(val dfa: GenericDfa[State]) {
 
@@ -161,6 +162,7 @@ object Dfa {
       else
         followEpsilon(expanded) // call memoized function!
     }
+    @tailrec
     def toDfaImpl(
       pendingStates: Seq[MultiState],
       dfaTransitions: Map[MultiState, Map[NormTree.SglChar, MultiState]] = Map()): GenericDfa[MultiState] = {

@@ -1,6 +1,6 @@
 name := "dregex"
 
-scalaVersion := "2.11.4"
+scalaVersion := "2.11.5"
 
 version := "0.1-SNAPSHOT"
 
@@ -15,5 +15,6 @@ unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
 
 unmanagedSourceDirectories in Test := (scalaSource in Test).value :: Nil
 
- testOptions in Test += Tests.Argument("-oF")
- 
+testOptions in Test += Tests.Argument("-oF")
+
+parallelExecution in Test := false 
