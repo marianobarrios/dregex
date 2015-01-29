@@ -39,34 +39,34 @@ trait Regex {
     (genDfa.accepting.contains(current), i)
   }
 
-  def intersect(other: CompiledRegex): Regex = {
+  def intersect(other: Regex): Regex = {
     checkUniverse(other)
     val left = dfa
     val right = other.dfa
     new SynteticRegex(left intersect right, universe)
   }
   
-  def diff(other: CompiledRegex): Regex = {
+  def diff(other: Regex): Regex = {
     checkUniverse(other)
     val left = dfa
     val right = other.dfa
     new SynteticRegex(left diff right, universe)
   }
   
-  def union(other: CompiledRegex): Regex = {
+  def union(other: Regex): Regex = {
     checkUniverse(other)
     val left = dfa
     val right = other.dfa
     new SynteticRegex(left union right, universe)
   }
   
-  def doIntersect(other: CompiledRegex): Boolean = intersect(other).matchesAnything()
+  def doIntersect(other: Regex): Boolean = intersect(other).matchesAnything()
 
   /**
    * Return whether this regular expression is equivalent to other. Two regular expressions are equivalent if they
    * match exactly the same set of strings.
    */
-  def equiv(other: CompiledRegex): Boolean = {
+  def equiv(other: Regex): Boolean = {
     checkUniverse(other)
     !(dfa diff other.dfa).matchesAnything() && !(other.dfa diff dfa).matchesAnything()
   }
