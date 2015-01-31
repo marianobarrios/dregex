@@ -9,7 +9,7 @@ class OperationsTest extends FunSuite {
     leftCompiled doIntersect rightCompiled
   }
   
-  private def testInterception(left: String, right: String)(result: String): Boolean = {
+  private def testIntersection(left: String, right: String)(result: String): Boolean = {
     val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result)).unzip._2
     (leftCompiled intersect rightCompiled) equiv resultCompiled
   } 
@@ -30,13 +30,13 @@ class OperationsTest extends FunSuite {
   }
 
   test("intersections") {
-    assert(testInterception("a", ".")("a"))
-    assert(testInterception("a", "b")("(!?a)a"))
-    assert(testInterception("[^a]", "a")("(!?a)a"))
-    assert(testInterception("[^a]", "[a]")("(!?a)a"))
-    assert(testInterception("[^ab]", "[ab]")("(!?a)a"))
-    assert(testInterception("[^ab]", "a|b")("(!?a)a"))
-    assert(testInterception(".+", "")("(!?a)a"))
+    assert(testIntersection("a", ".")("a"))
+    assert(testIntersection("a", "b")("(?!a)a"))
+    assert(testIntersection("[^a]", "a")("(?!a)a"))
+    assert(testIntersection("[^a]", "[a]")("(?!a)a"))
+    assert(testIntersection("[^ab]", "[ab]")("(?!a)a"))
+    assert(testIntersection("[^ab]", "a|b")("(?!a)a"))
+    assert(testIntersection(".+", "")("(?!a)a"))
   }
 
   test("union") {

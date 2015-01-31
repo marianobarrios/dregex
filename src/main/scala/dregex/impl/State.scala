@@ -22,6 +22,6 @@ class State() {
 }
 
 object State {
-  val counter = new AtomicInteger
-  val NullState = new State() 
+  private val counter = new AtomicInteger
+  val NullState = new State
 }

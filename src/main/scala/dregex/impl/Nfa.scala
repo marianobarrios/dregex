@@ -34,8 +34,8 @@ object Nfa {
    * Transform a regular expression abstract syntax tree into a corresponding NFA
    */
   def fromTree(ast: Node): Nfa = {
-    val initial = new State()
-    val accepting = new State()
+    val initial = new State
+    val accepting = new State
     val transitions = fromTreeImpl(ast, initial, accepting)
     Nfa(initial, transitions, Set(accepting))
   }
@@ -89,7 +89,7 @@ object Nfa {
 
   def mergeTransitions(transitions: Map[State, Map[Nfa.Char, Set[State]]]*) = {
     transitions.reduce { (left, right) =>
-      Util.mergeNestedWithUnion(left, right)
+      Util.merge(left, right)(Util.mergeWithUnion)
     }
   }
 

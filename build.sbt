@@ -4,10 +4,10 @@ name := "dregex"
 
 crossScalaVersions := Seq("2.10.4", "2.11.5")
 
-version := "0.1-SNAPSHOT"
+version := "0.1-RC2"
 
 //publishTo := Some("bsas-snapshots" at "http://nexus.despegar.it:8080/nexus/content/repositories/snapshots/")
-//publishTo := Some("bsas-releases" at "http://nexus.despegar.it:8080/nexus/content/repositories/releases/")
+publishTo := Some("bsas-releases" at "http://nexus.despegar.it:8080/nexus/content/repositories/releases/")
 //publishTo := Some("miami-releases" at "http://nexus:8080/nexus/content/repositories/releases-miami/")
 //publishTo := Some("miami-snapshots" at "http://nexus:8080/nexus/content/repositories/snapshots-miami/")
 

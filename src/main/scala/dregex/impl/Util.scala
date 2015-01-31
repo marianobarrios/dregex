@@ -1,14 +1,10 @@
 package dregex.impl
 
-object Util {
+import com.typesafe.scalalogging.slf4j.StrictLogging
 
-  def mergeNestedWithUnion[A, B, C](left: Map[A, Map[B, Set[C]]], right: Map[A, Map[B, Set[C]]]) = {
-    merge(left, right)((l, r) => merge(l, r)(_ union _))
-  }
+object Util extends StrictLogging {
 
-  def mergeWithUnion[B, C](left: Map[B, Set[C]], right: Map[B, Set[C]]) = {
-    merge(left, right)(_ union _)
-  }
+  def mergeWithUnion[B, C](left: Map[B, Set[C]], right: Map[B, Set[C]]) = merge(left, right)(_ union _)
 
   def merge[A, B](left: Map[A, B], right: Map[A, B])(fn: (B, B) => B): Map[A, B] = {
     val merged = for ((k, lv) <- left) yield {
@@ -22,5 +18,12 @@ object Util {
   }
 
   def doIntersect[A](left: Set[A], right: Set[A]) = left exists right
+
+  def time[A](thunk: => A): (A, Long) = {
+    val start = System.nanoTime()
+    val res = thunk
+    val time = (System.nanoTime() - start) / 1000
+    (res, time)
+  }
 
 }

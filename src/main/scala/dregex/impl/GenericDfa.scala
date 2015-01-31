@@ -2,18 +2,18 @@ package dregex.impl
 
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
-case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A]], accepting: Set[A]) {
-  
+case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A]], accepting: Set[A]) extends StrictLogging {
+
   override def toString() = s"initial: $initial; transitions: $transitions; accepting: $accepting"
-  
-  def allStates = 
-    Set(initial) union transitions.keySet union transitions.values.map(_.values).flatten.toSet union accepting 
-  
-  def allButAccepting = 
-    Set(initial) union transitions.keySet union transitions.values.map(_.values).flatten.toSet diff accepting
-  
+
+  def allStates =
+    Set(initial) union transitions.keySet union transitions.values.map(_.values).flatten.toSet union accepting
+
+  def allButAccepting =
+    allStates diff accepting
+
   def allChars = transitions.values.map(_.keys).flatten.toSet
-  
+
   /**
    * Rewrite a DFA using canonical names for the states.
    * Useful for simplifying the DFA product of intersections or NFA conversions.

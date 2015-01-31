@@ -1,27 +1,27 @@
 package dregex
 
 import org.scalatest.FunSuite
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import dregex.impl.Util
 
-class PerformanceTest extends FunSuite with StrictLogging {
-
-  def time[A](thunk: => A): (A, Long) = {
-    val start = System.nanoTime()
-    val res = thunk
-    val time = (System.nanoTime() - start) / 1000
-    (res, time)
-  }
-
-  test("slow regexs") {
-    val (_, elapsed) = time {
-      Regex.compile("/aaaaaa/(?!xxc)(?!xxd)(?!xxe)(?!xxf)(?!xxg)(?!xxh).*")
-      Regex.compile("/aaaaaa/(?!x+c)(?!x+d)(?!x+e)(?!x+f)(?!x+g)(?!x+h).*")
-      Regex.compile("/aaaaaa/(?!x+c|x+d|x+e|x+f|x+g|x+h).*")
-      Regex.compile("/aaaaaa.+/(?!xxc)(?!xxd)(?!xxe)(?!xxf)(?!xxg)(?!xxh).*")
-      Regex.compile("/aaaaaa.+/(?!xxc)a(?!xxd)b(?!xxe)c(?!xxf).*")
-      Regex.compile("/aaaaaa.+/(?!xxc|xxd|xxe|xxf|xxg|xxh).*")
+class PerformanceTest extends FunSuite {
+  
+    test("slow regexs") {
+      val (regexes, elapsed1) = Util.time {
+        Regex.compile(Seq(
+            "qwertyuiopasd",
+            "/aaaaaa/(?!xxc)(?!xxd)(?!xxe)(?!xxf)(?!xxg)(?!xxh).*",
+            "/aaaaaa/(?!x+c)(?!x+d)(?!x+e)(?!x+f)(?!x+g)(?!x+h).*",
+            "/aaaaaa/(?!x+c|x+d|x+e|x+f|x+g|x+h).*",
+            "/aaaaaa.+/(?!xxc)(?!xxd)(?!xxe)(?!xxf)(?!xxg)(?!xxh).*",
+            "/aaaaaa.+/(?!xxc)a(?!xxd)b(?!xxe)c(?!xxf).*", // disables lookahead combinations
+            "/aaaaaa.+/(?!xxc|xxd|xxe|xxf|xxg|xxh).*"
+          )).unzip._2
+      }
+      info(s"compilation time: ${elapsed1 / 1000} ms")
+      val (_, elapsed2) = Util.time {
+        regexes.tail.foreach(_ doIntersect regexes.head)
+      }
+      info(s"intersection time: ${elapsed2 / 1000} ms")
     }
-    logger.info(s"Performance test took ${elapsed / 1000} ms")
-  }
 
 }
