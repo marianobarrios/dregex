@@ -1,6 +1,5 @@
 package dregex
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
 import dregex.impl.RegexParser
 import dregex.impl.Dfa
 import dregex.impl.NormTree
@@ -14,15 +13,15 @@ trait Regex {
 
   private def checkUniverse(other: Regex): Unit = {
     if (other.universe != universe)
-      throw new Exception("Different universes!")
+      throw new Exception("cannot make operations between regex from different universes")
   }
   
   def matches(string: String): Boolean = {
-    val (result, _) = matchesWithPos(string)
+    val (result, _) = matchAndReport(string)
     result
   }
   
-  def matchesWithPos(string: String): (Boolean, Int) = {
+  def matchAndReport(string: String): (Boolean, Int) = {
     val genDfa = dfa.dfa
     var current = genDfa.initial
     var i = 0
@@ -43,23 +42,17 @@ trait Regex {
 
   def intersect(other: Regex): Regex = {
     checkUniverse(other)
-    val left = dfa
-    val right = other.dfa
-    new SynteticRegex(left intersect right, universe)
+    new SynteticRegex(dfa intersect other.dfa, universe)
   }
   
   def diff(other: Regex): Regex = {
     checkUniverse(other)
-    val left = dfa
-    val right = other.dfa
-    new SynteticRegex(left diff right, universe)
+    new SynteticRegex(dfa diff other.dfa, universe)
   }
   
   def union(other: Regex): Regex = {
     checkUniverse(other)
-    val left = dfa
-    val right = other.dfa
-    new SynteticRegex(left union right, universe)
+    new SynteticRegex(dfa union other.dfa, universe)
   }
   
   def doIntersect(other: Regex): Boolean = intersect(other).matchesAnything()
@@ -98,8 +91,8 @@ object Regex {
   }
   
   /**
-   * Create a Regex that does not match anything. Note that that is different from matching the empty string.
-   * Despite the theorical equivalence between automata and regular expressions, in practice there is no regular
+   * Create a regular expression that does not match anything. Note that that is different from matching the empty 
+   * string. Despite the theoretical equivalence of automata and regular expressions, in practice there is no regular 
    * expression that does not match anything.
    */
   def nullRegex(u: Universe) = new SynteticRegex(Dfa.NothingDfa, u)
