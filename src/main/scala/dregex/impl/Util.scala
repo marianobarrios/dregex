@@ -26,4 +26,9 @@ object Util extends StrictLogging {
     (res, time)
   }
 
+  
+  implicit class StrictMap[K, A](map: Map[K, A]) {
+    def mapValuesNow[B](f: A => B): Map[K, B] = map.map { case (a, b) => (a, f(b)) }
+  }
+  
 }

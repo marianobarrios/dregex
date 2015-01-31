@@ -77,9 +77,8 @@ object Regex {
     new CompiledRegex(tree, new Universe(Seq(tree)))
   }
 
-  def compileParsed(trees: Seq[ParsedRegex]): Seq[(ParsedRegex, CompiledRegex)] = {
-    val universe = new Universe(trees)
-    for (tree <- trees) yield tree -> new CompiledRegex(tree, universe)
+  def compileParsed(tree: ParsedRegex, universe: Universe): CompiledRegex = {
+    new CompiledRegex(tree, universe)
   }
   
   def compile(regexs: Seq[String]): Seq[(String, CompiledRegex)] = {

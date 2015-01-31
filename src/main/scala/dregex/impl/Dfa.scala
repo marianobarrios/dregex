@@ -4,6 +4,7 @@ import scala.collection.mutable
 import scala.annotation.tailrec
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import dregex.impl.NormTree.SglChar
+import Util.StrictMap
 
 class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
 
@@ -174,8 +175,8 @@ object Dfa extends StrictLogging {
    * https://en.wikipedia.org/w/index.php?title=Powerset_construction&oldid=547783241
    */
   def fromNfa(nfa: Nfa): Dfa = {
-    val epsilonFreeTransitions = nfa.transitions.mapValues { trans =>
-      for ((Nfa.LitChar(char), states) <- trans) yield char -> states // partial function!
+    val epsilonFreeTransitions = nfa.transitions.mapValuesNow { trans =>
+     for ((Nfa.LitChar(char), target) <- trans) yield char -> target // partial function!
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
     /**

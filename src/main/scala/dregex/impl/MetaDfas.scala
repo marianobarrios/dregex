@@ -13,7 +13,7 @@ object MetaDfas {
 
   def fromNfa(abstractNfa: MetaNfa): MetaDfa = abstractNfa match {
     case NfaOperation(operation, left, right) => DfaOperation(operation, fromNfa(left), fromNfa(right))
-    case NfaAtom(nfa) => AtomDfa(Dfa.fromNfa(nfa))
+    case NfaAtom(nfa) => AtomDfa(Dfa.fromNfa(nfa).minimize())
   }
 
 }

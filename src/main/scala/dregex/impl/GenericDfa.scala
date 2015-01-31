@@ -1,12 +1,13 @@
 package dregex.impl
 
 import com.typesafe.scalalogging.slf4j.StrictLogging
+import Util.StrictMap
 
 case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A]], accepting: Set[A]) extends StrictLogging {
 
   override def toString() = s"initial: $initial; transitions: $transitions; accepting: $accepting"
 
-  def allStates =
+  val allStates =
     Set(initial) union transitions.keySet union transitions.values.map(_.values).flatten.toSet union accepting
 
   def allButAccepting =
@@ -23,7 +24,7 @@ case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A
     val mapping = (for (state <- allStates) yield state -> stateFactory()).toMap
     GenericDfa[B](
       initial = mapping(initial),
-      transitions = for ((s, fn) <- transitions) yield mapping(s) -> fn.mapValues(mapping),
+      transitions = for ((s, fn) <- transitions) yield mapping(s) -> fn.mapValuesNow(mapping),
       accepting = accepting.map(mapping))
   }
 
