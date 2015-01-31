@@ -3,8 +3,6 @@ package dregex
 import dregex.impl.RegexParser
 import dregex.impl.Dfa
 import dregex.impl.NormTree
-import scala.util.Try
-import scala.util.Success
 
 trait Regex {
 
@@ -72,20 +70,20 @@ trait Regex {
 
 object Regex {
 
+  def parse(regex: String): ParsedRegex = new ParsedRegex(RegexParser.parse(regex))
+  
   def compile(regex: String): CompiledRegex = {
-    val tree = RegexParser.parse(regex)
+    val tree = parse(regex)
     new CompiledRegex(tree, new Universe(Seq(tree)))
   }
 
-  def tryCompile(regexs: Seq[String]): Seq[(String, Try[CompiledRegex])] = {
-    val results = regexs.map(r => (r, Try(RegexParser.parse(r))))
-    val parsedRegexs = results.unzip._2.collect { case Success(r) => r }
-    val universe = new Universe(parsedRegexs)
-    for ((regex, tree) <- results) yield regex -> tree.map(t => new CompiledRegex(t, universe))
+  def compileParsed(trees: Seq[ParsedRegex]): Seq[(ParsedRegex, CompiledRegex)] = {
+    val universe = new Universe(trees)
+    for (tree <- trees) yield tree -> new CompiledRegex(tree, universe)
   }
   
   def compile(regexs: Seq[String]): Seq[(String, CompiledRegex)] = {
-    val trees = regexs.map(r => (r, RegexParser.parse(r)))
+    val trees = regexs.map(r => (r, parse(r)))
     val universe = new Universe(trees.unzip._2)
     for ((regex, tree) <- trees) yield regex -> new CompiledRegex(tree, universe)
   }

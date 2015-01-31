@@ -88,7 +88,7 @@ class RegexParser extends JavaTokenParsers {
   def charClass = "[" ~ "^".? ~ "-".? ~ charClassContent ~ "-".? ~ "]" ^^ {
     case _ ~ negated ~ leftDash ~ charClass ~ rightDash ~ _ =>
       val chars = if (leftDash.isDefined || rightDash.isDefined)
-        charClass :+ Lit("-")
+        charClass :+ Lit('-')
       else
         charClass
       negated.fold[Node](CharClass(chars))(x => NegatedCharClass(chars))

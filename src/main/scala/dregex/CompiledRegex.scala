@@ -8,12 +8,9 @@ import dregex.impl.MetaNfas
 import dregex.impl.RegexTree
 import dregex.impl.Operations
 
-class CompiledRegex(val parsedRegex: RegexTree.Node, val universe: Universe) extends Regex with StrictLogging {
+class CompiledRegex private[dregex] (val parsedRegex: ParsedRegex, val universe: Universe) extends Regex with StrictLogging {
   
-  val metaTree = LookaroundExpander.expandLookarounds(parsedRegex)
-  logger.trace("meta tree: " + metaTree)
-  
-  val normTree = MetaNormTrees.normalize(metaTree, universe.alphabet)
+  val normTree = MetaNormTrees.normalize(parsedRegex.metaTree, universe.alphabet)
   logger.trace("norm: " + normTree)
   
   val metaNfa = MetaNfas.fromTree(normTree)

@@ -14,10 +14,13 @@ object Cardinality extends Enumeration {
 
 object RegexTree {
 
-  trait Node
+  trait Node {
+    def hasLookarounds(): Boolean
+  }
 
   trait ComplexPart extends Node {
     def values: Seq[Node]
+    def hasLookarounds = !values.forall(!_.hasLookarounds)
   }
 
   trait SingleComplexPart extends ComplexPart {
@@ -27,6 +30,7 @@ object RegexTree {
 
   trait AtomPart extends Node {
     def atoms: Seq[Char]
+    def hasLookarounds = false
   }
 
   case class Lit(char: Char) extends AtomPart {
@@ -42,7 +46,7 @@ object RegexTree {
   object Lit {
     def apply(str: String) = {
       if (str.length != 1)
-        throw new Exception("String is no char: " + str)
+        throw new IllegalAccessException("String is no char: " + str)
       new Lit(str.head)
     }
   }
@@ -63,7 +67,9 @@ object RegexTree {
     override def toString = s"Disj(${values.mkString(", ")})"
   }
 
-  case class Lookaround(dir: Direction.Value, cond: Condition.Value, value: Node) extends SingleComplexPart
+  case class Lookaround(dir: Direction.Value, cond: Condition.Value, value: Node) extends SingleComplexPart {
+    override def hasLookarounds = true
+  }
 
   case class Quant(card: Cardinality.Value, value: Node) extends SingleComplexPart
 

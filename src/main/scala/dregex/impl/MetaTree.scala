@@ -3,7 +3,17 @@ package dregex.impl
 import dregex.impl.Operations.Operation
 
 object MetaTrees {
-  trait MetaTree
-  case class AtomTree(ast: RegexTree.Node) extends MetaTree
-  case class TreeOperation(operation: Operation.Value, left: MetaTree, right: MetaTree) extends MetaTree
+  
+  trait MetaTree {
+    def hasLookarounds(): Boolean
+  }
+  
+  case class AtomTree(ast: RegexTree.Node) extends MetaTree {
+    def hasLookarounds = ast.hasLookarounds()
+  }
+  
+  case class TreeOperation(operation: Operation.Value, left: MetaTree, right: MetaTree) extends MetaTree {
+    def hasLookarounds = left.hasLookarounds || right.hasLookarounds
+  }
+  
 }
