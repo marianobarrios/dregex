@@ -7,6 +7,6 @@ import dregex.impl.LookaroundExpander
 class ParsedRegex private[dregex] (val tree: RegexTree.Node) extends StrictLogging {
 
   val metaTree = LookaroundExpander.expandLookarounds(tree)
-  logger.trace("meta tree: " + metaTree)
+  //logger.trace("meta tree: " + metaTree)
   
 }

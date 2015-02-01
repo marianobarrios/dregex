@@ -6,11 +6,11 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import dregex.impl.NormTree.SglChar
 import Util.StrictMap
 
-class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
+class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends StrictLogging {
 
   import State.NullState
 
-  override def toString() = dfa.toString
+  override def toString() = impl.toString
 
   case class BiState(first: State, second: State)
 
@@ -26,13 +26,13 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
    * and the one passed as an argument.
    */
   def intersect(other: Dfa): Dfa = {
-    val left = dfa
-    val right = other.dfa
+    val left = impl
+    val right = other.impl
     val commonChars = left.allChars intersect right.allChars
     val newInitial = BiState(left.initial, right.initial)
     val newTransitions = for {
-      (leftState, leftCharmap) <- left.transitions.updated(NullState, Map())
-      (rightState, rightCharmap) <- right.transitions.updated(NullState, Map())
+      (leftState, leftCharmap) <- left.transitions
+      (rightState, rightCharmap) <- right.transitions
       charMap = for {
         char <- commonChars
         leftDestState <- leftCharmap.get(char)
@@ -46,8 +46,8 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
     }
     // the accepting states of the new DFA are formed by the accepting states of the intersecting DFA
     val accepting = for (l <- left.accepting; r <- right.accepting) yield BiState(l, r)
-    val newDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
-    Dfa.fromGenericDfa(newDfa)
+    val genericDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
+    Dfa.fromGenericDfa(genericDfa)
   }
 
   /**
@@ -55,12 +55,12 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
    * are not accepted by the one passed as an argument.
    */
   def diff(other: Dfa): Dfa = {
-    val left = dfa
-    val right = other.dfa
+    val left = impl
+    val right = other.impl
     val allChars = left.allChars union right.allChars
     val newInitial = BiState(left.initial, right.initial)
     val newTransitions = for {
-      (leftState, leftCharmap) <- left.transitions.updated(NullState, Map())
+      (leftState, leftCharmap) <- left.transitions
       (rightState, rightCharmap) <- right.transitions.updated(NullState, Map())
       charMap = for {
         char <- allChars
@@ -76,8 +76,8 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of 
     // the right DFA that are no accepting
     val accepting = for (l <- left.accepting; r <- right.allButAccepting + NullState) yield BiState(l, r)
-    val newDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
-    Dfa.fromGenericDfa(newDfa)
+    val genericDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
+    Dfa.fromGenericDfa(genericDfa)
   }
 
   /**
@@ -85,8 +85,8 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
    * either by this DFA or by the one passed as an argument.
    */
   def union(other: Dfa): Dfa = {
-    val left = dfa
-    val right = other.dfa
+    val left = impl
+    val right = other.impl
     val allChars = left.allChars union right.allChars
     val newInitial = BiState(left.initial, right.initial)
     val newTransitions = for {
@@ -113,8 +113,8 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
     } yield {
       BiState(l, r)
     }
-    val newDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
-    Dfa.fromGenericDfa(newDfa)
+    val genericDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
+    Dfa.fromGenericDfa(genericDfa)
   }
 
   /**
@@ -124,21 +124,21 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
   def matchesAnything(): Boolean = {
     val visited = mutable.Set[State]()
     def hasPathToAccepting(current: State): Boolean = {
-      if (dfa.accepting.contains(current)) {
+      if (impl.accepting.contains(current)) {
         true
       } else {
         visited += current
         for {
-          targetState <- dfa.transitions.getOrElse(current, Map()).values
+          targetState <- impl.transitions.getOrElse(current, Map()).values
           if !visited.contains(targetState)
         } {
           if (hasPathToAccepting(targetState))
             return true
         }
-        false  
+        false
       }
     }
-    hasPathToAccepting(dfa.initial)
+    hasPathToAccepting(impl.initial)
   }
 
   /**
@@ -146,19 +146,23 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
    * http://cs.stackexchange.com/questions/1872/brzozowskis-algorithm-for-dfa-minimization
    */
   def minimize(): Dfa = {
-    val reversed = Dfa.fromNfa(reverse())
-    Dfa.fromNfa(reversed.reverse())
+    if (minimal) {
+      this
+    } else {
+      val reversed = Dfa.fromNfa(reverse())
+      Dfa.fromNfa(reversed.reverse(), minimal = true)
+    }
   }
 
   def reverse(): Nfa = {
     val initial = new State
     val epsilon: Nfa.Char = Nfa.Epsilon
-    val first = Map(initial -> Map(epsilon -> dfa.accepting))
-    val rest = for ((from, fn) <- dfa.transitions; (char, to) <- fn) yield {
+    val first = Map(initial -> Map(epsilon -> impl.accepting))
+    val rest = for ((from, fn) <- impl.transitions; (char, to) <- fn) yield {
       val nfaChar: Nfa.Char = Nfa.LitChar(char)
       Map(to -> Map(nfaChar -> Set(from)))
     }
-    val accepting = Set(dfa.initial)
+    val accepting = Set(impl.initial)
     Nfa(initial, Nfa.mergeTransitions((first +: rest.toSeq): _*), accepting)
   }
 
@@ -177,9 +181,9 @@ object Dfa extends StrictLogging {
    * Produce a DFA from a NFA using the 'power set construction'
    * https://en.wikipedia.org/w/index.php?title=Powerset_construction&oldid=547783241
    */
-  def fromNfa(nfa: Nfa): Dfa = {
+  def fromNfa(nfa: Nfa, minimal: Boolean = false): Dfa = {
     val epsilonFreeTransitions = nfa.transitions.mapValuesNow { trans =>
-     for ((Nfa.LitChar(char), target) <- trans) yield char -> target // partial function!
+      for ((Nfa.LitChar(char), target) <- trans) yield char -> target // partial function!
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
     /**
@@ -227,9 +231,10 @@ object Dfa extends StrictLogging {
     }
     // a DFA state is accepting if any of its NFA member-states is
     val dfaAccepting = dfaStates.filter(st => Util.doIntersect(st.states, nfa.accepting)).toSet
-    fromGenericDfa(GenericDfa(dfaInitial, dfaTransitions.toMap, dfaAccepting))
+    val genericDfa = GenericDfa(dfaInitial, dfaTransitions.toMap, dfaAccepting)
+    fromGenericDfa(genericDfa, minimal)
   }
 
-  def fromGenericDfa[A](genericDfa: GenericDfa[A]) = new Dfa(genericDfa.rewrite(() => new State))
+  def fromGenericDfa[A](genericDfa: GenericDfa[A], minimal: Boolean = false) = new Dfa(genericDfa.rewrite(() => new State))
 
 }

@@ -184,11 +184,8 @@ object RegexParser extends StrictLogging {
   def parse(regex: String) = {
     val parser = new RegexParser()
     parser.parseAll(parser.regex, regex) match {
-      case parser.Success(ast, next) =>
-        logger.trace("ast: " + ast)
-        ast
-      case parser.NoSuccess((msg, next)) =>
-        throw new Exception("Invalid regex: " + msg)
+      case parser.Success(ast, next) => ast
+      case parser.NoSuccess((msg, next)) => throw new Exception("Invalid regex: " + msg)
     }
   }
 

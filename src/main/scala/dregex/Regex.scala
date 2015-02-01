@@ -20,7 +20,7 @@ trait Regex {
   }
   
   def matchAndReport(string: String): (Boolean, Int) = {
-    val genDfa = dfa.dfa
+    val genDfa = dfa.impl
     var current = genDfa.initial
     var i = 0
     for (char <- string) {

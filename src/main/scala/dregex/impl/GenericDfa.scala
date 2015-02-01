@@ -14,7 +14,7 @@ case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A
     allStates diff accepting
 
   lazy val allChars = transitions.values.map(_.keys).flatten.toSet
-
+  
   /**
    * Rewrite a DFA using canonical names for the states.
    * Useful for simplifying the DFA product of intersections or NFA conversions.
