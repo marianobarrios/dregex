@@ -87,7 +87,7 @@ object Nfa {
 
   }
 
-  def mergeTransitions(transitions: Map[State, Map[Nfa.Char, Set[State]]]*) = {
+  def mergeTransitions(transitions: Map[State, Map[Nfa.Char, Set[State]]]*): Map[State, Map[Nfa.Char, Set[State]]] = {
     transitions.reduce { (left, right) =>
       Util.merge(left, right)(Util.mergeWithUnion)
     }

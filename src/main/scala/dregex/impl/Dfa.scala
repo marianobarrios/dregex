@@ -122,19 +122,20 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
    * A DFA matches at least some language if there is a path from the initial state to any of the accepting states
    */
   def matchesAnything(): Boolean = {
-    var visitedStates = Set[State]()
+    val visited = mutable.Set[State]()
     def hasPathToAccepting(current: State): Boolean = {
       if (dfa.accepting.contains(current)) {
         true
       } else {
-        visitedStates += current
-        val x = for {
+        visited += current
+        for {
           targetState <- dfa.transitions.getOrElse(current, Map()).values
-          if !visitedStates.contains(targetState)
-        } yield {
-          hasPathToAccepting(targetState)
+          if !visited.contains(targetState)
+        } {
+          if (hasPathToAccepting(targetState))
+            return true
         }
-        x.find(x => x).isDefined
+        false  
       }
     }
     hasPathToAccepting(dfa.initial)
@@ -151,9 +152,11 @@ class Dfa(val dfa: GenericDfa[State]) extends StrictLogging {
 
   def reverse(): Nfa = {
     val initial = new State
-    val first = Map(initial -> Map[Nfa.Char, Set[State]](Nfa.Epsilon -> dfa.accepting))
-    val rest = for ((st, fn) <- dfa.transitions; (from, to) <- fn) yield {
-      Map(to -> Map[Nfa.Char, Set[State]](Nfa.LitChar(from) -> Set(st)))
+    val epsilon: Nfa.Char = Nfa.Epsilon
+    val first = Map(initial -> Map(epsilon -> dfa.accepting))
+    val rest = for ((from, fn) <- dfa.transitions; (char, to) <- fn) yield {
+      val nfaChar: Nfa.Char = Nfa.LitChar(char)
+      Map(to -> Map(nfaChar -> Set(from)))
     }
     val accepting = Set(dfa.initial)
     Nfa(initial, Nfa.mergeTransitions((first +: rest.toSeq): _*), accepting)

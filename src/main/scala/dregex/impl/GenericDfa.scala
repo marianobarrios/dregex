@@ -7,13 +7,13 @@ case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A
 
   override def toString() = s"initial: $initial; transitions: $transitions; accepting: $accepting"
 
-  val allStates =
+  lazy val allStates =
     Set(initial) union transitions.keySet union transitions.values.map(_.values).flatten.toSet union accepting
 
-  def allButAccepting =
+  lazy val allButAccepting =
     allStates diff accepting
 
-  def allChars = transitions.values.map(_.keys).flatten.toSet
+  lazy val allChars = transitions.values.map(_.keys).flatten.toSet
 
   /**
    * Rewrite a DFA using canonical names for the states.
