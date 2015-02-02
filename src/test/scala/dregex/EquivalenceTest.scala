@@ -50,6 +50,7 @@ class EquivalenceTest extends FunSuite {
   }
   
   test("characted classes") {
+    assertResult(true)(equiv("[a]", "a"))
     assertResult(true)(equiv("a|b|c", "[abc]"))
     assertResult(true)(equiv("[abcdef]", "[a-f]"))
     assertResult(true)(equiv("[a-cdef]", "[a-f]"))
