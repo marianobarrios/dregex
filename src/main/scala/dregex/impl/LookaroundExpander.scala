@@ -37,28 +37,25 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 object LookaroundExpander extends StrictLogging {
 
   import RegexTree._
+  import Direction._
+  import Condition._
 
   /**
    * Remove trailing stars or question marks in a lookahead, which are meaningless
    */
   def simplify(lookaround: Lookaround) = lookaround match {
-    case Lookaround(Direction.Ahead, cond, value) =>
-      val effValue = value match {
-        case Juxt(init :+ Rep(0, max, _)) => if (init.isEmpty) EmptyLit else Juxt(init)
-        case _ => value
-      }
-      Lookaround(Direction.Ahead, cond, effValue)
+    case Lookaround(Ahead, cond, Juxt(init :+ a :+ b :+ Rep(0, max, _))) => Lookaround(Ahead, cond, Juxt(init :+ a :+ b)) // at least two
+    case Lookaround(Ahead, cond, Juxt(Seq(first, Rep(0, max, _)))) => Lookaround(Ahead, cond, first) // one
+    case Lookaround(Ahead, cond, Juxt(Seq() :+ Rep(0, max, _))) => EmptyLit // nothing
     case lookbehind => lookbehind
   }
-  
+
   /**
    * Optimization: combination of consecutive negative lookahead constructions
    * (?!a)(?!b)(?!c) gets combined to (?!a|b|c), which is faster to process.
    * This optimization should be applied before the lookarounds are expanded to intersections and differences.
    */
   private def combineNegLookaheads(vals: Seq[Node]) = {
-    import Direction._
-    import Condition._
     vals.foldLeft(Seq[Node]()) { (acc, x) =>
       (acc, x) match {
         case (init :+ Lookaround(Ahead, Negative, v1), Lookaround(Ahead, Negative, v2)) =>
@@ -83,21 +80,21 @@ object LookaroundExpander extends StrictLogging {
   private def expandImpl(args: Seq[Node]): MetaTree = args match {
     case first +: second +: rest => // more than one element
       first match {
-        case Lookaround(Direction.Ahead, cond, value) =>
+        case Lookaround(Ahead, cond, value) =>
           val op = cond match {
-            case Condition.Positive => Operation.Intersect
-            case Condition.Negative => Operation.Substract
+            case Positive => Operation.Intersect
+            case Negative => Operation.Substract
           }
           TreeOperation(op, expandImpl(second +: rest), AtomTree(Juxt(Seq(value, Rep(min = 0, max = -1, value = Wildcard)))))
-        case Lookaround(Direction.Behind, cond, value) =>
+        case Lookaround(Behind, cond, value) =>
           throw new UnsupportedException("lookbehind")
         case _ =>
           merge(first, expandImpl(second +: rest))
       }
     case first +: rest => // only one element (and also the last)
       first match {
-        case Lookaround(Direction.Ahead, cond, value) => throw new UnsupportedException("lookahead in trailing position")
-        case Lookaround(Direction.Behind, cond, value) => throw new UnsupportedException("lookbehind")
+        case Lookaround(Ahead, cond, value) => throw new UnsupportedException("lookahead in trailing position")
+        case Lookaround(Behind, cond, value) => throw new UnsupportedException("lookbehind")
         case _ => AtomTree(first)
       }
   }
