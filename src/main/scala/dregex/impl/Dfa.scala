@@ -21,10 +21,6 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
    * http://cs.stackexchange.com/a/7108 
    */
 
-  /**
-   * Intersect this DFA with other. The resulting DFA will only accept the strings that are accepted by both this DFA
-   * and the one passed as an argument.
-   */
   def intersect(other: Dfa): Dfa = {
     val left = impl
     val right = other.impl
@@ -50,10 +46,6 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     Dfa.fromGenericDfa(genericDfa)
   }
 
-  /**
-   * Substract a DFA from this one. The resulting DFA will only accept the strings that are accepted by this DFA and
-   * are not accepted by the one passed as an argument.
-   */
   def diff(other: Dfa): Dfa = {
     val left = impl
     val right = other.impl
@@ -80,10 +72,6 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     Dfa.fromGenericDfa(genericDfa)
   }
 
-  /**
-   * Make the union between this DFA and the other. The resulting DFA will only accept the strings that are accepted
-   * either by this DFA or by the one passed as an argument.
-   */
   def union(other: Dfa): Dfa = {
     val left = impl
     val right = other.impl
@@ -118,8 +106,8 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
   }
 
   /**
-   * Return whether a DFA matches anything. Note that the empty string is considered a match.
-   * A DFA matches at least some language if there is a path from the initial state to any of the accepting states
+   * Return whether a DFA matches anything. A DFA matches at least some language if there is a path from the initial s
+   * tate to any of the accepting states
    */
   def matchesAnything(): Boolean = {
     val visited = mutable.Set[State]()
@@ -185,10 +173,8 @@ object Dfa extends StrictLogging {
       for ((char: NormTree.SglChar, target) <- trans) yield char -> target // partial function!
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
-    /**
-     * Given a transition map and a set of states of a NFA, this function augments that set, following all epsilon
-     * transitions recursively
-     */
+    // Given a transition map and a set of states of a NFA, this function augments that set, following all epsilon
+    // transitions recursively
     def followEpsilon(current: Set[State]) = epsilonExpansionCache.get(current).getOrElse {
       val res = followEpsilonImpl(current)
       epsilonExpansionCache(current) = res

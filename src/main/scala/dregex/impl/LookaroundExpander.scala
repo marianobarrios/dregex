@@ -8,7 +8,7 @@ import dregex.impl.Operations.Operation
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 /**
- * A meta regular expression is the intersection or substraction of 2 other (meta or simple) regular expressions.
+ * A meta regular expression is the intersection or subtraction of 2 other (meta or simple) regular expressions.
  * Lookaround constructions are transformed in equivalent meta simple regular expressions for processing.
  * A(?=B)C is transformed into AC ∩ AB.*
  * A(?!B)C is transformed into AC - AB.*
