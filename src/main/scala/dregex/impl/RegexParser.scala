@@ -2,6 +2,8 @@ package dregex.impl
 
 import scala.util.parsing.combinator.JavaTokenParsers
 import com.typesafe.scalalogging.slf4j.StrictLogging
+import dregex.InvalidRegexException
+import dregex.InvalidRegexException
 
 class RegexParser extends JavaTokenParsers {
 
@@ -10,7 +12,14 @@ class RegexParser extends JavaTokenParsers {
   import RegexTree._
 
   val backslash = """\"""
-  def number = """\d""".r.+ ^^ (_.mkString.toInt)
+  
+  def number = """\d""".r.+ ^^ { s => 
+    try {
+      s.mkString.toInt
+    } catch {
+      case e: NumberFormatException => throw new InvalidRegexException("Cannot parse number: " + s)
+    }
+  }
 
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
@@ -124,7 +133,7 @@ class RegexParser extends JavaTokenParsers {
         case Some(_ ~ None ~ ":") => value // Non-capturing group
         case Some(_ ~ None ~ "=") => LookaroundExpander.simplify(Lookaround(Ahead, Positive, value))
         case Some(_ ~ None ~ "!") => LookaroundExpander.simplify(Lookaround(Ahead, Negative, value))
-        case Some(_ ~ Some("<") ~ ":") => throw new Exception("Invalid grouping: <: ")
+        case Some(_ ~ Some("<") ~ ":") => throw new InvalidRegexException("Invalid grouping: <: ")
         case Some(_ ~ Some("<") ~ "=") => Lookaround(Behind, Positive, value)
         case Some(_ ~ Some("<") ~ "!") => Lookaround(Behind, Negative, value)
         case _ => throw new AssertionError
@@ -149,7 +158,7 @@ class RegexParser extends JavaTokenParsers {
       if (minVal <= maxVal)
         (minVal, maxVal)
       else
-        throw new Exception("invalid range in quantifier")
+        throw new InvalidRegexException("invalid range in quantifier")
     case _ ~ minVal ~ Some(comma ~ None) ~ _ ~ _ =>
       // Quantifiers of the form {min,}
       (minVal, -1)
@@ -185,7 +194,7 @@ object RegexParser extends StrictLogging {
     val parser = new RegexParser()
     parser.parseAll(parser.regex, regex) match {
       case parser.Success(ast, next) => ast
-      case parser.NoSuccess((msg, next)) => throw new Exception("Invalid regex: " + msg)
+      case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
     }
   }
 
