@@ -14,7 +14,7 @@ object NormTree {
     override def toString = char.toString
   }
 
-  case class EmptyLit() extends Node {
+  case object EmptyLit extends Node {
     override def toString = "empty-lit"
   }
 

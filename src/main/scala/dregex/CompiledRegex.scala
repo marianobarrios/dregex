@@ -23,6 +23,7 @@ class CompiledRegex private[dregex] (val parsedRegex: ParsedRegex, val universe:
   
   val (dfa, t2) = Util.time(Operations.resolve(metaDfa))
   //logger.trace("dfa: " + dfa)
+  //logger.debug("DFA states: " + dfa.impl.allStates.size)
   logger.trace(s"Time to resolve ${t2/1000} ms")
   
 }

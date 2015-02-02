@@ -5,6 +5,7 @@ import dregex.impl.MetaTrees.AtomTree
 import dregex.impl.MetaTrees.TreeOperation
 import dregex.impl.MetaTrees.MetaTree
 import dregex.impl.Operations.Operation
+import com.typesafe.scalalogging.slf4j.StrictLogging
 
 /**
  * A meta regular expression is the intersection or substraction of 2 other (meta or simple) regular expressions.
@@ -33,10 +34,25 @@ import dregex.impl.Operations.Operation
  *
  * NOTE: Only lookahead is actually implemented, lookbehind is not.
  */
-object LookaroundExpander {
+object LookaroundExpander extends StrictLogging {
 
   import RegexTree._
 
+  /**
+   * Remove trailing stars or question marks in a lookahead, which are meaningless
+   */
+  def simplify(lookaround: Lookaround) = lookaround match {
+    case Lookaround(Direction.Ahead, cond, value) =>
+      val effValue = value match {
+        case Juxt(init :+ Quant(Cardinality.ZeroToInf, _)) => if (init.isEmpty) EmptyLit else Juxt(init)
+        case Juxt(init :+ Quant(Cardinality.ZeroToOne, _)) => if (init.isEmpty) EmptyLit else Juxt(init)
+        case Juxt(init :+ Rep(0, max, _)) => if (init.isEmpty) EmptyLit else Juxt(init)
+        case _ => value
+      }
+      Lookaround(Direction.Ahead, cond, effValue)
+    case lookbehind => lookbehind
+  }
+  
   /**
    * Optimization: combination of consecutive negative lookahead constructions
    * (?!a)(?!b)(?!c) gets combined to (?!a|b|c), which is faster to process.
@@ -48,7 +64,7 @@ object LookaroundExpander {
     vals.foldLeft(Seq[Node]()) { (acc, x) =>
       (acc, x) match {
         case (init :+ Lookaround(Ahead, Negative, v1), Lookaround(Ahead, Negative, v2)) =>
-          init ++ Seq(Lookaround(Ahead, Negative, Disj(Seq(v1, v2))))
+          init :+ Lookaround(Ahead, Negative, Disj(Seq(v1, v2)))
         case _ =>
           acc :+ x
       }
@@ -74,7 +90,7 @@ object LookaroundExpander {
             case Condition.Positive => Operation.Intersect
             case Condition.Negative => Operation.Substract
           }
-          TreeOperation(op, expandImpl(second +: rest), AtomTree(Juxt(Seq(value, Quant(Cardinality.ZeroToInf, Wildcard())))))
+          TreeOperation(op, expandImpl(second +: rest), AtomTree(Juxt(Seq(value, Quant(Cardinality.ZeroToInf, Wildcard)))))
         case Lookaround(Direction.Behind, cond, value) =>
           throw new UnsupportedException("lookbehind")
         case _ =>

@@ -475,6 +475,12 @@ class MatchTest extends FunSuite {
       assertResult(false)(r.matches("a"))
     }
     
+    using(Regex.compile("(?!.*)a")) { r =>
+      assertResult(false)(r.matchesAnything)
+      assertResult(false)(r.matches(""))
+      assertResult(false)(r.matches("a"))
+    }
+    
     using(Regex.compile("(?!a)b")) { r =>
       assertResult(true)(r.matchesAnything)
       assertResult(false)(r.matches(""))

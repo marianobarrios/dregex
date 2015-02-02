@@ -10,8 +10,7 @@ case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A
   lazy val allStates =
     Set(initial) union transitions.keySet union transitions.values.map(_.values).flatten.toSet union accepting
 
-  lazy val allButAccepting =
-    allStates diff accepting
+  lazy val allButAccepting = allStates diff accepting
 
   lazy val allChars = transitions.values.map(_.keys).flatten.toSet
   

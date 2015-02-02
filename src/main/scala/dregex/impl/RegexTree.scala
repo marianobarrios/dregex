@@ -38,9 +38,9 @@ object RegexTree {
     def atoms = Seq(char)
   }
 
-  case class EmptyLit() extends AtomPart {
+  case object EmptyLit extends AtomPart {
     override def toString = "empty-lit"
-    def atoms = Seq()
+    val atoms = Seq()
   }
 
   object Lit {
@@ -51,8 +51,8 @@ object RegexTree {
     }
   }
 
-  case class Wildcard() extends AtomPart {
-    def atoms = Seq()
+  case object Wildcard extends AtomPart {
+    val atoms = Seq()
   }
 
   case class CharClass(chars: Seq[Lit]) extends AtomPart {

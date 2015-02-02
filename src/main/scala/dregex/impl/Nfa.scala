@@ -83,7 +83,7 @@ object Nfa {
     case Rep(min, max, value) => fromTreeImpl(Juxt(Seq(value, Rep(min - 1, max - 1, value))), from, to)
 
     case l: SglChar => Map(from -> Map(LitChar(l) -> Set(to)))
-    case EmptyLit() => Map(from -> Map(Epsilon -> Set(to)))
+    case EmptyLit => Map(from -> Map(Epsilon -> Set(to)))
 
   }
 

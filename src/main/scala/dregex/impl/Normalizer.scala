@@ -47,11 +47,11 @@ object Normalizer {
   /**
    * Expand the wildcards (\".\") and character classes, transforming them into disjunctions over the supplied alphabet
    */
-  def normalize(ast: Node, alphabet: Set[Char]): NormTree.Node = ast match {
+  def normalize(tree: Node, alphabet: Set[Char]): NormTree.Node = tree match {
     // lookarounds should be expanded by now
     case d: Lookaround => throw new IllegalArgumentException("lookarounds should be alread expanded")
     // expand wildcards
-    case Wildcard() => NormTree.Disj(alphabet.toSeq.map(NormTree.Lit(_)) :+ NormTree.Other)
+    case Wildcard => NormTree.Disj(alphabet.toSeq.map(NormTree.Lit(_)) :+ NormTree.Other)
     case NegatedCharClass(chars) => 
       NormTree.Disj((alphabet diff chars.map(_.char).toSet).toSeq.map(NormTree.Lit(_)) :+ NormTree.Other)
     case CharClass(chars) => NormTree.Disj(chars.map(c => NormTree.Lit(c.char)))
@@ -61,7 +61,7 @@ object Normalizer {
     case Rep(min, max, value) => NormTree.Rep(min, max, normalize(value, alphabet))
     case Juxt(values) => NormTree.Juxt(values.map(normalize(_, alphabet)))
     case Lit(char) => NormTree.Lit(char)
-    case EmptyLit() => NormTree.EmptyLit()
+    case EmptyLit => NormTree.EmptyLit
   }
 
 }

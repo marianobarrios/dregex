@@ -122,8 +122,8 @@ class RegexParser extends JavaTokenParsers {
       modifiers match {
         case None => value // Naked parenthesis
         case Some(_ ~ None ~ ":") => value // Non-capturing group
-        case Some(_ ~ None ~ "=") => Lookaround(Ahead, Positive, value)
-        case Some(_ ~ None ~ "!") => Lookaround(Ahead, Negative, value)
+        case Some(_ ~ None ~ "=") => LookaroundExpander.simplify(Lookaround(Ahead, Positive, value))
+        case Some(_ ~ None ~ "!") => LookaroundExpander.simplify(Lookaround(Ahead, Negative, value))
         case Some(_ ~ Some("<") ~ ":") => throw new Exception("Invalid grouping: <: ")
         case Some(_ ~ Some("<") ~ "=") => Lookaround(Behind, Positive, value)
         case Some(_ ~ Some("<") ~ "!") => Lookaround(Behind, Negative, value)
@@ -131,7 +131,7 @@ class RegexParser extends JavaTokenParsers {
       }
   }
 
-  def charWildcard = "." ^^^ Wildcard()
+  def charWildcard = "." ^^^ Wildcard
 
   def regexAtom = charLit | charWildcard | charClass | dashClass | shorthandCharClass | group
 
@@ -168,7 +168,7 @@ class RegexParser extends JavaTokenParsers {
     case parts => Juxt(parts)
   }
 
-  def emptyRegex = "" ^^^ EmptyLit()
+  def emptyRegex = "" ^^^ EmptyLit
 
   def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~ regex).? ^^ {
     case left ~ Some(_ ~ right) => Disj(Seq(left, right))
