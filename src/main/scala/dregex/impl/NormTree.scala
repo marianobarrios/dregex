@@ -22,8 +22,6 @@ object NormTree {
     override def toString = s"Disj(${values.mkString(", ")})"
   }
 
-  case class Quant(card: Cardinality.Value, value: Node) extends Node
-  
   case class Rep(min: Int, max: Int, value: Node) extends Node
 
   case class Juxt(values: Seq[Node]) extends Node {

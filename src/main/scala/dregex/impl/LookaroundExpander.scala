@@ -44,8 +44,6 @@ object LookaroundExpander extends StrictLogging {
   def simplify(lookaround: Lookaround) = lookaround match {
     case Lookaround(Direction.Ahead, cond, value) =>
       val effValue = value match {
-        case Juxt(init :+ Quant(Cardinality.ZeroToInf, _)) => if (init.isEmpty) EmptyLit else Juxt(init)
-        case Juxt(init :+ Quant(Cardinality.ZeroToOne, _)) => if (init.isEmpty) EmptyLit else Juxt(init)
         case Juxt(init :+ Rep(0, max, _)) => if (init.isEmpty) EmptyLit else Juxt(init)
         case _ => value
       }
@@ -90,7 +88,7 @@ object LookaroundExpander extends StrictLogging {
             case Condition.Positive => Operation.Intersect
             case Condition.Negative => Operation.Substract
           }
-          TreeOperation(op, expandImpl(second +: rest), AtomTree(Juxt(Seq(value, Quant(Cardinality.ZeroToInf, Wildcard)))))
+          TreeOperation(op, expandImpl(second +: rest), AtomTree(Juxt(Seq(value, Rep(min = 0, max = -1, value = Wildcard)))))
         case Lookaround(Direction.Behind, cond, value) =>
           throw new UnsupportedException("lookbehind")
         case _ =>

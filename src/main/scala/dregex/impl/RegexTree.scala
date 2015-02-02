@@ -8,10 +8,6 @@ object Condition extends Enumeration {
   val Positive, Negative = Value
 }
 
-object Cardinality extends Enumeration {
-  val ZeroToOne, ZeroToInf, OneToInf = Value
-}
-
 object RegexTree {
 
   trait Node {
@@ -70,8 +66,6 @@ object RegexTree {
   case class Lookaround(dir: Direction.Value, cond: Condition.Value, value: Node) extends SingleComplexPart {
     override def hasLookarounds = true
   }
-
-  case class Quant(card: Cardinality.Value, value: Node) extends SingleComplexPart
 
   case class Rep(min: Int, max: Int, value: Node) extends SingleComplexPart 
 

@@ -57,7 +57,6 @@ object Normalizer {
     case CharClass(chars) => NormTree.Disj(chars.map(c => NormTree.Lit(c.char)))
     // recurse over the rest
     case Disj(values) => NormTree.Disj(values.map(normalize(_, alphabet)))
-    case Quant(card, value) => NormTree.Quant(card, normalize(value, alphabet))
     case Rep(min, max, value) => NormTree.Rep(min, max, normalize(value, alphabet))
     case Juxt(values) => NormTree.Juxt(values.map(normalize(_, alphabet)))
     case Lit(char) => NormTree.Lit(char)

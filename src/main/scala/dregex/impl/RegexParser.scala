@@ -135,13 +135,13 @@ class RegexParser extends JavaTokenParsers {
 
   def regexAtom = charLit | charWildcard | charClass | dashClass | shorthandCharClass | group
 
-  def quantifier = {
-    import Cardinality._
-    "+" ^^^ OneToInf | "*" ^^^ ZeroToInf | "?" ^^^ ZeroToOne
-  }
-
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
-  def quantifiedBranch = regexAtom ~ quantifier ~ "?".? ^^ { case atom ~ quant ~ _ => Quant(quant, atom) }
+  
+  def quantifiedBranch = regexAtom ~ ("+" | "*" | "?") ~ "?".? ^^ { 
+    case atom ~ "+" ~ _ => Rep(min = 1, max = -1, value = atom) 
+    case atom ~ "*" ~ _ => Rep(min = 0, max = -1, value = atom) 
+    case atom ~ "?" ~ _ => Rep(min = 0, max = 1, value = atom) 
+  }
 
   def generalQuantifier = "{" ~ number ~ ("," ~ number.?).? ~ "}" ~ "?".? ^^ {
     case _ ~ minVal ~ Some(comma ~ Some(maxVal)) ~ _ ~ _ =>

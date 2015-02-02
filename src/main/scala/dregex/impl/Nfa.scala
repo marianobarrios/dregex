@@ -53,10 +53,6 @@ object Nfa {
     // Disjunction is made without any epsilon transitions, as they are not required for correctness.
     case Disj(parts) => mergeTransitions(parts.map(part => fromTreeImpl(part, from, to)): _*)
 
-    case Quant(Cardinality.OneToInf, value) => fromTreeImpl(Rep(1, -1, value), from, to)
-    case Quant(Cardinality.ZeroToInf, value) => fromTreeImpl(Rep(0, -1, value), from, to)
-    case Quant(Cardinality.ZeroToOne, value) => fromTreeImpl(Rep(0, 1, value), from, to)
-
     case Rep(0, 0, value) => 
       Map(from -> Map(Epsilon -> Set(to)))
     case Rep(0, 1, value) =>
