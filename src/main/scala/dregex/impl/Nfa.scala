@@ -34,12 +34,18 @@ object Nfa {
 
     case Juxt(Seq(head)) =>
       fromTreeImpl(head, from, to)
-    case Juxt(head +: rest) =>
-      val int = new State
-      mergeTransitions(
-        fromTreeImpl(head, from, int),
-        fromTreeImpl(Juxt(rest), int, to))
-
+      
+    // doing this iteratively prevents stack overflows in the case of long literal strings 
+    case Juxt(init :+ last) =>
+      var merged = Map[State, Map[NormTree.Char, Set[State]]]()
+      var prev = from
+      for (part <- init) {
+        val int = new State
+        merged = mergeTransitions(merged, fromTreeImpl(part, prev, int))
+        prev = int
+      }
+      mergeTransitions(merged, fromTreeImpl(last, prev, to))
+      
     // Disjunction is made without any epsilon transitions, as they are not required for correctness.
     case Disj(parts) => mergeTransitions(parts.map(part => fromTreeImpl(part, from, to)): _*)
 

@@ -15,7 +15,7 @@ class CompiledRegex private[dregex] (val parsedRegex: ParsedRegex, val universe:
   extends Regex with StrictLogging {
 
   val normTree = MetaNormTrees.normalize(parsedRegex.metaTree, universe.alphabet)
-  //logger.trace("norm: " + normTree)
+  logger.trace("norm: " + normTree)
 
   val metaNfa = MetaNfas.fromTree(normTree)
   //logger.trace("meta nfa: " + metaNfa)
