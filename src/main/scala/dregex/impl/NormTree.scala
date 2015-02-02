@@ -4,18 +4,19 @@ object NormTree {
 
   trait Node
 
-  trait SglChar extends Node
+  trait Char extends Node
+  trait SglChar extends Char
   
   case object Other extends SglChar {
     override def toString = "other"
   }
 
-  case class Lit(char: Char) extends SglChar {
+  case class Lit(char: scala.Char) extends SglChar {
     override def toString = char.toString
   }
 
-  case object EmptyLit extends Node {
-    override def toString = "empty-lit"
+  case object Epsilon extends Char {
+    override def toString = "ε"
   }
 
   case class Disj(values: Seq[Node]) extends Node {

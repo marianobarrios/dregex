@@ -34,8 +34,8 @@ object RegexTree {
     def atoms = Seq(char)
   }
 
-  case object EmptyLit extends AtomPart {
-    override def toString = "empty-lit"
+  case object Epsilon extends AtomPart {
+    override def toString = "ε"
     val atoms = Seq()
   }
 

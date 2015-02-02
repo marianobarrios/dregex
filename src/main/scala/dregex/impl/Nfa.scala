@@ -1,6 +1,6 @@
 package dregex.impl
 
-case class Nfa(initial: State, transitions: Map[State, Map[Nfa.Char, Set[State]]], accepting: Set[State]) {
+case class Nfa(initial: State, transitions: Map[State, Map[NormTree.Char, Set[State]]], accepting: Set[State]) {
   override def toString() = {
     val transList = for ((state, charMap) <- transitions) yield {
       val map = for ((char, destination) <- charMap) yield s"$char -> ${destination.mkString("|")}"
@@ -20,16 +20,6 @@ object Nfa {
 
   import NormTree._
 
-  sealed trait Char
-
-  case class LitChar(char: NormTree.SglChar) extends Char {
-    override def toString() = char.toString()
-  }
-
-  case object Epsilon extends Char {
-    override def toString() = "ε"
-  }
-
   /**
    * Transform a regular expression abstract syntax tree into a corresponding NFA
    */
@@ -40,7 +30,7 @@ object Nfa {
     Nfa(initial, transitions, Set(accepting))
   }
 
-  def fromTreeImpl(ast: Node, from: State, to: State): Map[State, Map[Nfa.Char, Set[State]]] = ast match {
+  def fromTreeImpl(ast: Node, from: State, to: State): Map[State, Map[NormTree.Char, Set[State]]] = ast match {
 
     case Juxt(Seq(head)) =>
       fromTreeImpl(head, from, to)
@@ -78,12 +68,11 @@ object Nfa {
     case Rep(0, max, value) if max > 1 => fromTreeImpl(Juxt(Seq(Rep(0, 1, value), Rep(0, max - 1, value))), from, to)
     case Rep(min, max, value) => fromTreeImpl(Juxt(Seq(value, Rep(min - 1, max - 1, value))), from, to)
 
-    case l: SglChar => Map(from -> Map(LitChar(l) -> Set(to)))
-    case EmptyLit => Map(from -> Map(Epsilon -> Set(to)))
+    case l: Char => Map(from -> Map(l -> Set(to)))
 
   }
 
-  def mergeTransitions(transitions: Map[State, Map[Nfa.Char, Set[State]]]*): Map[State, Map[Nfa.Char, Set[State]]] = {
+  def mergeTransitions(transitions: Map[State, Map[NormTree.Char, Set[State]]]*): Map[State, Map[NormTree.Char, Set[State]]] = {
     transitions.reduce { (left, right) =>
       Util.merge(left, right)(Util.mergeWithUnion)
     }

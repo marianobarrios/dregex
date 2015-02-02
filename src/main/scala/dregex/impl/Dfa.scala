@@ -156,11 +156,10 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
 
   def reverse(): Nfa = {
     val initial = new State
-    val epsilon: Nfa.Char = Nfa.Epsilon
+    val epsilon: NormTree.Char = NormTree.Epsilon
     val first = Map(initial -> Map(epsilon -> impl.accepting))
     val rest = for ((from, fn) <- impl.transitions; (char, to) <- fn) yield {
-      val nfaChar: Nfa.Char = Nfa.LitChar(char)
-      Map(to -> Map(nfaChar -> Set(from)))
+      Map(to -> Map[NormTree.Char, Set[State]](char -> Set(from)))
     }
     val accepting = Set(impl.initial)
     Nfa(initial, Nfa.mergeTransitions((first +: rest.toSeq): _*), accepting)
@@ -183,7 +182,7 @@ object Dfa extends StrictLogging {
    */
   def fromNfa(nfa: Nfa, minimal: Boolean = false): Dfa = {
     val epsilonFreeTransitions = nfa.transitions.mapValuesNow { trans =>
-      for ((Nfa.LitChar(char), target) <- trans) yield char -> target // partial function!
+      for ((char: NormTree.SglChar, target) <- trans) yield char -> target // partial function!
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
     /**
@@ -198,7 +197,7 @@ object Dfa extends StrictLogging {
     @tailrec
     def followEpsilonImpl(current: Set[State]): MultiState = {
       val immediate = for (state <- current) yield {
-        nfa.transitions.getOrElse(state, Map()).getOrElse(Nfa.Epsilon, Set())
+        nfa.transitions.getOrElse(state, Map()).getOrElse(NormTree.Epsilon, Set())
       }
       val expanded = immediate.fold(current)(_ union _)
       if (expanded == current)

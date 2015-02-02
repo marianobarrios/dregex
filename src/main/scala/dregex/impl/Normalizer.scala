@@ -60,7 +60,7 @@ object Normalizer {
     case Rep(min, max, value) => NormTree.Rep(min, max, normalize(value, alphabet))
     case Juxt(values) => NormTree.Juxt(values.map(normalize(_, alphabet)))
     case Lit(char) => NormTree.Lit(char)
-    case EmptyLit => NormTree.EmptyLit
+    case Epsilon => NormTree.Epsilon
   }
 
 }

@@ -46,7 +46,7 @@ object LookaroundExpander extends StrictLogging {
   def simplify(lookaround: Lookaround) = lookaround match {
     case Lookaround(Ahead, cond, Juxt(init :+ a :+ b :+ Rep(0, max, _))) => Lookaround(Ahead, cond, Juxt(init :+ a :+ b)) // at least two
     case Lookaround(Ahead, cond, Juxt(Seq(first, Rep(0, max, _)))) => Lookaround(Ahead, cond, first) // one
-    case Lookaround(Ahead, cond, Juxt(Seq() :+ Rep(0, max, _))) => EmptyLit // nothing
+    case Lookaround(Ahead, cond, Juxt(Seq() :+ Rep(0, max, _))) => Epsilon // nothing
     case lookbehind => lookbehind
   }
 

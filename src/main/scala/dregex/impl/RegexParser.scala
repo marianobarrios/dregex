@@ -168,7 +168,7 @@ class RegexParser extends JavaTokenParsers {
     case parts => Juxt(parts)
   }
 
-  def emptyRegex = "" ^^^ EmptyLit
+  def emptyRegex = "" ^^^ Epsilon
 
   def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~ regex).? ^^ {
     case left ~ Some(_ ~ right) => Disj(Seq(left, right))
