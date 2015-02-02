@@ -12,11 +12,10 @@ object Operations {
    */
   val minimizationThreshold = 50
   
-  def resolve(abstractDfa: MetaDfa): Dfa = {
-    val resolved = abstractDfa match {
-      case DfaOperation(Operation.Intersect, left, right) => resolve(left) intersect resolve(right)
-      case DfaOperation(Operation.Substract, left, right) => resolve(left) diff resolve(right)
-      case atom: AtomDfa => atom.dfa.minimize()
+  def resolve(meta: MetaDfa): Dfa = {
+    val resolved = meta match {
+      case DfaOperation(op, left, right) => op(resolve(left), resolve(right))
+      case AtomDfa(dfa) => dfa.minimize()
     }
     if (resolved.impl.allStates.size >= minimizationThreshold)
       resolved.minimize()
@@ -24,8 +23,6 @@ object Operations {
       resolved
   }
 
-  object Operation extends Enumeration {
-    val Intersect, Substract = Value
-  }
-
+  type Operation = (Dfa, Dfa) => Dfa
+  
 }

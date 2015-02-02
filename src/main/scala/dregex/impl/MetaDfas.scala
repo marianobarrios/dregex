@@ -8,7 +8,7 @@ import dregex.impl.Operations.Operation
 object MetaDfas {
 
   sealed trait MetaDfa
-  case class DfaOperation(operation: Operation.Value, left: MetaDfa, right: MetaDfa) extends MetaDfa
+  case class DfaOperation(operation: Operation, left: MetaDfa, right: MetaDfa) extends MetaDfa
   case class AtomDfa(dfa: Dfa) extends MetaDfa
 
   def fromNfa(abstractNfa: MetaNfa): MetaDfa = abstractNfa match {

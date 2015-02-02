@@ -8,7 +8,7 @@ import dregex.impl.Operations.Operation
 object MetaNfas {
 
   sealed trait MetaNfa
-  case class NfaOperation(operation: Operation.Value, left: MetaNfa, right: MetaNfa) extends MetaNfa
+  case class NfaOperation(operation: Operation, left: MetaNfa, right: MetaNfa) extends MetaNfa
   case class NfaAtom(nfa: Nfa) extends MetaNfa
 
   def fromTree(abstractAst: MetaNormTree): MetaNfa = abstractAst match {

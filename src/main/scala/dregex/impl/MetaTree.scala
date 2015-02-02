@@ -12,7 +12,7 @@ object MetaTrees {
     def hasLookarounds = ast.hasLookarounds()
   }
   
-  case class TreeOperation(operation: Operation.Value, left: MetaTree, right: MetaTree) extends MetaTree {
+  case class TreeOperation(operation: Operation, left: MetaTree, right: MetaTree) extends MetaTree {
     def hasLookarounds = left.hasLookarounds || right.hasLookarounds
   }
   

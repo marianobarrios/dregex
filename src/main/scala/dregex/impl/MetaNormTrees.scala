@@ -9,7 +9,7 @@ object MetaNormTrees {
   
   trait MetaNormTree
   case class NormTreeAtom(ast: NormTree.Node) extends MetaNormTree
-  case class NormTreeOperation(operation: Operation.Value, left: MetaNormTree, right: MetaNormTree) extends MetaNormTree
+  case class NormTreeOperation(operation: Operation, left: MetaNormTree, right: MetaNormTree) extends MetaNormTree
 
   def normalize(ast: MetaTree, alphabet: Set[Char]): MetaNormTree = ast match {
     case TreeOperation(op, left, right) => NormTreeOperation(op, normalize(left, alphabet), normalize(right, alphabet))

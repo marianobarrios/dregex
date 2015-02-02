@@ -41,12 +41,18 @@ class EquivalenceTest extends FunSuite {
   test("lookaround") {
     assertResult(true)(equiv("(?!a|b)(?!c).*", "(?!a|b|c).*"))
     assertResult(true)(equiv("(?=.).*", ".+"))
-    assertResult(true)(equiv("(?!a.*)b", "(?!a)b"))
-    assertResult(true)(equiv("(?!a.?)b", "(?!a)b"))
-    assertResult(true)(equiv("(?!a{0,34})b", "(?!a)b"))
-    assertResult(true)(equiv("(?=a.*)b", "(?!a)b"))
-    assertResult(true)(equiv("(?=a.?)b", "(?!a)b"))
-    assertResult(true)(equiv("(?=a{0,34})b", "(?!a)b"))
+    assertResult(true)(equiv("(?!a.*).+", "(?!a).+"))
+    assertResult(true)(equiv("(?!a.?).+", "(?!a).+"))
+    assertResult(true)(equiv("(?!a.{0,34}).+", "(?!a).+"))
+    assertResult(true)(equiv("(?=a.*).+", "(?=a).+"))
+    assertResult(true)(equiv("(?=a.?).+", "(?=a).+"))
+    assertResult(true)(equiv("(?=a.{0,34}).+", "(?=a).+"))
+    assertResult(true)(equiv("(?=.*).+", ".+"))
+    assertResult(true)(equiv("(?=.?).+", ".+"))
+    assertResult(true)(equiv("(?=.{0,34}).+", ".+"))
+    assertResult(true)(equiv("(?=a*).+", ".+"))
+    assertResult(true)(equiv("(?=a?).+", ".+"))
+    assertResult(true)(equiv("(?=a{0,34}).+", ".+"))
   }
   
   test("characted classes") {

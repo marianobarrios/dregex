@@ -46,7 +46,6 @@ object LookaroundExpander extends StrictLogging {
   def simplify(lookaround: Lookaround) = lookaround match {
     case Lookaround(Ahead, cond, Juxt(init :+ a :+ b :+ Rep(0, max, _))) => Lookaround(Ahead, cond, Juxt(init :+ a :+ b)) // at least two
     case Lookaround(Ahead, cond, Juxt(Seq(first, Rep(0, max, _)))) => Lookaround(Ahead, cond, first) // one
-    case Lookaround(Ahead, cond, Juxt(Seq() :+ Rep(0, max, _))) => Epsilon // nothing
     case lookbehind => lookbehind
   }
 
@@ -81,9 +80,9 @@ object LookaroundExpander extends StrictLogging {
     case first +: second +: rest => // more than one element
       first match {
         case Lookaround(Ahead, cond, value) =>
-          val op = cond match {
-            case Positive => Operation.Intersect
-            case Negative => Operation.Substract
+          val op: Operation = cond match {
+            case Positive => (left, right) => left intersect right
+            case Negative => (left, right) => left diff right
           }
           TreeOperation(op, expandImpl(second +: rest), AtomTree(Juxt(Seq(value, Rep(min = 0, max = -1, value = Wildcard)))))
         case Lookaround(Behind, cond, value) =>
