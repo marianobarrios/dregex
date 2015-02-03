@@ -239,6 +239,36 @@ class MatchTest extends FunSuite {
       assertResult(false)(r.matches("aab"))
     }
 
+    using(Regex.compile("(a{2})*")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(true)(r.matches(""))
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(false)(r.matches("aaa"))
+      assertResult(true)(r.matches("aaaa"))
+    }
+    
+    using(Regex.compile("(a{2})+")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches(""))
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(false)(r.matches("aaa"))
+      assertResult(true)(r.matches("aaaa"))
+    }
+
+    using(Regex.compile("(a{2,3})*")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(true)(r.matches(""))
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(true)(r.matches("aaa"))
+      assertResult(true)(r.matches("aaaa"))
+      assertResult(true)(r.matches("aaaaa"))
+      assertResult(true)(r.matches("aaaaaa"))
+      assertResult(true)(r.matches("aaaaaaa"))
+    }
+
     using(Regex.compile("a{0}")) { r =>
       assertResult(true)(r.matchesAnything)
       assertResult(true)(r.matches(""))

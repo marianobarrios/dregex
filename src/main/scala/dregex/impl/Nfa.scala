@@ -34,7 +34,7 @@ object Nfa {
 
     case Juxt(Seq(head)) =>
       fromTreeImpl(head, from, to)
-      
+
     // doing this iteratively prevents stack overflows in the case of long literal strings 
     case Juxt(init :+ last) =>
       var merged = Map[State, Map[NormTree.Char, Set[State]]]()
@@ -45,36 +45,37 @@ object Nfa {
         prev = int
       }
       mergeTransitions(merged, fromTreeImpl(last, prev, to))
-      
-    // Disjunction is made without any epsilon transitions, as they are not required for correctness.
+
     case Disj(parts) => mergeTransitions(parts.map(part => fromTreeImpl(part, from, to)): _*)
 
-    case Rep(0, 0, value) => 
-      Map(from -> Map(Epsilon -> Set(to)))
-    case Rep(0, 1, value) =>
-      val (int1, int2) = (new State, new State)
-      mergeTransitions(
-        fromTreeImpl(value, int1, int2),
-        Map(from -> Map(Epsilon -> Set(int1))),
-        Map(int2 -> Map(Epsilon -> Set(to))),
-        Map(from -> Map(Epsilon -> Set(to))))
+    case Rep(n, -1, value) if n > 0 => fromTreeImpl(Juxt(Seq.fill(n)(value) :+ Rep(0, -1, value)), from, to)
+    case Rep(n, m, value) if n > 0 => fromTreeImpl(Juxt(Seq.fill(n)(value) :+ Rep(0, m - n, value)), from, to)
+
     case Rep(0, -1, value) =>
-      val (int1, int2) = (new State, new State)
+      val int1 = new State
+      val int2 = new State
       mergeTransitions(
         fromTreeImpl(value, int1, int2),
         Map(from -> Map(Epsilon -> Set(int1))),
         Map(int2 -> Map(Epsilon -> Set(to))),
         Map(from -> Map(Epsilon -> Set(to))),
         Map(int2 -> Map(Epsilon -> Set(int1))))
-    case Rep(1, 1, value) =>
-      fromTreeImpl(value, from, to)
 
-    // order is important
-    case Rep(min, -1, value) if min > 0 => fromTreeImpl(Juxt(Seq(value, Rep(min - 1, -1, value))), from, to)
-    case Rep(0, max, value) if max > 1 => fromTreeImpl(Juxt(Seq(Rep(0, 1, value), Rep(0, max - 1, value))), from, to)
-    case Rep(min, max, value) => fromTreeImpl(Juxt(Seq(value, Rep(min - 1, max - 1, value))), from, to)
+    case Rep(0, 0, value) =>
+      Map(from -> Map(Epsilon -> Set(to)))
+    
+    // doing this iteratively prevents stack overflows in the case of long repetitions
+    case Rep(0, m, value) if m > 0 =>
+      var merged = Map[State, Map[NormTree.Char, Set[State]]]()
+      var prev = from
+      for (i <- 0 until m - 1) {
+        val int = new State
+        merged = mergeTransitions(merged, fromTreeImpl(value, prev, int), Map(prev -> Map(Epsilon -> Set(to))))
+        prev = int
+      }
+      mergeTransitions(merged, fromTreeImpl(value, prev, to), Map(prev -> Map(Epsilon -> Set(to))))
 
-    case l: Char => Map(from -> Map(l -> Set(to)))
+    case c: Char => Map(from -> Map(c -> Set(to)))
 
   }
 

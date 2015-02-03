@@ -88,7 +88,7 @@ object LookaroundExpander extends StrictLogging {
         case Lookaround(Behind, cond, value) =>
           throw new UnsupportedException("lookbehind")
         case _ =>
-          merge(first, expandImpl(second +: rest))
+          merge(first, expandImpl(second +: rest)) // TODO: remove recursion
       }
     case first +: rest => // only one element (and also the last)
       first match {
