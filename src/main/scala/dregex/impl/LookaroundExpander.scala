@@ -76,34 +76,32 @@ object LookaroundExpander extends StrictLogging {
     expanded
   }
 
-  private def expandImpl(args: Seq[Node]): MetaTree = args match {
-    case first +: second +: rest => // more than one element
-      first match {
-        case Lookaround(Ahead, cond, value) =>
-          val op: Operation = cond match {
-            case Positive => (left, right) => left intersect right
-            case Negative => (left, right) => left diff right
-          }
-          TreeOperation(op, expandImpl(second +: rest), AtomTree(Juxt(Seq(value, Rep(min = 0, max = -1, value = Wildcard)))))
-        case Lookaround(Behind, cond, value) =>
-          throw new UnsupportedException("lookbehind")
-        case _ =>
-          merge(first, expandImpl(second +: rest)) // TODO: remove recursion
-      }
-    case first +: rest => // only one element (and also the last)
-      first match {
-        case Lookaround(Ahead, cond, value) => throw new UnsupportedException("lookahead in trailing position")
-        case Lookaround(Behind, cond, value) => throw new UnsupportedException("lookbehind")
-        case _ => AtomTree(first)
-      }
+  private def expandImpl(args: Seq[Node]): MetaTree = {
+    findLookaround(args) match {
+      case Some(i) if i < args.size - 1 =>
+        args(i).asInstanceOf[Lookaround] match {
+          case Lookaround(Ahead, cond, value) =>
+            val op: Operation = cond match {
+              case Positive => (left, right) => left intersect right
+              case Negative => (left, right) => left diff right
+            }
+            val previous = args.slice(0, i)
+            TreeOperation(op, 
+                expandImpl(previous ++ args.slice(i + 1, args.size)), 
+                AtomTree(Juxt(previous :+ value :+ Rep(min = 0, max = -1, value = Wildcard))))
+          case Lookaround(Behind, cond, value) =>
+            throw new UnsupportedException("lookbehind")
+        }
+      case Some(i) if i == args.size - 1 => 
+        throw new UnsupportedException("lookaround in trailing position")
+      case None =>
+        AtomTree(Juxt(args))
+    }
   }
 
-  private def merge(first: Node, second: MetaTree): MetaTree = (first, second) match {
-    case (Juxt(firstValues), AtomTree(Juxt(secondValues))) => AtomTree(Juxt(firstValues ++ secondValues))
-    case (Juxt(firstValues), AtomTree(second)) => AtomTree(Juxt(firstValues :+ second))
-    case (first, AtomTree(Juxt(secondValues))) => AtomTree(Juxt(first +: secondValues))
-    case (first, AtomTree(second)) => AtomTree(Juxt(Seq(first, second)))
-    case (first, TreeOperation(op, left, right)) => TreeOperation(op, merge(first, left), merge(first, right))
+  private def findLookaround(args: Seq[Node]): Option[Int] = {
+    val found = args.zipWithIndex.find { case (x, i) => x.isInstanceOf[Lookaround] }
+    found.map { case (_, idx) => idx }
   }
 
 }
