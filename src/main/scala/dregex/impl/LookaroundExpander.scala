@@ -78,7 +78,7 @@ object LookaroundExpander extends StrictLogging {
 
   private def expandImpl(args: Seq[Node]): MetaTree = {
     findLookaround(args) match {
-      case Some(i) if i < args.size - 1 =>
+      case Some(i) =>
         args(i).asInstanceOf[Lookaround] match {
           case Lookaround(Ahead, cond, value) =>
             val op: Operation = cond match {
@@ -92,8 +92,6 @@ object LookaroundExpander extends StrictLogging {
           case Lookaround(Behind, cond, value) =>
             throw new UnsupportedException("lookbehind")
         }
-      case Some(i) if i == args.size - 1 => 
-        throw new UnsupportedException("lookaround in trailing position")
       case None =>
         AtomTree(Juxt(args))
     }

@@ -40,6 +40,7 @@ class EquivalenceTest extends FunSuite {
 
   test("lookaround") {
     assertResult(true)(equiv("(?!a|b)(?!c).*", "(?!a|b|c).*"))
+    assertResult(true)(equiv("a(?!b)", "a"))
     assertResult(true)(equiv("(?=.).*", ".+"))
     assertResult(true)(equiv("(?!a.*).+", "(?!a).+"))
     assertResult(true)(equiv("(?!a.?).+", "(?!a).+"))

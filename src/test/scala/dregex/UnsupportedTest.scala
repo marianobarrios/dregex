@@ -4,10 +4,6 @@ import org.scalatest.FunSuite
 
 class UnsupportedTest extends FunSuite {
 
-  test("trailing lookahead") {
-    intercept[UnsupportedException](Regex.compile("a(?!a)"))
-  }
-
   test("deep lookaround") {
     intercept[UnsupportedException](Regex.compile("(?!a)|b"))
     intercept[UnsupportedException](Regex.compile("(?!a(?!b))"))
