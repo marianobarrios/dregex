@@ -492,6 +492,28 @@ class MatchTest extends FunSuite {
   }
   
   test("lookahead") {
+ 
+    using(Regex.compile("(a|c)(?!b).*")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(true)(r.matches("ad"))
+      assertResult(false)(r.matches("ab"))
+      assertResult(false)(r.matches("cb"))
+    }
+    
+    using(Regex.compile("[ac](?!b).*")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(true)(r.matches("ad"))
+      assertResult(false)(r.matches("ab"))
+      assertResult(false)(r.matches("cb"))
+    }
+    
+    using(Regex.compile("(d|[ac])(?!b).*")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(true)(r.matches("ad"))
+      assertResult(false)(r.matches("db"))
+      assertResult(false)(r.matches("ab"))
+      assertResult(false)(r.matches("cb"))
+    }
     
     using(Regex.compile("(?!b)a")) { r =>
       assertResult(true)(r.matchesAnything)
@@ -569,6 +591,17 @@ class MatchTest extends FunSuite {
       assertResult(false)(r.matches("xxxc"))
       assertResult(false)(r.matches("xxxcx"))
       assertResult(false)(r.matches("xxxxb"))
+    }  
+    
+    using(Regex.compile("xxx(?=a|b).(?!c).*")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches(""))
+      assertResult(true)(r.matches("xxxay"))
+      assertResult(true)(r.matches("xxxby"))
+      assertResult(true)(r.matches("xxxay"))
+      assertResult(true)(r.matches("xxxby"))
+      assertResult(false)(r.matches("xxxyc"))
+      assertResult(false)(r.matches("xxxycx"))
     }
     
     using(Regex.compile("xxx(?!a|b)(?!c).*")) { r =>

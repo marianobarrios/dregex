@@ -10,29 +10,27 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 /**
  * A meta regular expression is the intersection or subtraction of 2 other (meta or simple) regular expressions.
  * Lookaround constructions are transformed in equivalent meta simple regular expressions for processing.
+ * 
  * A(?=B)C is transformed into AC ∩ AB.*
  * A(?!B)C is transformed into AC - AB.*
- * A(?<=B)C is transformed into AC ∩ .*BC
- * A(?<!B)C is transformed into AC - .*BC
  *
  * In the case of more than one lookaround, the transformation is applied recursively.
  *
+ * This works if A is of known length
+ * 
  * Only top level lookarounds that are part of a juxtaposition are permitted, i.e. they are no allowed inside
- * parenthesis, nested or as members of a conjunction. Additionally negative lookaheads are not allowed at the
- * end of the expression. Examples:
+ * parenthesis, nested or as members of a conjunction. Examples:
  *
  * Allowed:
  * A(?!B)C
  * (?!B)C
  *
  * Not allowed:
- * A(?!B)      at the end
  * (?!B)|B     part of a conjuction
- * (?!B)       unique element, not a juxtaposition
  * (?!(?!B))   lookaround inside lookaround
  * (A(?!B))B   lookaround inside parenthesis
  *
- * NOTE: Only lookahead is actually implemented, lookbehind is not.
+ * NOTE: Only lookahead is currently implemented
  */
 object LookaroundExpander extends StrictLogging {
 
@@ -85,10 +83,12 @@ object LookaroundExpander extends StrictLogging {
               case Positive => (left, right) => left intersect right
               case Negative => (left, right) => left diff right
             }
-            val previous = args.slice(0, i)
-            TreeOperation(op, 
-                expandImpl(previous ++ args.slice(i + 1, args.size)), 
-                AtomTree(Juxt(previous :+ value :+ Rep(min = 0, max = -1, value = Wildcard))))
+            val prefix = args.slice(0, i)
+            for (node <- prefix if node.length.isEmpty)
+              throw new UnsupportedException("lookaround with variable-length prefix")
+            val suffix = args.slice(i + 1, args.size)
+            val wildcard = Rep(min = 0, max = -1, value = Wildcard)
+            TreeOperation(op, expandImpl(prefix ++ suffix), AtomTree(Juxt(prefix :+ value :+ wildcard)))
           case Lookaround(Behind, cond, value) =>
             throw new UnsupportedException("lookbehind")
         }

@@ -10,6 +10,12 @@ class UnsupportedTest extends FunSuite {
     intercept[UnsupportedException](Regex.compile("b((?!a)c)"))
   }
 
+  test("variable-length prefix before lookaround") {
+    intercept[UnsupportedException](Regex.compile(".*(?!b).*"))
+    intercept[UnsupportedException](Regex.compile("(a|aa)(?!b).*"))
+    intercept[UnsupportedException](Regex.compile("a?(?!b).*"))
+  }
+  
   test("lookbehind") {
     intercept[UnsupportedException](Regex.compile("a(?<!b)c"))
     intercept[UnsupportedException](Regex.compile("a(?<=b)c"))

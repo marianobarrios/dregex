@@ -12,9 +12,8 @@ class PerformanceTest extends FunSuite {
             "/aaaaaa/(?!xxc)(?!xxd)(?!xxe)(?!xxf)(?!xxg)(?!xxh).*",
             "/aaaaaa/(?!x+c)(?!x+d)(?!x+e)(?!x+f)(?!x+g)(?!x+h).*",
             "/aaaaaa/(?!x+c|x+d|x+e|x+f|x+g|x+h).*",
-            "/aaaaaa.+/(?!xxc)(?!xxd)(?!xxe)(?!xxf)(?!xxg)(?!xxh).*",
-            "/aaaaaa.+/(?!xxc)a(?!xxd)b(?!xxe)c(?!xxf).*", // disables lookahead combinations
-            "/aaaaaa.+/(?!xxc|xxd|xxe|xxf|xxg|xxh).*"
+            "/aaaaaa/(?!xxc)a(?!xxd)b(?!xxe)c(?!xxf).*", // disables lookahead combinations
+            "/aaaaaa/(?!xxc|xxd|xxe|xxf|xxg|xxh).*"
           )).unzip._2
       }
       info(s"compilation time: ${elapsed1 / 1000} ms")
