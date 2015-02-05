@@ -16,19 +16,8 @@ object RegexTree {
   }
 
   trait ComplexPart extends Node {
-
     def values: Seq[Node]
-
     def hasLookarounds = !values.forall(!_.hasLookarounds)
-
-    //    def length = {
-    //      val lengths = values.map(_.length).collect { case Some(i) => i }
-    //      if (lengths.size == values.size && values.toSet.size == 1)
-    //        Some(lengths.head)
-    //      else
-    //        None
-    //    }
-
   }
 
   trait SingleComplexPart extends ComplexPart {

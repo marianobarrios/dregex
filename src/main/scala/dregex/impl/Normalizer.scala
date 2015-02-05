@@ -49,7 +49,7 @@ object Normalizer {
    */
   def normalize(tree: Node, alphabet: Set[Char]): NormTree.Node = tree match {
     // lookarounds should be expanded by now
-    case d: Lookaround => throw new IllegalArgumentException("lookarounds should be alread expanded")
+    case d: Lookaround => throw new IllegalArgumentException("lookarounds should be already expanded")
     // expand wildcards
     case Wildcard => NormTree.Disj(alphabet.toSeq.map(NormTree.Lit(_)) :+ NormTree.Other)
     case NegatedCharClass(chars) => 
