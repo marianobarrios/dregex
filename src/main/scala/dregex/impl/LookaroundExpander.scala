@@ -10,14 +10,14 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 /**
  * A meta regular expression is the intersection or subtraction of 2 other (meta or simple) regular expressions.
  * Lookaround constructions are transformed in equivalent meta simple regular expressions for processing.
- * 
+ *
  * A(?=B)C is transformed into AC ∩ AB.*
  * A(?!B)C is transformed into AC - AB.*
  *
  * In the case of more than one lookaround, the transformation is applied recursively.
  *
  * This works if A is of known length
- * 
+ *
  * Only top level lookarounds that are part of a juxtaposition are permitted, i.e. they are no allowed inside
  * parenthesis, nested or as members of a conjunction. Examples:
  *
@@ -63,14 +63,24 @@ object LookaroundExpander extends StrictLogging {
     }
   }
 
-  def expandLookarounds(tree: Node) = {
+  // TODO: Consider just a LA
+  def expandLookarounds(tree: Node): MetaTree = {
     val expanded = tree match {
-      case Juxt(values) => expandImpl(combineNegLookaheads(values))
-      case _ => AtomTree(tree)
+      case Juxt(values) =>
+        expandImpl(combineNegLookaheads(values))
+      case Disj(values) if values.exists(_.hasLookarounds) =>
+        val first +: second +: rest = values
+        val op: Operation = (left, right) => left union right
+        val firstOp = TreeOperation(op, expandLookarounds(first), expandLookarounds(second))
+        rest.foldLeft(firstOp) { (acc, value) =>
+          TreeOperation(op, acc, expandLookarounds(value))
+        }
+      case _ =>
+        AtomTree(tree)
     }
-    // if any lookaround remains, it was non-top-level, and thas is not supported
+    // if any lookaround remains, it was non-top-level, and that is not supported
     if (expanded.hasLookarounds)
-      throw new UnsupportedException("lookaround in this position (non top-level)")
+      throw new UnsupportedException("lookaround in this position")
     expanded
   }
 

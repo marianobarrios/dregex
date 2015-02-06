@@ -53,7 +53,8 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     val newInitial = BiState(left.initial, right.initial)
     val newTransitions = for {
       (leftState, leftCharmap) <- left.transitions
-      (rightState, rightCharmap) <- right.transitions.updated(NullState, Map())
+      rightState <- right.allStates.toSeq :+ NullState
+      rightCharmap = right.transitions.getOrElse(rightState, Map())
       charMap = for {
         char <- allChars
         leftDestState <- leftCharmap.get(char)
@@ -78,8 +79,10 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     val allChars = left.allChars union right.allChars
     val newInitial = BiState(left.initial, right.initial)
     val newTransitions = for {
-      (leftState, leftCharmap) <- left.transitions.updated(NullState, Map())
-      (rightState, rightCharmap) <- right.transitions.updated(NullState, Map())
+      leftState <- left.allStates.toSeq :+ NullState
+      leftCharmap = left.transitions.getOrElse(leftState, Map())
+      rightState <- right.allStates.toSeq :+ NullState
+      rightCharmap = right.transitions.getOrElse(rightState, Map())
       charMap = for {
         char <- allChars
         leftDestState = leftCharmap.getOrElse(char, NullState)
@@ -101,13 +104,13 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     } yield {
       BiState(l, r)
     }
-    val genericDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
+    val genericDfa = GenericDfa[BiState](newInitial, newTransitions.toMap, accepting)
     Dfa.fromGenericDfa(genericDfa)
   }
 
   /**
-   * Return whether a DFA matches anything. A DFA matches at least some language if there is a path from the initial s
-   * tate to any of the accepting states
+   * Return whether a DFA matches anything. A DFA matches at least some language if there is a path from the initial 
+   * state to any of the accepting states
    */
   def matchesAnything(): Boolean = {
     val visited = mutable.Set[State]()

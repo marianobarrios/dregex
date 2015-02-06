@@ -647,6 +647,14 @@ class MatchTest extends FunSuite {
     !Regex.compile("(?!a*).*").matchesAnything()
     !Regex.compile("(?!a{0,10}).*").matchesAnything()
     
+    using(Regex.compile("(?!a).|c.")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("b"))
+      assertResult(true)(r.matches("c"))
+      assertResult(true)(r.matches("cx"))
+      assertResult(false)(r.matches("bx"))
+    }
   }
   
   
