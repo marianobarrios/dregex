@@ -131,8 +131,8 @@ class RegexParser extends JavaTokenParsers {
       modifiers match {
         case None => value // Naked parenthesis
         case Some(_ ~ None ~ ":") => value // Non-capturing group
-        case Some(_ ~ None ~ "=") => LookaroundExpander.simplify(Lookaround(Ahead, Positive, value))
-        case Some(_ ~ None ~ "!") => LookaroundExpander.simplify(Lookaround(Ahead, Negative, value))
+        case Some(_ ~ None ~ "=") => Lookaround(Ahead, Positive, value)
+        case Some(_ ~ None ~ "!") => Lookaround(Ahead, Negative, value)
         case Some(_ ~ Some("<") ~ ":") => throw new InvalidRegexException("Invalid grouping: <: ")
         case Some(_ ~ Some("<") ~ "=") => Lookaround(Behind, Positive, value)
         case Some(_ ~ Some("<") ~ "!") => Lookaround(Behind, Negative, value)

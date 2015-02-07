@@ -18,6 +18,7 @@ object RegexTree {
   trait ComplexPart extends Node {
     def values: Seq[Node]
     def hasLookarounds = !values.forall(!_.hasLookarounds)
+    def map(fn: Node => Node): ComplexPart 
   }
 
   trait SingleComplexPart extends ComplexPart {
@@ -66,7 +67,9 @@ object RegexTree {
   }
 
   case class Disj(values: Seq[Node]) extends ComplexPart {
+    
     override def toString = s"Disj(${values.mkString(", ")})"
+    
     def length = {
       val lengths = values.map(_.length).collect { case Some(i) => i }
       if (lengths.size == values.size && lengths.toSet.size == 1)
@@ -74,23 +77,34 @@ object RegexTree {
       else
         None
     }
+    
+    def map(fn: Node => Node) = Disj(values.map(fn))
+    
   }
 
   case class Lookaround(dir: Direction.Value, cond: Condition.Value, value: Node) extends SingleComplexPart {
     override def hasLookarounds = true
     def length = throw new AssertionError
+    def map(fn: Node => Node) = copy(value = fn(value))
+    
   }
 
   case class Rep(min: Int, max: Int, value: Node) extends SingleComplexPart {
+    
     def length = (min, max) match {
       case (_, -1) => None
       case (n, m) if n == m => Some(n)
       case (_, _) => None
     }
+    
+    def map(fn: Node => Node) = copy(value = fn(value))
+    
   }
 
   case class Juxt(values: Seq[Node]) extends ComplexPart {
+    
     override def toString = s"Juxt(${values.mkString(", ")})"
+    
     def length = {
       val lengths = values.map(_.length).collect { case Some(i) => i }
       if (lengths.size == values.size)
@@ -98,6 +112,9 @@ object RegexTree {
       else
         None
     }
+    
+    def map(fn: Node => Node) = Juxt(values.map(fn))
+    
   }
 
 }

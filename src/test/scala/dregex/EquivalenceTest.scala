@@ -75,4 +75,9 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(equiv("""\s""", """[ \t\n\r\f]"""))
   }
   
+  test("disjunctions") {
+    val Seq(a, b, c) = Regex.compile(Seq("a|b", "a", "b")).unzip._2
+    assertResult(true)(a equiv (b union c))
+  }
+  
 }

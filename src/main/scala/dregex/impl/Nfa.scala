@@ -32,6 +32,9 @@ object Nfa {
 
   def fromTreeImpl(ast: Node, from: State, to: State): Map[State, Map[NormTree.Char, Set[State]]] = ast match {
 
+    case Juxt(Seq()) =>
+      Map(from -> Map(Epsilon -> Set(to)))
+
     case Juxt(Seq(head)) =>
       fromTreeImpl(head, from, to)
 

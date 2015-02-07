@@ -38,36 +38,15 @@ object LookaroundExpander extends StrictLogging {
   import Direction._
   import Condition._
 
-  /**
-   * Remove trailing stars or question marks in a lookahead, which are meaningless
-   */
-  def simplify(lookaround: Lookaround) = lookaround match {
-    case Lookaround(Ahead, cond, Juxt(init :+ a :+ b :+ Rep(0, max, _))) => Lookaround(Ahead, cond, Juxt(init :+ a :+ b)) // at least two
-    case Lookaround(Ahead, cond, Juxt(Seq(first, Rep(0, max, _)))) => Lookaround(Ahead, cond, first) // one
-    case lookbehind => lookbehind
-  }
-
-  /**
-   * Optimization: combination of consecutive negative lookahead constructions
-   * (?!a)(?!b)(?!c) gets combined to (?!a|b|c), which is faster to process.
-   * This optimization should be applied before the lookarounds are expanded to intersections and differences.
-   */
-  private def combineNegLookaheads(vals: Seq[Node]) = {
-    vals.foldLeft(Seq[Node]()) { (acc, x) =>
-      (acc, x) match {
-        case (init :+ Lookaround(Ahead, Negative, v1), Lookaround(Ahead, Negative, v2)) =>
-          init :+ Lookaround(Ahead, Negative, Disj(Seq(v1, v2)))
-        case _ =>
-          acc :+ x
-      }
-    }
-  }
-
   // TODO: Consider just a LA
   def expandLookarounds(tree: Node): MetaTree = {
     val expanded = tree match {
-      case Juxt(values) =>
-        expandImpl(combineNegLookaheads(values))
+      case la: Lookaround => 
+        expandLookarounds(Juxt(Seq(la)))
+      case juxt: Juxt if canDistribute(juxt) =>
+        expandLookarounds(distributeLookaroundOverDisj(juxt))
+      case juxt: Juxt => 
+        expandImpl(juxt)
       case Disj(values) if values.exists(_.hasLookarounds) =>
         val first +: second +: rest = values
         val op: Operation = (left, right) => left union right
@@ -83,27 +62,54 @@ object LookaroundExpander extends StrictLogging {
       throw new UnsupportedException("lookaround in this position")
     expanded
   }
+  
+  private def canDistribute(juxt: Juxt): Boolean = {
+    val idxDisj = juxt.values.indexWhere(_.isInstanceOf[Disj])
+    if (idxDisj == -1)
+      return false
+    val idxLa = juxt.values.slice(idxDisj + 1, juxt.values.size).indexWhere(_.isInstanceOf[Lookaround])
+    idxLa != -1
+  }
 
-  private def expandImpl(args: Seq[Node]): MetaTree = {
-    findLookaround(args) match {
+  private def distributeLookaroundOverDisj(juxt: Juxt): Node = {
+    val values = juxt.values
+    val idxDisj = values.indexWhere(_.isInstanceOf[Disj])
+    val idxLa = values.slice(idxDisj + 1, values.size).indexWhere(_.isInstanceOf[Lookaround])
+    val disj = values(idxDisj).asInstanceOf[Disj]
+    val prefix = values.slice(0, idxDisj)
+    val suffix = values.slice(idxDisj + 1, values.size)
+    val newDisjValues = for (v <- disj.values) yield {
+      val newJuxt = Juxt((prefix :+ v) ++ suffix)
+      if (canDistribute(newJuxt))
+        distributeLookaroundOverDisj(newJuxt)
+      else
+        newJuxt
+    }
+    Disj(newDisjValues)
+  }
+
+  private def expandImpl(juxt: Juxt): MetaTree = {
+    findLookaround(juxt.values) match {
       case Some(i) =>
-        args(i).asInstanceOf[Lookaround] match {
+        juxt.values(i).asInstanceOf[Lookaround] match {
           case Lookaround(Ahead, cond, value) =>
             val op: Operation = cond match {
               case Positive => (left, right) => left intersect right
               case Negative => (left, right) => left diff right
             }
-            val prefix = args.slice(0, i)
-            for (node <- prefix if node.length.isEmpty)
+            val prefix = juxt.values.slice(0, i)
+            for (node <- prefix if node.length.isEmpty) {
+              logger.trace("lookaround with variable-length prefix: " + node)
               throw new UnsupportedException("lookaround with variable-length prefix")
-            val suffix = args.slice(i + 1, args.size)
+            }
+            val suffix = juxt.values.slice(i + 1, juxt.values.size)
             val wildcard = Rep(min = 0, max = -1, value = Wildcard)
-            TreeOperation(op, expandImpl(prefix ++ suffix), AtomTree(Juxt(prefix :+ value :+ wildcard)))
+            TreeOperation(op, expandImpl(Juxt(prefix ++ suffix)), AtomTree(Juxt(prefix :+ value :+ wildcard)))
           case Lookaround(Behind, cond, value) =>
             throw new UnsupportedException("lookbehind")
         }
       case None =>
-        AtomTree(Juxt(args))
+        AtomTree(juxt)
     }
   }
 
