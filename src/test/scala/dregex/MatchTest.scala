@@ -197,6 +197,36 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matches("\f"))
       assertResult(false)(r.matches("a"))
     }
+    
+    using(Regex.compile("""\D""")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches(""))
+      assertResult(false)(r.matches("0"))
+      assertResult(false)(r.matches("9"))
+      assertResult(true)(r.matches("a"))
+    }
+
+    using(Regex.compile("""\W""")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches(""))
+      assertResult(false)(r.matches("0"))
+      assertResult(false)(r.matches("9"))
+      assertResult(false)(r.matches("a"))
+      assertResult(false)(r.matches("A"))
+      assertResult(false)(r.matches("_"))
+      assertResult(true)(r.matches(":"))
+    }
+
+    using(Regex.compile("""\S""")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches(""))
+      assertResult(false)(r.matches(" "))
+      assertResult(false)(r.matches("\t"))
+      assertResult(false)(r.matches("\n"))
+      assertResult(false)(r.matches("\r"))
+      assertResult(false)(r.matches("\f"))
+      assertResult(true)(r.matches("a"))
+    }
 
   }
 

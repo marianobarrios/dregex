@@ -38,7 +38,6 @@ object LookaroundExpander extends StrictLogging {
   import Direction._
   import Condition._
 
-  // TODO: Consider just a LA
   def expandLookarounds(tree: Node): MetaTree = {
     val expanded = tree match {
       case la: Lookaround => 

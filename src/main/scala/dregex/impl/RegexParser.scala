@@ -24,7 +24,7 @@ class RegexParser extends JavaTokenParsers {
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
 
-  def specialEscape = backslash ~ "[^dwsuUxc01234567]".r ^^ {
+  def specialEscape = backslash ~ "[^dwsDWSuUxc01234567]".r ^^ {
     case _ ~ char =>
       char match {
         case "n" => Lit('\n')
@@ -111,17 +111,29 @@ class RegexParser extends JavaTokenParsers {
   }
 
   /*
-   * Parse: "\d", "\w", "\s"
-   * Production: "\d" -> {:type char-class :args ["0", "1", "2", ..., "9"]}
+   * Parse "\d", "\w", "\s"
    */
   def shorthandCharClass = backslash ~ "[dws]".r ^^ {
     case _ ~ shorthand =>
       val range = shorthand match {
         case "d" => '0' to '9'
-        case "w" => ('0' to '9') ++ ('a' to 'z') ++ ('A' to 'Z') ++ Seq('_')
+        case "w" => ('0' to '9') ++ ('a' to 'z') ++ ('A' to 'Z') :+ '_'
         case "s" => Seq('\n', '\t', '\r', '\f', ' ')
       }
       CharClass(range.map(x => Lit(x)))
+  }
+  
+  /*
+   * Parse "\D", "\W", "\S"
+   */
+  def shorthandNegatedCharClass = backslash ~ "[DWS]".r ^^ {
+    case _ ~ shorthand =>
+      val range = shorthand match {
+        case "D" => '0' to '9'
+        case "W" => ('0' to '9') ++ ('a' to 'z') ++ ('A' to 'Z') :+ '_'
+        case "S" => Seq('\n', '\t', '\r', '\f', ' ')
+      }
+      NegatedCharClass(range.map(x => Lit(x)))
   }
 
   def group = "(" ~ ("?" ~ "<".? ~ "[:=!]".r).? ~ regex ~ ")" ^^ {
@@ -142,7 +154,8 @@ class RegexParser extends JavaTokenParsers {
 
   def charWildcard = "." ^^^ Wildcard
 
-  def regexAtom = charLit | charWildcard | charClass | dashClass | shorthandCharClass | group
+  def regexAtom = 
+    charLit | charWildcard | charClass | dashClass | shorthandCharClass | shorthandNegatedCharClass | group
 
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
   
