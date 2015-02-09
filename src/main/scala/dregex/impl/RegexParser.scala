@@ -12,8 +12,8 @@ class RegexParser extends JavaTokenParsers {
   import RegexTree._
 
   val backslash = """\"""
-  
-  def number = """\d""".r.+ ^^ { s => 
+
+  def number = """\d""".r.+ ^^ { s =>
     try {
       s.mkString.toInt
     } catch {
@@ -72,69 +72,51 @@ class RegexParser extends JavaTokenParsers {
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(x)))
 
   def charLit = anchor | anythingExcept(charSpecial) | anyEscape
+
   def characterClassLit = anythingExcept(charSpecialInsideClasses) | anyEscape
+
+  def singleCharacterClassLit = characterClassLit ^^ (lit => ExtensionCharSet(lit.char))
 
   /*
   * For convenience, character class ranges are implemented at the parser level. This method directly
   * returns a list of all the characters included in the range 
   */
   def charClassRange = characterClassLit ~ "-" ~ characterClassLit ^^ {
-    case start ~ _ ~ end =>
-      (start.char to end.char).map(x => Lit(x))
+    case start ~ _ ~ end => RangeCharSet(start.char, end.char)
   }
 
-  // In order to be compatible with the range, the literal char is also returned as a one-element list.
-  def charClassAtom = (charClassRange | (characterClassLit ^^ (Seq(_))))
+  def charClassAtom = charClassRange | singleCharacterClassLit | shorthandCharSet
 
-  def charClassContent: Parser[Seq[Lit]] = charClassAtom ~ charClassContent.? ^^ {
-    case atom ~ content =>
-      content match {
-        case Some(c) => c ++ atom
-        case None => atom
-      }
-  }
-
-  def charClass = "[" ~ "^".? ~ "-".? ~ charClassContent ~ "-".? ~ "]" ^^ {
+  def charClass = "[" ~ "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? ~ "]" ^^ {
     case _ ~ negated ~ leftDash ~ charClass ~ rightDash ~ _ =>
       val chars = if (leftDash.isDefined || rightDash.isDefined)
-        charClass :+ Lit('-')
+        charClass :+ ExtensionCharSet('-')
       else
         charClass
-      negated.fold[Node](CharClass(chars))(x => NegatedCharClass(chars))
+      negated.fold[Node](CharClass(chars: _*))(x => NegatedCharClass(chars: _*))
   }
 
   // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
   def dashClass = "[" ~ "^".? ~ "-" ~ "]" ^^ {
     case _ ~ negated ~ _ ~ _ =>
-      negated.fold[Node](CharClass(Seq(Lit('-'))))(x => NegatedCharClass(Seq(Lit('-'))))
+      negated.fold[Node](CharClass(ExtensionCharSet('-')))(x => NegatedCharClass(ExtensionCharSet('-')))
   }
 
-  /*
-   * Parse "\d", "\w", "\s"
-   */
-  def shorthandCharClass = backslash ~ "[dws]".r ^^ {
-    case _ ~ shorthand =>
-      val range = shorthand match {
-        case "d" => '0' to '9'
-        case "w" => ('0' to '9') ++ ('a' to 'z') ++ ('A' to 'Z') :+ '_'
-        case "s" => Seq('\n', '\t', '\r', '\f', ' ')
-      }
-      CharClass(range.map(x => Lit(x)))
-  }
+  val numberSet = RangeCharSet('0', '9')
+  val spaceSet = ExtensionCharSet('\n', '\t', '\r', '\f', ' ')
+  val wordSet = MultiRangeCharSet(numberSet, RangeCharSet('a', 'z'), RangeCharSet('A', 'Z'), ExtensionCharSet('_'))
   
-  /*
-   * Parse "\D", "\W", "\S"
-   */
-  def shorthandNegatedCharClass = backslash ~ "[DWS]".r ^^ {
-    case _ ~ shorthand =>
-      val range = shorthand match {
-        case "D" => '0' to '9'
-        case "W" => ('0' to '9') ++ ('a' to 'z') ++ ('A' to 'Z') :+ '_'
-        case "S" => Seq('\n', '\t', '\r', '\f', ' ')
-      }
-      NegatedCharClass(range.map(x => Lit(x)))
+  def shorthandCharSet = backslash ~ "[DWSdws]".r ^^ {
+    case _ ~ "d" => numberSet
+    case _ ~ "D" => CompCharSet(numberSet)
+    case _ ~ "s" => spaceSet
+    case _ ~ "S" => CompCharSet(spaceSet)
+    case _ ~ "w" => wordSet
+    case _ ~ "W" => CompCharSet(wordSet)
   }
+
+  def shorthandCharClass = shorthandCharSet ^^ (set => CharClass(set))
 
   def group = "(" ~ ("?" ~ "<".? ~ "[:=!]".r).? ~ regex ~ ")" ^^ {
     case _ ~ modifiers ~ value ~ _ =>
@@ -154,15 +136,15 @@ class RegexParser extends JavaTokenParsers {
 
   def charWildcard = "." ^^^ Wildcard
 
-  def regexAtom = 
-    charLit | charWildcard | charClass | dashClass | shorthandCharClass | shorthandNegatedCharClass | group
+  def regexAtom =
+    charLit | charWildcard | charClass | dashClass | shorthandCharClass | group
 
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
-  
-  def quantifiedBranch = regexAtom ~ ("+" | "*" | "?") ~ "?".? ^^ { 
-    case atom ~ "+" ~ _ => Rep(min = 1, max = -1, value = atom) 
-    case atom ~ "*" ~ _ => Rep(min = 0, max = -1, value = atom) 
-    case atom ~ "?" ~ _ => Rep(min = 0, max = 1, value = atom) 
+
+  def quantifiedBranch = regexAtom ~ ("+" | "*" | "?") ~ "?".? ^^ {
+    case atom ~ "+" ~ _ => Rep(min = 1, max = -1, value = atom)
+    case atom ~ "*" ~ _ => Rep(min = 0, max = -1, value = atom)
+    case atom ~ "?" ~ _ => Rep(min = 0, max = 1, value = atom)
   }
 
   def generalQuantifier = "{" ~ number ~ ("," ~ number.?).? ~ "}" ~ "?".? ^^ {

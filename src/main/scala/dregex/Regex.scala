@@ -39,8 +39,9 @@ trait Regex {
     var i = 0
     for (char <- string) {
       val currentTrans = genDfa.transitions.getOrElse(current, Map())
-      val effChar = if (universe.alphabet.contains(char))
-        NormTree.Lit(char)
+      val litChar = NormTree.Lit(char)
+      val effChar = if (universe.alphabet.contains(litChar))
+        litChar
       else
         NormTree.Other
       current = currentTrans.get(effChar) match {

@@ -56,16 +56,40 @@ object RegexTree {
     val length = Some(1)
   }
 
-  case class CharClass(chars: Seq[Lit]) extends AtomPart {
-    def atoms = chars.map(_.char)
+  case class CharClass(sets: CharSet*) extends AtomPart {
+    def atoms = sets.map(_.chars).flatten
     val length = Some(1)
   }
 
-  case class NegatedCharClass(chars: Seq[Lit]) extends AtomPart {
-    def atoms = chars.map(_.char)
+  case class NegatedCharClass(sets: CharSet*) extends AtomPart {
+    def atoms = sets.map(_.chars).flatten
     val length = Some(1)
   }
+  
+  trait CharSet {
+    def chars: Seq[Char]
+    def resolve(alphabet: Set[NormTree.SglChar]): Set[NormTree.SglChar]
+  }
+  
+  case class CompCharSet(charSet: CharSet) extends CharSet {
+    def chars = charSet.chars
+    def resolve(alphabet: Set[NormTree.SglChar]) = alphabet diff charSet.resolve(alphabet)
+  }
+  
+  case class ExtensionCharSet(chars: Char*) extends CharSet {
+    def resolve(alphabet: Set[NormTree.SglChar]) = chars.map(NormTree.Lit(_)).toSet
+  }
+  
+  case class RangeCharSet(from: Char, to: Char) extends CharSet {
+    val chars = (from to to).toSeq
+    def resolve(alphabet: Set[NormTree.SglChar]) = (from to to).map(NormTree.Lit(_)).toSet
+  }
 
+  case class MultiRangeCharSet(ranges: CharSet*) extends CharSet {
+    val chars = ranges.map(r => r.chars).flatten
+    def resolve(alphabet: Set[NormTree.SglChar]) = ranges.map(_.chars).flatten.map(NormTree.Lit(_)).toSet
+  }
+  
   case class Disj(values: Seq[Node]) extends ComplexPart {
     
     override def toString = s"Disj(${values.mkString(", ")})"

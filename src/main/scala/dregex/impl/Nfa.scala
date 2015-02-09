@@ -49,6 +49,7 @@ object Nfa {
       }
       mergeTransitions(merged, fromTreeImpl(last, prev, to))
 
+    case Disj(Seq()) => Map()
     case Disj(parts) => mergeTransitions(parts.map(part => fromTreeImpl(part, from, to)): _*)
 
     case Rep(n, -1, value) if n > 0 => fromTreeImpl(Juxt(Seq.fill(n)(value) :+ Rep(0, -1, value)), from, to)
