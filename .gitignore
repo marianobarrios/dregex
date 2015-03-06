@@ -4,3 +4,4 @@ target/
 .cache
 /bin/
 *.log
+.settings
