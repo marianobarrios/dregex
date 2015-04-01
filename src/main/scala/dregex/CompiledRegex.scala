@@ -6,7 +6,7 @@ import dregex.impl.Operations
 import dregex.impl.Util
 
 /**
- * A regular expression that was generated from a string literal.
+ * A fully-compiled regular expression that was generated from a string literal.
  */
 class CompiledRegex private[dregex] (val parsedRegex: ParsedRegex, val universe: Universe)
   extends Regex with StrictLogging {

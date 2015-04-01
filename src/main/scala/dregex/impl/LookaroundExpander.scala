@@ -29,6 +29,7 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
  * (?!B)|B     part of a conjuction
  * (?!(?!B))   lookaround inside lookaround
  * (A(?!B))B   lookaround inside parenthesis
+ * A+(?!B)C    lookaround with variable-length prefix
  *
  * NOTE: Only lookahead is currently implemented
  */

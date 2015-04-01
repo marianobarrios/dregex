@@ -5,6 +5,9 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import dregex.impl.LookaroundExpander
 import dregex.impl.Optimizer
 
+/**
+ * A parsed, but uncompiled regular expression.
+ */
 class ParsedRegex private[dregex] (val tree: RegexTree.Node) extends StrictLogging {
 
   val optimized = Optimizer.optimize(tree)
