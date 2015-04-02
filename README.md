@@ -70,7 +70,7 @@ As the alphabet can be potentially huge (such as Unicode is) something must be d
 * `.` → `<other_char>`
 * `abc.` → `abc(a|b|c|<other_char>)`
 
-Where `<other_char>` is a special metacharacter that matches any of the characters of the alphabet not present in the regex. Note that with this technique knowing the whole alphabet explicitly is not needed. Care must be taken when the regex is meant to be used for an operation with another regex (such as intersection or difference). In this case, <other_char> must match only the characters present in neither regex. 
+Where `<other_char>` is a special metacharacter that matches any of the characters of the alphabet not present in the regex. Note that with this technique knowing the whole alphabet explicitly is not needed. Care must be taken when the regex is meant to be used for an operation with another regex (such as intersection or difference). In this case, `<other_char>` must match only the characters present in neither regex. 
 
 #### Example:
 
