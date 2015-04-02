@@ -1,6 +1,6 @@
 organization := "com.github.marianobarrios"
 name := "dregex"
-version := "0.2-SNAPSHOT"
+version := "0.2.0"
 description := "Deterministic Regular Expressions Engine"
 homepage := Some(url("https://github.com/marianobarrios/dregex"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
