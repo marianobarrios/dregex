@@ -9,7 +9,7 @@ On the other hand, there is a mathematical definition of regular expressions, as
 
 There are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). Nevertheless, backreferences are seldom used in practice and it is possible to select a practical subset of the Perl flavor substantially bigger than their mathematical counterpart (or the POSIX's regex) yet expresable using standard DFA.
 
-Dregex is an attempt to implement such a subset and make a fast implementation.
+Dregex is an attempt to implement such a subset and make a fast implementation for the Java Virtual Machine.
 
 Supported regex flavor
 ----------------------
