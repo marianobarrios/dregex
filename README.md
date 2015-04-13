@@ -5,7 +5,7 @@ Dregex is a Scala/JVM library that implements a regular expression engine using 
 
 Most mainstream engines work with flavors of regular expressions based on the one that appeared Perl 5 in 1994. That flavors include a wide range of features, which make state-machine based implementation impossible. As they rely on recursive backtracking, these engines can also have exponential matching time.
 
-On the other hand, there is a mathematical definition of regular expressions, as they were invented by Stephen Kleene in 1956. In the most minimalistic version these expresions consist of just literal characters, alternation (`|`) and repetition (`*`). They can be matched again arbitrary text of length n in O(n), using a Definite Finite Automaton (DFA). Using DFA also allows to do set operations; i.e., union, intersection and difference.
+On the other hand, there is a mathematical definition of regular expressions, as they were invented by Stephen Kleene in 1956. In the most minimalistic version these expresions consist of just literal characters, alternation ("|") and repetition ("*"). They can be matched again arbitrary text of length n in O(n), using a Definite Finite Automaton (DFA). Using DFA also allows to do set operations; i.e., union, intersection and difference.
 
 There are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). Nevertheless, backreferences are seldom used in practice and it is possible to select a practical subset of the Perl flavor substantially bigger than their mathematical counterpart (or the POSIX's regex) yet expresable using standard DFA.
 
