@@ -1,7 +1,7 @@
 Dregex - Deterministic Regular Expression Engine
 ================================================
 
-Dregex is a Scala/JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features, while retaining linear matching time.
+Dregex is a Scala/JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time.
 
 Most mainstream engines work with flavors of regular expressions based on the one that appeared Perl 5 in 1994. That flavors include a wide range of features, which make state-machine based implementation impossible. As they rely on recursive backtracking, these engines can also have exponential matching time.
 
