@@ -22,7 +22,7 @@ Supported regex flavor
 * General quantifiers: `{n}`, `{n,m}`, `{n,}`
 * Dot wildcards
 * Simple character classes: `[abc]`
-* Simple negated characted classes: `[^abc]`
+* Simple negated character classes: `[^abc]`
 * Ranges in character classes: `[a-z]`
 * Special character classes: `\w`, `\s`, `\d`.
 * Negated special character classes: `\W`, `\S`, `\D`.
@@ -50,7 +50,7 @@ Internals
 
 The library parses the regular expressions and builds a NFA (Nondeterministic Finite Automaton) using a variation of the [Thompson algorithm](http://en.wikipedia.org/w/index.php?title=Thompson%27s_construction_algorithm&oldid=649249684). Then uses the "powerset construction" to build a DFA (Deterministic Finite Automaton). One the DFA is built, the matching algorithm is straightforward.
 
-### Wildcards and characted classes
+### Wildcards and character classes
 
 Character classes are expanded as disjunctions before NFA creation. Respectively, wildcards are expanded as a universal class. 
 
