@@ -116,18 +116,31 @@ object Regex {
   
   def compile(regex: String): CompiledRegex = {
     val tree = parse(regex)
-    new CompiledRegex(tree, new Universe(Seq(tree)))
+    new CompiledRegex(regex, tree, new Universe(Seq(tree)))
   }
 
   def compileParsed(tree: ParsedRegex, universe: Universe): CompiledRegex = {
-    new CompiledRegex(tree, universe)
+    new CompiledRegex(regex, tree, universe)
   }
   
   def compile(regexs: Seq[String]): Seq[(String, CompiledRegex)] = {
     val trees = regexs.map(r => (r, parse(r)))
     val universe = new Universe(trees.unzip._2)
-    for ((regex, tree) <- trees) yield regex -> new CompiledRegex(tree, universe)
+    for ((regex, tree) <- trees) yield regex -> new CompiledRegex(regex, tree, universe)
   }
+
+  def findRelations(func: (Regex, Regex) => Boolean, xs: Seq[String]): Seq[(String, String)] = { 
+    //TODO: make prettier and/or more efficient
+    val rs = Regex compile xs
+    val _perms = rs.combinations(2) ++ rs.combinations(2).map(_.reverse)
+    val perms = _perms.map({case (x :: y :: Nil ) => (x, y)} ) 
+    perms.filter( {case ((_, r1), (_, r2)) => func(r1, r2) }).map( {case ((s1, _), (s2, _)) => (s1, s2) }) toSeq
+  }
+
+  def findSubsetRelations(xs: Seq[String]): Seq[(String, String)] = findRelations(_ isSubsetOf _, xs)
+
+  def findProperSubsetRelations(xs: Seq[String]): Seq[(String, String)] = findRelations(_ isProperSubsetOf _, xs)
+
   
   /**
    * Create a regular expression that does not match anything. Note that that is different from matching the empty 
