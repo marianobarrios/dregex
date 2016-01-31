@@ -89,6 +89,10 @@ trait Regex {
    */
   def doIntersect(other: Regex): Boolean = intersect(other).matchesAnything()
 
+  def isSubsetOf(other: Regex): Boolean =  !(this diff other matchesAnything)
+
+  def isProperSubsetOf(other: Regex): Boolean =  (this isSubsetOf other) && (other diff this matchesAnything) 
+
   /**
    * Return whether this regular expression is equivalent to other. Two regular expressions are equivalent if they
    * match exactly the same set of strings. This operation takes O(n*m) time, where n and m are the number of states of 
