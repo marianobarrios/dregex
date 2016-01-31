@@ -14,6 +14,6 @@ class CompiledRegex private[dregex] (originalString: String, val parsedRegex: Pa
   val (dfa, t2) = Util.time(Operations.resolve(parsedRegex.metaTree, universe))
   logger.trace(s"Time to resolve ${t2 / 1000} ms")
 
-  def toString = originalString
+  override def toString = originalString
 
 }

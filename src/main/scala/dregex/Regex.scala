@@ -119,8 +119,8 @@ object Regex {
     new CompiledRegex(regex, tree, new Universe(Seq(tree)))
   }
 
-  def compileParsed(tree: ParsedRegex, universe: Universe): CompiledRegex = {
-    new CompiledRegex(regex, tree, universe)
+  def compileParsed(originalString: String, tree: ParsedRegex, universe: Universe): CompiledRegex = {
+    new CompiledRegex(originalString, tree, universe)
   }
   
   def compile(regexs: Seq[String]): Seq[(String, CompiledRegex)] = {
