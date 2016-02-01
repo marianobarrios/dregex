@@ -116,17 +116,17 @@ object Regex {
   
   def compile(regex: String): CompiledRegex = {
     val tree = parse(regex)
-    new CompiledRegex(tree, new Universe(Seq(tree)))
+    new CompiledRegex(regex, tree, new Universe(Seq(tree)))
   }
 
-  def compileParsed(tree: ParsedRegex, universe: Universe): CompiledRegex = {
-    new CompiledRegex(tree, universe)
+  def compileParsed(originalString: String, tree: ParsedRegex, universe: Universe): CompiledRegex = {
+    new CompiledRegex(originalString, tree, universe)
   }
   
   def compile(regexs: Seq[String]): Seq[(String, CompiledRegex)] = {
     val trees = regexs.map(r => (r, parse(r)))
     val universe = new Universe(trees.unzip._2)
-    for ((regex, tree) <- trees) yield regex -> new CompiledRegex(tree, universe)
+    for ((regex, tree) <- trees) yield regex -> new CompiledRegex(regex, tree, universe)
   }
   
   /**
