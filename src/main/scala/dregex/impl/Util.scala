@@ -1,6 +1,7 @@
 package dregex.impl
 
 import com.typesafe.scalalogging.slf4j.StrictLogging
+import java.time.Duration
 
 object Util extends StrictLogging {
 
@@ -19,10 +20,10 @@ object Util extends StrictLogging {
 
   def doIntersect[A](left: Set[A], right: Set[A]) = left exists right
 
-  def time[A](thunk: => A): (A, Long) = {
+  def time[A](thunk: => A): (A, Duration) = {
     val start = System.nanoTime()
     val res = thunk
-    val time = (System.nanoTime() - start) / 1000
+    val time = Duration.ofNanos(System.nanoTime() - start)
     (res, time)
   }
 

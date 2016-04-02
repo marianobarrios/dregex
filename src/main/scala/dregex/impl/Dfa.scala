@@ -14,6 +14,8 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
 
   case class BiState(first: State, second: State)
 
+  lazy val stateCount = impl.stateCount
+  
   /*
    * Intersections, unions and differences between DFA are done using the "product construction"
    * The following pages include graphical examples of this technique:
@@ -109,7 +111,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
   }
 
   /**
-   * Return whether a DFA matches anything. A DFA matches at least some language if there is a path from the initial 
+   * Return whether a DFA matches anything. A DFA matches at least some language if there is a path from the initial
    * state to any of the accepting states
    */
   def matchesAnything(): Boolean = {
