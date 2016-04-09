@@ -11,6 +11,11 @@ There are some features of Perl regular expressions that are impossible to expre
 
 Dregex is an attempt to implement such a subset and make a fast implementation for the Java Virtual Machine.
 
+Build
+-----
+
+[![Build Status](https://travis-ci.org/marianobarrios/dregex.svg?branch=master)](https://travis-ci.org/marianobarrios/dregex)
+
 Supported regex flavor
 ----------------------
 
