@@ -15,7 +15,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
   case class BiState(first: State, second: State)
 
   lazy val stateCount = impl.stateCount
-  
+
   /*
    * Intersections, unions and differences between DFA are done using the "product construction"
    * The following pages include graphical examples of this technique:
@@ -45,7 +45,8 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     // the accepting states of the new DFA are formed by the accepting states of the intersecting DFA
     val accepting = for (l <- left.accepting; r <- right.accepting) yield BiState(l, r)
     val genericDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
-    Dfa.fromGenericDfa(genericDfa)
+    val resultDfa = Dfa.fromGenericDfa(genericDfa)
+    resultDfa.removeUnreachableStates()
   }
 
   def diff(other: Dfa): Dfa = {
@@ -56,7 +57,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     val newTransitions = for {
       (leftState, leftCharmap) <- left.transitions
       rightState <- right.allStates.toSeq :+ NullState
-      rightCharmap = right.transitions.getOrElse(rightState, Map())
+      rightCharmap = right.transitionMap(rightState)
       charMap = for {
         char <- allChars
         leftDestState <- leftCharmap.get(char)
@@ -72,7 +73,8 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     // the right DFA that are no accepting
     val accepting = for (l <- left.accepting; r <- right.allButAccepting + NullState) yield BiState(l, r)
     val genericDfa = GenericDfa[BiState](newInitial, newTransitions, accepting)
-    Dfa.fromGenericDfa(genericDfa)
+    val resultDfa = Dfa.fromGenericDfa(genericDfa)
+    resultDfa.removeUnreachableStates()
   }
 
   def union(other: Dfa): Dfa = {
@@ -82,9 +84,9 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     val newInitial = BiState(left.initial, right.initial)
     val newTransitions = for {
       leftState <- left.allStates.toSeq :+ NullState
-      leftCharmap = left.transitions.getOrElse(leftState, Map())
+      leftCharmap = left.transitionMap(leftState)
       rightState <- right.allStates.toSeq :+ NullState
-      rightCharmap = right.transitions.getOrElse(rightState, Map())
+      rightCharmap = right.transitionMap(rightState)
       charMap = for {
         char <- allChars
         leftDestState = leftCharmap.getOrElse(char, NullState)
@@ -107,7 +109,8 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       BiState(l, r)
     }
     val genericDfa = GenericDfa[BiState](newInitial, newTransitions.toMap, accepting)
-    Dfa.fromGenericDfa(genericDfa)
+    val resultDfa = Dfa.fromGenericDfa(genericDfa)
+    resultDfa.removeUnreachableStates()
   }
 
   /**
@@ -122,7 +125,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       } else {
         visited += current
         for {
-          targetState <- impl.transitions.getOrElse(current, Map()).values
+          targetState <- impl.transitionMap(current).values
           if !visited.contains(targetState)
         } {
           if (hasPathToAccepting(targetState))
@@ -132,6 +135,26 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       }
     }
     hasPathToAccepting(impl.initial)
+  }
+
+  def removeUnreachableStates(): Dfa = {
+    val visited = collection.mutable.Set[State]()
+    val pending = collection.mutable.Queue(impl.initial)
+    while (!pending.isEmpty) {
+      val currentState = pending.dequeue()
+      visited += currentState
+      for {
+        targetState <- impl.transitionMap(currentState).values.toSet
+        if !visited.contains(targetState)
+      } {
+        pending.enqueue(targetState)
+      }
+    }
+    // using set as function
+    val filteredTransitions = impl.transitions.filterKeys(visited)
+    val filteredAccepting = impl.accepting.filter(visited)
+    val genericDfa = GenericDfa(impl.initial, filteredTransitions, filteredAccepting)
+    Dfa.fromGenericDfa(genericDfa)
   }
 
   /**
@@ -225,6 +248,7 @@ object Dfa extends StrictLogging {
     fromGenericDfa(genericDfa, minimal)
   }
 
-  def fromGenericDfa[A](genericDfa: GenericDfa[A], minimal: Boolean = false) = new Dfa(genericDfa.rewrite(() => new State))
+  def fromGenericDfa[A](genericDfa: GenericDfa[A], minimal: Boolean = false) =
+    new Dfa(genericDfa.rewrite(() => new State), minimal)
 
 }

@@ -16,6 +16,8 @@ case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A
   
   lazy val stateCount = allStates.size
   
+  def transitionMap(state: A) = transitions.getOrElse(state, Map.empty)
+    
   /**
    * Rewrite a DFA using canonical names for the states.
    * Useful for simplifying the DFA product of intersections or NFA conversions.
