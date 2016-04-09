@@ -11,10 +11,10 @@ There are some features of Perl regular expressions that are impossible to expre
 
 Dregex is an attempt to implement such a subset and make a fast implementation for the Java Virtual Machine.
 
-Build
------
-
 [![Build Status](https://travis-ci.org/marianobarrios/dregex.svg?branch=master)](https://travis-ci.org/marianobarrios/dregex)
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.11)
+[![Scaladoc](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.11.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.11)
 
 Supported regex flavor
 ----------------------
@@ -42,11 +42,6 @@ Supported regex flavor
 
 * Lookaround in arbitrary positions
 * Backreferences
-
-API
----
-
-The scaladoc for the API can be found [here](http://www.javadoc.io/doc/com.github.marianobarrios/dregex_2.11/0.2-RC2).
 
 Internals
 ---------
