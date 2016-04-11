@@ -1,12 +1,12 @@
 organization := "com.github.marianobarrios"
 name := "dregex"
-version := "0.2-SNAPSHOT"
+version := "0.4.0-SNAPSHOT"
 description := "Deterministic Regular Expressions Engine"
 homepage := Some(url("https://github.com/marianobarrios/dregex"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
 
-scalaVersion := "2.11.5"
-crossScalaVersions := Seq("2.10.4", "2.11.5")
+scalaVersion := "2.11.8"
+crossScalaVersions := Seq("2.10.6", "2.11.8")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
@@ -31,14 +31,14 @@ scalacOptions := Seq(
 	
 libraryDependencies ++= 
   "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" ::
-  "org.scalatest" %% "scalatest" % "2.2.4" % "test" ::
-  "ch.qos.logback" % "logback-classic" % "1.1.2" % Test ::
+  "org.scalatest" %% "scalatest" % "2.2.6" % "test" ::
+  "ch.qos.logback" % "logback-classic" % "1.1.7" % Test ::
   Nil
 
 libraryDependencies := {
   CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, major)) if major >= 11 =>
-      libraryDependencies.value ++ Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3")
+      libraryDependencies.value ++ Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4")
     case _ =>
       libraryDependencies.value
   }
