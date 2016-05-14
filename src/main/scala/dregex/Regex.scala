@@ -40,7 +40,7 @@ trait Regex extends StrictLogging {
     var current = genDfa.initial
     var i = 0
     for (char <- string) {
-      val currentTrans = genDfa.transitions.getOrElse(current, Map())
+      val currentTrans = genDfa.defTransitions.getOrElse(current, Map())
       val litChar = NormTree.Lit(char)
       val effChar = if (universe.alphabet.contains(litChar))
         litChar

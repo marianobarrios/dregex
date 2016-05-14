@@ -3,21 +3,31 @@ package dregex.impl
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import Util.StrictMap
 
-case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A]], accepting: Set[A]) extends StrictLogging {
+case class GenericDfa[A](initial: A, defTransitions: Map[A, Map[NormTree.SglChar, A]], accepting: Set[A]) 
+    extends Automaton[A, NormTree.SglChar] with StrictLogging {
 
   override def toString() = s"initial: $initial; transitions: $transitions; accepting: $accepting"
 
   lazy val allStates =
-    Set(initial) union transitions.keySet union transitions.values.map(_.values).flatten.toSet union accepting
+    Set(initial) union defTransitions.keySet union defTransitions.values.map(_.values).flatten.toSet union accepting
 
   lazy val allButAccepting = allStates diff accepting
 
-  lazy val allChars = transitions.values.map(_.keys).flatten.toSet
+  lazy val allChars = defTransitions.values.map(_.keys).flatten.toSet
   
   lazy val stateCount = allStates.size
   
-  def transitionMap(state: A) = transitions.getOrElse(state, Map.empty)
+  def transitionMap(state: A) = defTransitions.getOrElse(state, Map.empty)
     
+  def transitions = {
+    for ((state, transitionMap) <- defTransitions) yield {
+      state -> (for ((char, target) <- transitionMap) yield {
+        char -> Set(target)
+      })
+    }
+  }
+  
+  
   /**
    * Rewrite a DFA using canonical names for the states.
    * Useful for simplifying the DFA product of intersections or NFA conversions.
@@ -27,7 +37,7 @@ case class GenericDfa[A](initial: A, transitions: Map[A, Map[NormTree.SglChar, A
     val mapping = (for (state <- allStates) yield state -> stateFactory()).toMap
     GenericDfa[B](
       initial = mapping(initial),
-      transitions = for ((s, fn) <- transitions) yield mapping(s) -> fn.mapValuesNow(mapping),
+      defTransitions = for ((s, fn) <- defTransitions) yield mapping(s) -> fn.mapValuesNow(mapping),
       accepting = accepting.map(mapping))
   }
 

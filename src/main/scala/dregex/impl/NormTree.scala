@@ -6,7 +6,7 @@ object NormTree {
 
   trait Char extends Node
   trait SglChar extends Char
-  
+
   case object Other extends SglChar {
     override def toString = "other"
   }

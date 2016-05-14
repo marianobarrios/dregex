@@ -12,7 +12,11 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
 
   override def toString() = impl.toString
 
-  case class BiState(first: State, second: State)
+  case class BiState(first: State, second: State) {
+    override def toString() = {
+      s"$first,$second"
+    }
+  }
 
   lazy val stateCount = impl.stateCount
 
@@ -29,8 +33,8 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     val commonChars = left.allChars intersect right.allChars
     val newInitial = BiState(left.initial, right.initial)
     val newTransitions = for {
-      (leftState, leftCharmap) <- left.transitions
-      (rightState, rightCharmap) <- right.transitions
+      (leftState, leftCharmap) <- left.defTransitions
+      (rightState, rightCharmap) <- right.defTransitions
       charMap = for {
         char <- commonChars
         leftDestState <- leftCharmap.get(char)
@@ -55,7 +59,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     val allChars = left.allChars union right.allChars
     val newInitial = BiState(left.initial, right.initial)
     val newTransitions = for {
-      (leftState, leftCharmap) <- left.transitions
+      (leftState, leftCharmap) <- left.defTransitions
       rightState <- right.allStates.toSeq :+ NullState
       rightCharmap = right.transitionMap(rightState)
       charMap = for {
@@ -151,7 +155,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       }
     }
     // using set as function
-    val filteredTransitions = impl.transitions.filterKeys(visited)
+    val filteredTransitions = impl.defTransitions.filterKeys(visited)
     val filteredAccepting = impl.accepting.filter(visited)
     val genericDfa = GenericDfa(impl.initial, filteredTransitions, filteredAccepting)
     Dfa.fromGenericDfa(genericDfa)
@@ -174,7 +178,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     val initial = new State
     val epsilon: NormTree.Char = NormTree.Epsilon
     val first = Map(initial -> Map(epsilon -> impl.accepting))
-    val rest = for ((from, fn) <- impl.transitions; (char, to) <- fn) yield {
+    val rest = for ((from, fn) <- impl.defTransitions; (char, to) <- fn) yield {
       Map(to -> Map[NormTree.Char, Set[State]](char -> Set(from)))
     }
     val accepting = Set(impl.initial)
@@ -188,9 +192,13 @@ object Dfa extends StrictLogging {
   /**
    * Match-nothing DFA
    */
-  val NothingDfa = new Dfa(GenericDfa[State](initial = new State, transitions = Map(), accepting = Set()))
+  val NothingDfa = new Dfa(GenericDfa[State](initial = new State, defTransitions = Map(), accepting = Set()))
 
-  case class MultiState(states: Set[State])
+  case class MultiState(states: Set[State]) {
+    override def toString() = {
+      states.mkString(",")
+    }
+  }
 
   /**
    * Produce a DFA from a NFA using the 'power set construction'

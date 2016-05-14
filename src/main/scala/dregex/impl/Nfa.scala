@@ -1,6 +1,8 @@
 package dregex.impl
 
-case class Nfa(initial: State, transitions: Map[State, Map[NormTree.Char, Set[State]]], accepting: Set[State]) {
+case class Nfa(initial: State, transitions: Map[State, Map[NormTree.Char, Set[State]]], accepting: Set[State]) 
+  extends Automaton[State, NormTree.Char] {
+  
   override def toString() = {
     val transList = for ((state, charMap) <- transitions) yield {
       val map = for ((char, destination) <- charMap) yield s"$char -> ${destination.mkString("|")}"
@@ -9,6 +11,14 @@ case class Nfa(initial: State, transitions: Map[State, Map[NormTree.Char, Set[St
     val trans = transList.mkString(", ")
     s"initial: $initial; transitions: $trans; accepting: $accepting"
   }
+  
+  lazy val allStates = {
+    Set(initial) ++ 
+      transitions.keySet ++
+      transitions.values.map(_.values).toSet.flatten.flatten ++
+      accepting
+  }
+
 }
 
 /**
@@ -27,7 +37,7 @@ object Nfa {
     val initial = new State
     val accepting = new State
     val transitions = fromTreeImpl(ast, initial, accepting)
-    Nfa(initial, transitions, Set(accepting))
+    return Nfa(initial, transitions, Set(accepting))
   }
 
   def fromTreeImpl(ast: Node, from: State, to: State): Map[State, Map[NormTree.Char, Set[State]]] = ast match {
