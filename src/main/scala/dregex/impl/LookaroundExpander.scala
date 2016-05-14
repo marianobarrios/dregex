@@ -103,7 +103,7 @@ object LookaroundExpander extends StrictLogging {
               throw new UnsupportedException("lookaround with variable-length prefix")
             }
             val suffix = juxt.values.slice(i + 1, juxt.values.size)
-            val wildcard = Rep(min = 0, max = -1, value = Wildcard)
+            val wildcard = Rep(min = 0, max = None, value = Wildcard)
             TreeOperation(op, expandImpl(Juxt(prefix ++ suffix)), AtomTree(Juxt(prefix :+ value :+ wildcard)))
           case Lookaround(Behind, cond, value) =>
             throw new UnsupportedException("lookbehind")

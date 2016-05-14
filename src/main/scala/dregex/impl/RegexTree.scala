@@ -113,11 +113,11 @@ object RegexTree {
     
   }
 
-  case class Rep(min: Int, max: Int, value: Node) extends SingleComplexPart {
+  case class Rep(min: Int, max: Option[Int], value: Node) extends SingleComplexPart {
     
     def length = (min, max) match {
-      case (_, -1) => None
-      case (n, m) if n == m => Some(n)
+      case (_, None) => None
+      case (n, Some(m)) if n == m => Some(n)
       case (_, _) => None
     }
     

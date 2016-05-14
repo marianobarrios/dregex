@@ -142,24 +142,24 @@ class RegexParser extends JavaTokenParsers {
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
 
   def quantifiedBranch = regexAtom ~ ("+" | "*" | "?") ~ "?".? ^^ {
-    case atom ~ "+" ~ _ => Rep(min = 1, max = -1, value = atom)
-    case atom ~ "*" ~ _ => Rep(min = 0, max = -1, value = atom)
-    case atom ~ "?" ~ _ => Rep(min = 0, max = 1, value = atom)
+    case atom ~ "+" ~ _ => Rep(min = 1, max = None, value = atom)
+    case atom ~ "*" ~ _ => Rep(min = 0, max = None, value = atom)
+    case atom ~ "?" ~ _ => Rep(min = 0, max = Some(1), value = atom)
   }
 
   def generalQuantifier = "{" ~ number ~ ("," ~ number.?).? ~ "}" ~ "?".? ^^ {
     case _ ~ minVal ~ Some(comma ~ Some(maxVal)) ~ _ ~ _ =>
       // Quantifiers of the for {min,max}
       if (minVal <= maxVal)
-        (minVal, maxVal)
+        (minVal, Some(maxVal))
       else
         throw new InvalidRegexException("invalid range in quantifier")
     case _ ~ minVal ~ Some(comma ~ None) ~ _ ~ _ =>
       // Quantifiers of the form {min,}
-      (minVal, -1)
+      (minVal, None)
     case _ ~ minVal ~ None ~ _ ~ _ =>
       // Quantifiers of the form "{n}", the value is captured as "min", despite being also the max
-      (minVal, minVal)
+      (minVal, Some(minVal))
   }
 
   def generallyQuantifiedBranch = regexAtom ~ generalQuantifier ^^ {

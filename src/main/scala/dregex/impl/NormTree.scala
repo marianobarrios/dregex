@@ -23,10 +23,14 @@ object NormTree {
     override def toString = s"Disj(${values.mkString(", ")})"
   }
 
-  case class Rep(min: Int, max: Int, value: Node) extends Node
+  /**
+   * A repetition of at least {@link #min} up to {@link #max}. 
+   * If {@link #max} is {@link Option#None} it means infinite.
+   */
+  case class Rep(min: Int, max: Option[Int], value: Node) extends Node
 
   case class Juxt(values: Seq[Node]) extends Node {
     override def toString = s"Juxt(${values.mkString(", ")})"
   }
-  
+
 }
