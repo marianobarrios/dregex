@@ -1,13 +1,16 @@
 package dregex.impl
 
+import dregex.impl.RegexTree.AtomPart
+
 /**
  * Take a regex AST and produce a NFA.
  * Except when noted the Thompson-McNaughton-Yamada algorithm is used.
  * Reference: http://stackoverflow.com/questions/11819185/steps-to-creating-an-nfa-from-a-regular-expression
  */
-object Compiler {
+class Compiler(alphabet: Set[RegexTree.SglChar]) {
 
-  import NormTree._
+  import RegexTree._
+  import Compiler.mergeTransitions
 
   /**
    * Transform a regular expression abstract syntax tree into a corresponding NFA
@@ -20,16 +23,48 @@ object Compiler {
     Dfa.fromNfa(nfa)
   }
 
-  private def fromTreeImpl(ast: Node, from: State, to: State): Map[State, Map[Char, Set[State]]] = {
-    ast match {
+  private def fromTreeImpl(node: Node, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+    node match {
+      case Wildcard =>
+        fromTreeImpl(Disj(alphabet.toSeq), from, to)
 
-      // base case
+      case CharClass(sets @ _*) =>
+        fromTreeImpl(Disj(sets.map(_.resolve(alphabet)).flatten), from, to)
 
-      case c: Char =>
-        Map(from -> Map(c -> Set(to)))
+      case NegatedCharClass(sets @ _*) =>
+        fromTreeImpl(Disj((alphabet diff sets.map(_.resolve(alphabet)).flatten.toSet).toSeq), from, to)
 
-      // juxtaposition and disjunction
+      case sglChar: SglChar =>
+        Map(from -> Map(sglChar -> Set(to)))
 
+      case Epsilon =>
+        Map(from -> Map(Epsilon -> Set(to)))
+
+      case juxt: Juxt =>
+        processJuxt(juxt, from, to)
+        
+      case disj: Disj =>
+        processDisj(disj, from, to)
+        
+      case rep: Rep =>
+        processRep(rep, from, to)
+
+      case Intersection(left, right) =>
+        processOp(left, right, from, to, (l, r) => l intersect r)
+
+      case Union(left, right) =>
+        processOp(left, right, from, to, (l, r) => l union r)
+
+      case Difference(left, right) =>
+        processOp(left, right, from, to, (l, r) => l diff r)
+
+      case _: Lookaround =>
+        throw new IllegalStateException("lookaround should have been expanded by this time")
+    }
+  }
+
+  private def processJuxt(juxt: Juxt, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+    juxt match {
       case Juxt(Seq()) =>
         Map(from -> Map(Epsilon -> Set(to)))
 
@@ -38,7 +73,7 @@ object Compiler {
 
       case Juxt(init :+ last) =>
         // doing this iteratively prevents stack overflows in the case of long literal strings 
-        var merged = Map[State, Map[Char, Set[State]]]()
+        var merged = Map[State, Map[AtomPart, Set[State]]]()
         var prev = from
         for (part <- init) {
           val int = new State
@@ -46,12 +81,20 @@ object Compiler {
           prev = int
         }
         mergeTransitions(merged, fromTreeImpl(last, prev, to))
+    }
+  }
 
+  private def processDisj(disj: Disj, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+    disj match {
       case Disj(Seq()) =>
         Map()
-
       case Disj(parts) =>
         mergeTransitions(parts.map(part => fromTreeImpl(part, from, to)): _*)
+    }
+  }
+
+  private def processRep(rep: Rep, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+    rep match {
 
       // trivial cases
 
@@ -107,7 +150,7 @@ object Compiler {
 
       case Rep(0, Some(m), value) if m > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
-        var merged = Map[State, Map[Char, Set[State]]]()
+        var merged = Map[State, Map[AtomPart, Set[State]]]()
         var prev = from
         for (i <- 0 until m - 1) {
           val int = new State
@@ -116,20 +159,6 @@ object Compiler {
         }
         mergeTransitions(merged, fromTreeImpl(value, prev, to), Map(prev -> Map(Epsilon -> Set(to))))
 
-      // set operations
-
-      case Intersection(left, right) =>
-        processOp(left, right, from, to, (l, r) => l intersect r)
-
-      case Union(left, right) =>
-        processOp(left, right, from, to, (l, r) => l union r)
-
-      case Difference(left, right) =>
-        processOp(left, right, from, to, (l, r) => l diff r)
-
-        
-      case _: Lookaround =>
-        throw new IllegalStateException("lookaround should have been expanded by this time")
     }
   }
 
@@ -137,7 +166,7 @@ object Compiler {
     val leftDfa = fromTree(left)
     val rightDfa = fromTree(right)
     val result = operation(leftDfa, rightDfa).toNfa()
-    val e: Char = Epsilon // upcast
+    val e: AtomPart = Epsilon // upcast
     mergeTransitions(
       Seq(
         result.transitions,
@@ -145,10 +174,12 @@ object Compiler {
         result.accepting.toSeq.map(acc => Map(acc -> Map(e -> Set(to)))): _*)
   }
 
-  def mergeTransitions(transitions: Map[State, Map[Char, Set[State]]]*): Map[State, Map[Char, Set[State]]] = {
+}
+
+object Compiler {
+  def mergeTransitions(transitions: Map[State, Map[AtomPart, Set[State]]]*): Map[State, Map[AtomPart, Set[State]]] = {
     transitions.reduce { (left, right) =>
       Util.merge(left, right)(Util.mergeWithUnion)
     }
   }
-
 }

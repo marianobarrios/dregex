@@ -1,8 +1,8 @@
 package dregex.extra
 
 import dregex.impl.Nfa
-import dregex.impl.NormTree
 import dregex.impl.Automaton
+import dregex.impl.RegexTree
 
 object DotFormatter {
   
@@ -23,7 +23,7 @@ object DotFormatter {
       (char, targetSet) <- localMap
       to <- targetSet
     } yield {
-      val weight = if (char == NormTree.Epsilon)
+      val weight = if (char == RegexTree.Epsilon)
         1
       else
         2

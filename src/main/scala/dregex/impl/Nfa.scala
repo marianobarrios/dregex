@@ -1,7 +1,7 @@
 package dregex.impl
 
-case class Nfa(initial: State, transitions: Map[State, Map[NormTree.Char, Set[State]]], accepting: Set[State])
-    extends Automaton[State, NormTree.Char] {
+case class Nfa(initial: State, transitions: Map[State, Map[RegexTree.AtomPart, Set[State]]], accepting: Set[State])
+    extends Automaton[State, RegexTree.AtomPart] {
 
   override def toString() = {
     val transList = for ((state, charMap) <- transitions) yield {

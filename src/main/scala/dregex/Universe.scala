@@ -1,7 +1,7 @@
 package dregex
 
-import dregex.impl.Normalizer
-import dregex.impl.NormTree
+import dregex.impl.RegexTree
+import dregex.impl.AlphabetCollector
 
 /**
  * Represent the set of characters that is the union of the sets of characters of a group of regular expressions.
@@ -9,8 +9,10 @@ import dregex.impl.NormTree
  */
 class Universe(parsedRegex: Seq[ParsedRegex]) {
 
-  val alphabet: Set[NormTree.SglChar] =
-    parsedRegex.map(r => Normalizer.alphabet(r.tree)).flatten.map(NormTree.Lit(_)).toSet + NormTree.Other
+  val alphabet: Set[RegexTree.SglChar] = {
+    val specifiedAlphabet = parsedRegex.map(r => AlphabetCollector.collect(r.tree)).flatten
+    specifiedAlphabet.map(RegexTree.Lit(_)).toSet + RegexTree.Other
+  }
 
   // TODO: toString using hash
 

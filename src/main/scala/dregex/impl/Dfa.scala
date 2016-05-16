@@ -7,7 +7,8 @@ import scala.collection.mutable
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import Util.StrictMap
-import dregex.impl.NormTree.SglChar
+import dregex.impl.RegexTree.SglChar
+import dregex.impl.RegexTree.Epsilon
 
 class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends StrictLogging {
 
@@ -179,10 +180,10 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
 
   def reverse(): Nfa = {
     val initial = new State
-    val epsilon: NormTree.Char = NormTree.Epsilon
+    val epsilon: RegexTree.AtomPart = RegexTree.Epsilon
     val first = Map(initial -> Map(epsilon -> impl.accepting))
     val rest = for ((from, fn) <- impl.defTransitions; (char, to) <- fn) yield {
-      Map(to -> Map[NormTree.Char, Set[State]](char -> Set(from)))
+      Map(to -> Map[RegexTree.AtomPart, Set[State]](char -> Set(from)))
     }
     val accepting = Set(impl.initial)
     Nfa(initial, Compiler.mergeTransitions((first +: rest.toSeq): _*), accepting)
@@ -194,7 +195,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
   def toNfa(): Nfa = {
     val transitions = impl.defTransitions.mapValuesNow { transitionMap =>
       for ((char, target) <- transitionMap) yield {
-        val genericChar: NormTree.Char = char
+        val genericChar: RegexTree.AtomPart = char
         genericChar -> Set(target)
       }
     }
@@ -222,7 +223,7 @@ object Dfa extends StrictLogging {
    */
   def fromNfa(nfa: Nfa, minimal: Boolean = false): Dfa = {
     val epsilonFreeTransitions = nfa.transitions.mapValuesNow { trans =>
-      for ((char: NormTree.SglChar, target) <- trans) yield char -> target // partial function!
+      for ((char: RegexTree.SglChar, target) <- trans) yield char -> target // partial function!
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
     // Given a transition map and a set of states of a NFA, this function augments that set, following all epsilon
@@ -235,7 +236,7 @@ object Dfa extends StrictLogging {
     @tailrec
     def followEpsilonImpl(current: Set[State]): MultiState = {
       val immediate = for (state <- current) yield {
-        nfa.transitions.getOrElse(state, Map()).getOrElse(NormTree.Epsilon, Set())
+        nfa.transitions.getOrElse(state, Map()).getOrElse(Epsilon, Set())
       }
       val expanded = immediate.fold(current)(_ union _)
       if (expanded == current)

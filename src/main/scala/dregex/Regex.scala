@@ -2,9 +2,9 @@ package dregex
 
 import dregex.impl.RegexParser
 import dregex.impl.Dfa
-import dregex.impl.NormTree
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import dregex.impl.Util
+import dregex.impl.RegexTree
 
 /**
  * A regular expression, ready to be tested against strings, or to take part in an operation against another.
@@ -41,11 +41,11 @@ trait Regex extends StrictLogging {
     var i = 0
     for (char <- string) {
       val currentTrans = genDfa.defTransitions.getOrElse(current, Map())
-      val litChar = NormTree.Lit(char)
+      val litChar = RegexTree.Lit(char)
       val effChar = if (universe.alphabet.contains(litChar))
         litChar
       else
-        NormTree.Other
+        RegexTree.Other
       current = currentTrans.get(effChar) match {
         case Some(newState) => newState
         case None => return (false, i)
