@@ -181,26 +181,28 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
   def reverse(): Nfa = {
     val initial = new State
     val epsilon: RegexTree.AtomPart = RegexTree.Epsilon
-    val first = Map(initial -> Map(epsilon -> impl.accepting))
-    val rest = for ((from, fn) <- impl.defTransitions; (char, to) <- fn) yield {
-      val genericChar: RegexTree.AtomPart = char
-      Map(to -> Map(genericChar -> Set(from)))
+    val first = impl.accepting.toSeq.map(s => NfaTransition(initial, s, epsilon))
+    val rest = for {
+      (from, fn) <- impl.defTransitions
+      (char, to) <- fn 
+    } yield {
+      NfaTransition(to, from, char)
     }
     val accepting = Set(impl.initial)
-    Nfa(initial, Compiler.mergeTransitions((first +: rest.toSeq): _*), accepting)
+    Nfa(initial, first ++ rest.toSeq, accepting)
   }
   
   /** 
    * Each DFA is also trivially a NFA, return it.
    */
   def toNfa(): Nfa = {
-    val transitions = impl.defTransitions.mapValuesNow { transitionMap =>
-      for ((char, target) <- transitionMap) yield {
-        val genericChar: RegexTree.AtomPart = char
-        genericChar -> Set(target)
-      }
+    val transitions = for {
+      (state, transitionMap) <- impl.defTransitions
+      (char, target) <- transitionMap
+    } yield {
+        NfaTransition(state, target, char)
     }
-    Nfa(impl.initial, transitions, impl.accepting)
+    Nfa(impl.initial, transitions.toSeq, impl.accepting)
   }
 
 }
@@ -223,8 +225,18 @@ object Dfa extends StrictLogging {
    * https://en.wikipedia.org/w/index.php?title=Powerset_construction&oldid=547783241
    */
   def fromNfa(nfa: Nfa, minimal: Boolean = false): Dfa = {
-    val epsilonFreeTransitions = nfa.transitions.mapValuesNow { trans =>
-      for ((char: RegexTree.NonEmptyChar, target) <- trans) yield char -> target // partial function!
+    /*
+     * Group the list of transitions of the NFA into a nested map, for easy lookup.
+     * The rest of this method will use this map instead of the original list.
+     */
+    val transitionMap = nfa.transitions.groupBy(_.from).mapValuesNow { stateTransitions =>
+      stateTransitions.groupBy(_.char).mapValuesNow { states =>
+        states.map(_.to).toSet
+      }
+    }
+    val epsilonFreeTransitions = transitionMap.mapValuesNow { trans =>
+      // warn: partial function in for comprehension!
+      for ((char: RegexTree.NonEmptyChar, target) <- trans) yield char -> target
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
     // Given a transition map and a set of states of a NFA, this function augments that set, following all epsilon
@@ -237,7 +249,7 @@ object Dfa extends StrictLogging {
     @tailrec
     def followEpsilonImpl(current: Set[State]): MultiState = {
       val immediate = for (state <- current) yield {
-        nfa.transitions.getOrElse(state, Map()).getOrElse(Epsilon, Set())
+        transitionMap.getOrElse(state, Map()).getOrElse(Epsilon, Set())
       }
       val expanded = immediate.fold(current)(_ union _)
       if (expanded == current)

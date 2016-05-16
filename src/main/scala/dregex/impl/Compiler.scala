@@ -2,6 +2,7 @@ package dregex.impl
 
 import dregex.impl.RegexTree.AtomPart
 import dregex.UnsupportedException
+import scala.collection.mutable.Buffer
 
 /**
  * Take a regex AST and produce a NFA.
@@ -11,7 +12,6 @@ import dregex.UnsupportedException
 class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
 
   import RegexTree._
-  import Compiler.mergeTransitions
 
   /**
    * Transform a regular expression abstract syntax tree into a corresponding NFA
@@ -24,24 +24,24 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
     Dfa.fromNfa(nfa)
   }
 
-  private def fromTreeImpl(node: Node, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+  private def fromTreeImpl(node: Node, from: State, to: State): Seq[NfaTransition] = {
     node match {
       // base case
-      case char: AtomPart => Map(from -> Map(char -> Set(to)))
+      case char: AtomPart => Seq(NfaTransition(from, to, char))
       // recurse
-      case exp: ExpandiblePart => processExpandibleAtom(exp, from, to)
+      case exp: ExpandiblePart => processExpandiblePart(exp, from, to)
       case juxt: Juxt => processJuxt(combineNegLookaheads(juxt), from, to)
       case la: Lookaround => fromTreeImpl(Juxt(Seq(la)), from, to)
       case disj: Disj => processDisj(disj, from, to)
       case rep: Rep => processRep(rep, from, to)
-      case Intersection(left, right) => processOp(left, right, from, to, (l, r) => l intersect r)
-      case Union(left, right) => processOp(left, right, from, to, (l, r) => l union r)
-      case Difference(left, right) => processOp(left, right, from, to, (l, r) => l diff r)
+      case Intersection(left, right) => processOp((l, r) => l intersect r, left, right, from, to)
+      case Union(left, right) => processOp((l, r) => l union r, left, right, from, to)
+      case Difference(left, right) => processOp((l, r) => l diff r, left, right, from, to)
     }
   }
 
-  private def processExpandibleAtom(atom: ExpandiblePart, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
-    atom match {
+  private def processExpandiblePart(part: ExpandiblePart, from: State, to: State): Seq[NfaTransition] = {
+    part match {
       case Wildcard =>
         fromTreeImpl(Disj(alphabet.toSeq), from, to)
 
@@ -64,7 +64,7 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
    *
    * NOTE: Only lookahead is currently implemented
    */
-  private def processJuxt(juxt: Juxt, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+  private def processJuxt(juxt: Juxt, from: State, to: State): Seq[NfaTransition] = {
     import Direction._
     import Condition._
     findLookaround(juxt.values) match {
@@ -78,7 +78,10 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
               case Positive => Intersection(Juxt(suffix), Juxt(Seq(value, wildcard)))
               case Negative => Difference(Juxt(suffix), Juxt(Seq(value, wildcard)))
             }
-            fromTreeImpl(Juxt(prefix :+ rightSide), from, to)
+            if (prefix.isEmpty)
+              fromTreeImpl(rightSide, from, to)
+            else
+              fromTreeImpl(Juxt(prefix :+ rightSide), from, to)
           case Lookaround(Behind, cond, value) =>
             throw new UnsupportedException("lookbehind")
         }
@@ -111,37 +114,38 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
     Juxt(newValues)
   }
 
-  private def processJuxtNoLookaround(juxt: Juxt, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+  private def processJuxtNoLookaround(juxt: Juxt, from: State, to: State): Seq[NfaTransition] = {
     juxt match {
       case Juxt(Seq()) =>
-        Map(from -> Map(Epsilon -> Set(to)))
+        Seq(NfaTransition(from, to, Epsilon))
 
       case Juxt(Seq(head)) =>
         fromTreeImpl(head, from, to)
 
       case Juxt(init :+ last) =>
         // doing this iteratively prevents stack overflows in the case of long literal strings 
-        var merged = Map[State, Map[AtomPart, Set[State]]]()
+        val transitions = Buffer[NfaTransition]()
         var prev = from
         for (part <- init) {
           val int = new State
-          merged = mergeTransitions(merged, fromTreeImpl(part, prev, int))
+          transitions ++= fromTreeImpl(part, prev, int)
           prev = int
         }
-        mergeTransitions(merged, fromTreeImpl(last, prev, to))
+        transitions ++= fromTreeImpl(last, prev, to)
+        transitions.toSeq
     }
   }
 
-  private def processDisj(disj: Disj, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+  private def processDisj(disj: Disj, from: State, to: State): Seq[NfaTransition] = {
     disj match {
       case Disj(Seq()) =>
-        Map()
+        Seq()
       case Disj(parts) =>
-        mergeTransitions(parts.map(part => fromTreeImpl(part, from, to)): _*)
+        parts.map(part => fromTreeImpl(part, from, to)).flatten
     }
   }
 
-  private def processRep(rep: Rep, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+  private def processRep(rep: Rep, from: State, to: State): Seq[NfaTransition] = {
     rep match {
 
       // trivial cases
@@ -150,7 +154,7 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
         fromTreeImpl(value, from, to)
 
       case Rep(0, Some(0), value) =>
-        Map(from -> Map(Epsilon -> Set(to)))
+        Seq(NfaTransition(from, to, Epsilon))
 
       // infinite repetitions
 
@@ -161,21 +165,19 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
       case Rep(1, None, value) =>
         val int1 = new State
         val int2 = new State
-        mergeTransitions(
-          fromTreeImpl(value, int1, int2),
-          Map(from -> Map(Epsilon -> Set(int1))),
-          Map(int2 -> Map(Epsilon -> Set(to))),
-          Map(int2 -> Map(Epsilon -> Set(int1))))
+        fromTreeImpl(value, int1, int2) :+
+          NfaTransition(from, int1, Epsilon) :+
+          NfaTransition(int2, to, Epsilon) :+
+          NfaTransition(int2, int1, Epsilon)
 
       case Rep(0, None, value) =>
         val int1 = new State
         val int2 = new State
-        mergeTransitions(
-          fromTreeImpl(value, int1, int2),
-          Map(from -> Map(Epsilon -> Set(int1))),
-          Map(int2 -> Map(Epsilon -> Set(to))),
-          Map(from -> Map(Epsilon -> Set(to))),
-          Map(int2 -> Map(Epsilon -> Set(int1))))
+        fromTreeImpl(value, int1, int2) :+
+          NfaTransition(from, int1, Epsilon) :+
+          NfaTransition(int2, to, Epsilon) :+
+          NfaTransition(from, to, Epsilon) :+
+          NfaTransition(int2, int1, Epsilon)
 
       // finite repetitions
 
@@ -187,47 +189,42 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
       case Rep(1, Some(m), value) if m > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
         val int1 = new State
-        var merged = fromTreeImpl(value, from, int1)
+        val transitions = Buffer[NfaTransition]()
+        transitions ++= fromTreeImpl(value, from, int1)
         var prev = int1
         for (i <- 1 until m - 1) {
           val int = new State
-          merged = mergeTransitions(merged, fromTreeImpl(value, prev, int), Map(prev -> Map(Epsilon -> Set(to))))
+          transitions ++= fromTreeImpl(value, prev, int)
+          transitions += NfaTransition(prev, to, Epsilon)
           prev = int
         }
-        mergeTransitions(merged, fromTreeImpl(value, prev, to), Map(prev -> Map(Epsilon -> Set(to))))
+        transitions ++= fromTreeImpl(value, prev, to)
+        transitions += NfaTransition(prev, to, Epsilon)
+        transitions.toSeq
 
       case Rep(0, Some(m), value) if m > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
-        var merged = Map[State, Map[AtomPart, Set[State]]]()
+        val transitions = Buffer[NfaTransition]()
         var prev = from
         for (i <- 0 until m - 1) {
           val int = new State
-          merged = mergeTransitions(merged, fromTreeImpl(value, prev, int), Map(prev -> Map(Epsilon -> Set(to))))
+          transitions ++= fromTreeImpl(value, prev, int)
+          transitions += NfaTransition(prev, to, Epsilon)
           prev = int
         }
-        mergeTransitions(merged, fromTreeImpl(value, prev, to), Map(prev -> Map(Epsilon -> Set(to))))
+        transitions ++= fromTreeImpl(value, prev, to)
+        transitions += NfaTransition(prev, to, Epsilon)
 
     }
   }
 
-  private def processOp(left: Node, right: Node, from: State, to: State, operation: (Dfa, Dfa) => Dfa) = {
+  private def processOp(operation: (Dfa, Dfa) => Dfa, left: Node, right: Node, from: State, to: State): Seq[NfaTransition] = {
     val leftDfa = fromTree(left)
     val rightDfa = fromTree(right)
     val result = operation(leftDfa, rightDfa).toNfa()
-    val e: AtomPart = Epsilon // upcast
-    mergeTransitions(
-      Seq(
-        result.transitions,
-        Map(from -> Map(e -> Set(result.initial)))) ++
-        result.accepting.toSeq.map(acc => Map(acc -> Map(e -> Set(to)))): _*)
+    result.transitions ++
+      result.accepting.toSeq.map(acc => NfaTransition(acc, to, Epsilon)) :+
+      NfaTransition(from, result.initial, Epsilon)
   }
 
-}
-
-object Compiler {
-  def mergeTransitions(transitions: Map[State, Map[AtomPart, Set[State]]]*): Map[State, Map[AtomPart, Set[State]]] = {
-    transitions.reduce { (left, right) =>
-      Util.merge(left, right)(Util.mergeWithUnion)
-    }
-  }
 }

@@ -5,7 +5,7 @@ import dregex.impl.Automaton
 import dregex.impl.RegexTree
 
 object DotFormatter {
-  
+
   def format[A, B](nfa: Automaton[A, B]): String = {
     val states = for (state <- nfa.allStates) yield {
       val shape = if (state == nfa.initial)
@@ -14,20 +14,16 @@ object DotFormatter {
         "circle"
       val peripheries = if (nfa.accepting.contains(state))
         2
-      else 
+      else
         1
       s""""${state.toString}" [shape=$shape,peripheries=$peripheries];"""
     }
-    val transitions = for {
-      (from, localMap) <- nfa.transitions
-      (char, targetSet) <- localMap
-      to <- targetSet
-    } yield {
-      val weight = if (char == RegexTree.Epsilon)
+    val transitions = for (transition <- nfa.transitions) yield {
+      val weight = if (transition.char == RegexTree.Epsilon)
         1
       else
         2
-      s""""${from.toString}" -> "${to.toString}" [label=${char.toString}, weight=$weight];"""
+      s""""${transition.from.toString}" -> "${transition.to.toString}" [label=${transition.char.toString}, weight=$weight];"""
     }
     s"""
       digraph graphname {
@@ -37,5 +33,5 @@ object DotFormatter {
       }
     """
   }
-  
+
 }

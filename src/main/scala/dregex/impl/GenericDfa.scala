@@ -6,6 +6,8 @@ import Util.StrictMap
 case class GenericDfa[A](initial: A, defTransitions: Map[A, Map[RegexTree.NonEmptyChar, A]], accepting: Set[A]) 
     extends Automaton[A, RegexTree.NonEmptyChar] with StrictLogging {
 
+  case class DfaTransition(from: A, to: A, char: RegexTree.NonEmptyChar) extends Transition[A, RegexTree.NonEmptyChar]
+  
   override def toString() = s"initial: $initial; transitions: $transitions; accepting: $accepting"
 
   lazy val allStates =
@@ -20,11 +22,13 @@ case class GenericDfa[A](initial: A, defTransitions: Map[A, Map[RegexTree.NonEmp
   def transitionMap(state: A) = defTransitions.getOrElse(state, Map.empty)
     
   def transitions = {
-    for ((state, transitionMap) <- defTransitions) yield {
-      state -> (for ((char, target) <- transitionMap) yield {
-        char -> Set(target)
-      })
+    val res = for {
+      (state, transitionMap) <- defTransitions
+      (char, target) <- transitionMap
+    } yield {
+        DfaTransition(state, target, char)
     }
+    res.toSeq
   }
   
   /**

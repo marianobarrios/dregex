@@ -1,21 +1,19 @@
 package dregex.impl
 
-case class Nfa(initial: State, transitions: Map[State, Map[RegexTree.AtomPart, Set[State]]], accepting: Set[State])
+case class NfaTransition(from: State, to: State, char: RegexTree.AtomPart) 
+    extends Transition[State, RegexTree.AtomPart]
+
+case class Nfa(initial: State, transitions: Seq[NfaTransition], accepting: Set[State])
     extends Automaton[State, RegexTree.AtomPart] {
 
   override def toString() = {
-    val transList = for ((state, charMap) <- transitions) yield {
-      val map = for ((char, destination) <- charMap) yield s"$char -> ${destination.mkString("|")}"
-      s"Map($state -> Map(${map.mkString(", ")}))"
-    }
-    val trans = transList.mkString(", ")
-    s"initial: $initial; transitions: $trans; accepting: $accepting"
+    s"initial: $initial; transitions: $transitions; accepting: $accepting"
   }
 
   lazy val allStates = {
     Set(initial) ++
-      transitions.keySet ++
-      transitions.values.map(_.values).toSet.flatten.flatten ++
+      transitions.map(_.from) ++
+      transitions.map(_.to) ++
       accepting
   }
 
