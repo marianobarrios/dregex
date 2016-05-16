@@ -23,7 +23,9 @@ object RegexTree {
 
   sealed trait AtomPart extends Node
   
-  sealed trait SglChar extends AtomPart
+  sealed trait NonExpandibleAtomPart extends AtomPart 
+  
+  sealed trait SglChar extends NonExpandibleAtomPart
 
   case object Other extends SglChar {
     override def toString = "other"
@@ -41,14 +43,16 @@ object RegexTree {
     }
   }
 
-  case object Epsilon extends AtomPart {
+  case object Epsilon extends NonExpandibleAtomPart {
     override def toString = "ε"
   }
 
-  case object Wildcard extends AtomPart
+  sealed trait ExpandibleAtomPart extends AtomPart 
   
-  case class CharClass(sets: CharSet*) extends AtomPart
-  case class NegatedCharClass(sets: CharSet*) extends AtomPart
+  case object Wildcard extends ExpandibleAtomPart
+  
+  case class CharClass(sets: CharSet*) extends ExpandibleAtomPart
+  case class NegatedCharClass(sets: CharSet*) extends ExpandibleAtomPart
 
   trait CharSet {
     def chars: Seq[Char]

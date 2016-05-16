@@ -1,6 +1,7 @@
 package dregex.impl
 
 import dregex.impl.RegexTree.AtomPart
+import dregex.UnsupportedException
 
 /**
  * Take a regex AST and produce a NFA.
@@ -25,6 +26,22 @@ class Compiler(alphabet: Set[RegexTree.SglChar]) {
 
   private def fromTreeImpl(node: Node, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
     node match {
+      // base case
+      case char: NonExpandibleAtomPart => Map(from -> Map(char -> Set(to)))
+      // recurse
+      case exp: ExpandibleAtomPart => processExpandibleAtom(exp, from, to)
+      case juxt: Juxt => processJuxt(combineNegLookaheads(juxt), from, to)
+      case la: Lookaround => fromTreeImpl(Juxt(Seq(la)), from, to)
+      case disj: Disj => processDisj(disj, from, to)
+      case rep: Rep => processRep(rep, from, to)
+      case Intersection(left, right) => processOp(left, right, from, to, (l, r) => l intersect r)
+      case Union(left, right) => processOp(left, right, from, to, (l, r) => l union r)
+      case Difference(left, right) => processOp(left, right, from, to, (l, r) => l diff r)
+    }
+  }
+
+  private def processExpandibleAtom(atom: ExpandibleAtomPart, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+    atom match {
       case Wildcard =>
         fromTreeImpl(Disj(alphabet.toSeq), from, to)
 
@@ -33,37 +50,68 @@ class Compiler(alphabet: Set[RegexTree.SglChar]) {
 
       case NegatedCharClass(sets @ _*) =>
         fromTreeImpl(Disj((alphabet diff sets.map(_.resolve(alphabet)).flatten.toSet).toSeq), from, to)
-
-      case sglChar: SglChar =>
-        Map(from -> Map(sglChar -> Set(to)))
-
-      case Epsilon =>
-        Map(from -> Map(Epsilon -> Set(to)))
-
-      case juxt: Juxt =>
-        processJuxt(juxt, from, to)
-        
-      case disj: Disj =>
-        processDisj(disj, from, to)
-        
-      case rep: Rep =>
-        processRep(rep, from, to)
-
-      case Intersection(left, right) =>
-        processOp(left, right, from, to, (l, r) => l intersect r)
-
-      case Union(left, right) =>
-        processOp(left, right, from, to, (l, r) => l union r)
-
-      case Difference(left, right) =>
-        processOp(left, right, from, to, (l, r) => l diff r)
-
-      case _: Lookaround =>
-        throw new IllegalStateException("lookaround should have been expanded by this time")
     }
   }
 
+  /**
+   * Lookaround constructions are transformed in equivalent DFA operations, and the result of those trivially transformed
+   * into a NFA again for insertion into the outer expression.
+   *
+   * (?=B)C is transformed into C ∩ B.*
+   * (?!B)C is transformed into C - B.*
+   *
+   * In the case of more than one lookaround, the transformation is applied recursively.
+   *
+   * NOTE: Only lookahead is currently implemented
+   */
   private def processJuxt(juxt: Juxt, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+    import Direction._
+    import Condition._
+    findLookaround(juxt.values) match {
+      case Some(i) =>
+        juxt.values(i).asInstanceOf[Lookaround] match {
+          case Lookaround(Ahead, cond, value) =>
+            val prefix = juxt.values.slice(0, i)
+            val suffix = juxt.values.slice(i + 1, juxt.values.size)
+            val wildcard = Rep(min = 0, max = None, value = Wildcard)
+            val rightSide: Node = cond match {
+              case Positive => Intersection(Juxt(suffix), Juxt(Seq(value, wildcard)))
+              case Negative => Difference(Juxt(suffix), Juxt(Seq(value, wildcard)))
+            }
+            fromTreeImpl(Juxt(prefix :+ rightSide), from, to)
+          case Lookaround(Behind, cond, value) =>
+            throw new UnsupportedException("lookbehind")
+        }
+      case None =>
+        processJuxtNoLookaround(juxt, from, to)
+    }
+  }
+
+  def findLookaround(args: Seq[Node]): Option[Int] = {
+    val found = args.zipWithIndex.find { case (x, i) => x.isInstanceOf[Lookaround] }
+    found.map { case (_, idx) => idx }
+  }
+
+  /**
+   * Optimization: combination of consecutive negative lookahead constructions
+   * (?!a)(?!b)(?!c) gets combined to (?!a|b|c), which is faster to process.
+   * This optimization should be applied before the look-around's are expanded to intersections and differences.
+   */
+  def combineNegLookaheads(juxt: Juxt): Juxt = {
+    import Direction._
+    import Condition._
+    val newValues = juxt.values.foldLeft(Seq[Node]()) { (acc, x) =>
+      (acc, x) match {
+        case (init :+ Lookaround(Ahead, Negative, v1), Lookaround(Ahead, Negative, v2)) =>
+          init :+ Lookaround(Ahead, Negative, Disj(Seq(v1, v2)))
+        case _ =>
+          acc :+ x
+      }
+    }
+    Juxt(newValues)
+  }
+
+  private def processJuxtNoLookaround(juxt: Juxt, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
     juxt match {
       case Juxt(Seq()) =>
         Map(from -> Map(Epsilon -> Set(to)))

@@ -3,8 +3,6 @@ package dregex
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import dregex.impl.Dfa
-import dregex.impl.LookaroundExpander
-import dregex.impl.Nfa
 import dregex.impl.Compiler
 
 /**
@@ -14,8 +12,7 @@ class CompiledRegex private[dregex] (originalString: String, val parsedRegex: Pa
     extends Regex with StrictLogging {
 
   val dfa: Dfa = {
-    val expandedTree = LookaroundExpander.expandLookarounds(parsedRegex.tree)
-    new Compiler(universe.alphabet).fromTree(expandedTree)
+    new Compiler(universe.alphabet).fromTree(parsedRegex.tree)
   }
 
   override def toString = s"[$originalString] (DFA states: ${dfa.stateCount})"
