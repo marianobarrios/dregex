@@ -567,6 +567,74 @@ class MatchTest extends FunSuite {
       assertResult(false)(r.matches("a"))
     }
 
+    using(Regex.compile("a(?!b).")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(true)(r.matches("ac"))
+      assertResult(false)(r.matches("ab"))
+    }
+    
+    using(Regex.compile("a(?!b).|other")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(true)(r.matches("ac"))
+      assertResult(false)(r.matches("ab"))
+      assertResult(true)(r.matches("other"))
+    }
+
+    using(Regex.compile("(a+(?!b).|other)+")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(true)(r.matches("aaa"))
+      assertResult(true)(r.matches("ac"))
+      assertResult(false)(r.matches("ab"))
+      assertResult(false)(r.matches("aab"))
+      assertResult(true)(r.matches("other"))
+      assertResult(true)(r.matches("otherother"))
+      assertResult(true)(r.matches("aaaother"))
+      assertResult(false)(r.matches("aabother"))
+      assertResult(true)(r.matches("aaotheraa"))
+      assertResult(false)(r.matches("aabotherab"))
+    }
+    
+    using(Regex.compile("([ax]+(?!b).|other)+")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches("x"))
+      assertResult(true)(r.matches("xa"))
+      assertResult(true)(r.matches("xaa"))
+      assertResult(true)(r.matches("xc"))
+      assertResult(false)(r.matches("xb"))
+      assertResult(false)(r.matches("xab"))
+      assertResult(true)(r.matches("other"))
+      assertResult(true)(r.matches("otherother"))
+      assertResult(true)(r.matches("xaaother"))
+      assertResult(false)(r.matches("xabother"))
+      assertResult(true)(r.matches("xaotheraa"))
+      assertResult(false)(r.matches("xabotherab"))
+    }
+    
+    using(Regex.compile("a+(?!b).")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(true)(r.matches("ac"))
+      assertResult(false)(r.matches("ab"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(true)(r.matches("aaa"))
+      assertResult(true)(r.matches("aac"))
+      assertResult(false)(r.matches("aab"))
+    }
+    
+    using(Regex.compile(".*(?!a).*")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(true)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
+      assertResult(true)(r.matches("aaa"))
+    }
+    
     using(Regex.compile("(?!.?)")) { r =>
       assertResult(false)(r.matchesAnything)
     }
@@ -612,6 +680,12 @@ class MatchTest extends FunSuite {
     using(Regex.compile("a(?!b)")) { r =>
       assertResult(true)(r.matchesAnything)
       assertResult(true)(r.matches("a"))
+    }
+
+    using(Regex.compile("a+(?!b)")) { r =>
+      assertResult(true)(r.matchesAnything)
+      assertResult(true)(r.matches("a"))
+      assertResult(true)(r.matches("aa"))
     }
 
     using(Regex.compile("(?!a)a")) { r =>
@@ -766,7 +840,17 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matches("aaccd"))
       assertResult(true)(r.matches("aacce"))
     }
-
+    
+    using(Regex.compile("(?!bb)b")) { r =>
+      assertResult(true)(r.matches("b"))
+    }
+    
+    using(Regex.compile("((?!bb)b)+")) { r =>
+      assertResult(true)(r.matches("b"))
+      // true because lookahead cannot "escape" the expression it's in 
+      assertResult(true)(r.matches("bb"))
+    }
+    
   }
 
 }

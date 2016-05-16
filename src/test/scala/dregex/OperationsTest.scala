@@ -37,6 +37,7 @@ class OperationsTest extends FunSuite {
     assertResult(false)(doIntersect("[^ab]", "[ab]"))
     assertResult(false)(doIntersect("[^ab]", "a|b"))
     assertResult(false)(doIntersect(".+", ""))
+    assertResult(false)(doIntersect("(?!a).", "a"))
   }
 
   test("subset - boolean") {
@@ -76,6 +77,8 @@ class OperationsTest extends FunSuite {
     assert(testUnion("a", "b")("a|b"))
     assert(testUnion("a", "[^a]")("."))
     assert(testUnion("", ".")(".?"))
+    assert(testUnion("a", "a")("a"))
+    assert(testUnion("(?!a).", "a")("."))
   }
 
 }

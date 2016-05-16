@@ -1,8 +1,9 @@
 package dregex.impl
 
 import scala.util.parsing.combinator.JavaTokenParsers
+
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import dregex.InvalidRegexException
+
 import dregex.InvalidRegexException
 
 class RegexParser extends JavaTokenParsers {

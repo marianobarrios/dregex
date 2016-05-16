@@ -1,10 +1,13 @@
 package dregex.impl
 
-import scala.collection.mutable
+import scala.annotation.migration
 import scala.annotation.tailrec
+import scala.collection.mutable
+
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import dregex.impl.NormTree.SglChar
+
 import Util.StrictMap
+import dregex.impl.NormTree.SglChar
 
 class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends StrictLogging {
 
@@ -182,7 +185,20 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       Map(to -> Map[NormTree.Char, Set[State]](char -> Set(from)))
     }
     val accepting = Set(impl.initial)
-    Nfa(initial, Nfa.mergeTransitions((first +: rest.toSeq): _*), accepting)
+    Nfa(initial, Compiler.mergeTransitions((first +: rest.toSeq): _*), accepting)
+  }
+  
+  /** 
+   * Each DFA is also trivially a NFA, return it.
+   */
+  def toNfa(): Nfa = {
+    val transitions = impl.defTransitions.mapValuesNow { transitionMap =>
+      for ((char, target) <- transitionMap) yield {
+        val genericChar: NormTree.Char = char
+        genericChar -> Set(target)
+      }
+    }
+    Nfa(impl.initial, transitions, impl.accepting)
   }
 
 }

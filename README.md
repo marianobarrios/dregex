@@ -5,9 +5,9 @@ Dregex is a Scala/JVM library that implements a regular expression engine using 
 
 Most mainstream engines work with flavors of regular expressions based on the one that appeared Perl 5 in 1994. Those flavors include a wide range of features, which make state-machine based implementation impossible. As they rely on recursive backtracking, these engines can also have exponential matching time.
 
-On the other hand, there is a mathematical definition of regular expressions, as they were invented by Stephen Kleene in 1956. In the most minimalistic version these expresions consist of just literal characters, alternation ("|") and repetition ("*"). They can be matched again arbitrary text of length n in O(n), using a Definite Finite Automaton (DFA). Using DFA also allows to do set operations; i.e., union, intersection and difference.
+On the other hand, there is a mathematical definition of regular expressions, as they were invented by Stephen Kleene in 1956. In the most minimalistic version these expressions consist of just literal characters, alternation ("|") and repetition ("*"). They can be matched again arbitrary text of length n in O(n), using a Definite Finite Automaton (DFA). Using DFA also allows to do set operations; i.e., union, intersection and difference.
 
-There are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). Nevertheless, backreferences are seldom used in practice and it is possible to select a practical subset of the Perl flavor substantially bigger than their mathematical counterpart (or the POSIX's regex) yet expresable using standard DFA.
+There are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). Nevertheless, backreferences are seldom used in practice and it is possible to select a practical subset of the Perl flavor substantially bigger than their mathematical counterpart (or the POSIX's regex) yet expressible using standard DFA.
 
 Dregex is an attempt to implement such a subset and make a fast implementation for the Java Virtual Machine.
 
@@ -32,7 +32,7 @@ Supported regex flavor
 * Special character classes: `\w`, `\s`, `\d`.
 * Negated special character classes: `\W`, `\S`, `\D`.
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
-* Lookahead (positive and negative), provided they appear at the top level, or as part of a juxtaposition, i.e. they are no allowed inside parenthesis, nested or as members of a conjunction. Additionally the expression before a lookahead must be of fixed length.
+* Lookahead (positive and negative)
 
 ### Not (yet) supported
 
@@ -40,7 +40,6 @@ Supported regex flavor
 
 ### Not supported
 
-* Lookaround in arbitrary positions
 * Backreferences
 
 Internals
@@ -92,28 +91,21 @@ This is a relatively straightforward algorithm that is implemented using the alr
 
 ### Lookahead
 
-In order to support lookaheads, "meta" regular expressions are introduced. A meta regular expression is the intersection or subtraction of 2 other (meta or simple) regular expressions. Lookaround constructions are transformed in equivalent meta simple regular expressions for processing.
+Lookaround constructions are transformed into an equivalent DFA operation, and the result of it trivially transformed into a NFA again for insertion into the outer expression:
 
-* `A(?=B)C` → `AC ∩ AB.*`
-* `A(?!B)C` → `AC - AB.*`
+* `(?=B)C` → `C ∩ B.*`
+* `(?!B)C` → `C - B.*`
 
 In the case of more than one lookaround, the transformation is applied recursively.
 
-This works if `A` is of known length.
+Lookaround expressions are supported anywhere in the regex, including inside repetition constructions. Nevertheless, there is a difference in the meaning of those lookarounds with respect to Perl-like engines. Consider:
 
-Only top level lookarounds that are part of a juxtaposition are permitted, i.e. they are no allowed inside parenthesis, nested or as members of a conjunction. Examples:
+`((?!aa)a)+`
 
-Allowed:
+This expression matches, in this engine, `a`, `aa`, `aaa` and so on, being effectively equivalent to `a+`, because the negative condition (`aa`) can never happen inside `a`. The fact that the expression is repeated does not change its inner logic. However, in Perl-like engines, the aforementioned regex does not match any `a` longer than one character, because those engines treat lookarounds specially, effectively running a sub-regex at the point of occurrence, irrespective of the context.
 
-* `A(?!B)C`
-* `(?!B)C`
-
-Not allowed:
-
-* `(?!B)|B`: part of a conjuction
-* `(?!(?!B))`: lookaround inside lookaround
-* `(A(?!B))B`: lookaround inside parenthesis
-* `A+(?!B)C`: lookaround with variable-length prefix
+The different behavior of this engine is, of course, a direct consequence of the way lookarounds are implemented. Nevertheless, it can be argued that this definition is conceptually simpler and, more importantly, easier to reason about in the context of complex expression. Regarding practical uses, looped lookarounds like the one in the example are quite rare anyway.
+ 
 
 Similar efforts
 ---------------

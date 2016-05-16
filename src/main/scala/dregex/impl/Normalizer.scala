@@ -1,7 +1,5 @@
 package dregex.impl
 
-import dregex.UnsupportedException
-
 /**
  * Regular expressions can have character classes and wildcards. In order to produce a NFA, they should be expanded
  * to disjunctions. In the case of wildcards or negated characted classes, the complete alphabet must also be known
@@ -49,9 +47,6 @@ object Normalizer {
    */
   def normalize(tree: Node, alphabet: Set[NormTree.SglChar]): NormTree.Node = tree match {
     
-    // lookarounds should be expanded by now
-    case d: Lookaround => throw new IllegalArgumentException("lookarounds should be already expanded")
-    
     // expand wildcards
     case Wildcard => NormTree.Disj(alphabet.toSeq)
     
@@ -66,6 +61,11 @@ object Normalizer {
     case Lit(char) => NormTree.Lit(char)
     case Epsilon => NormTree.Epsilon
     
+    case Lookaround(dir, cond, value) => NormTree.Lookaround(dir, cond, normalize(value, alphabet))
+
+    case Union(left, right) => NormTree.Union(normalize(left, alphabet), normalize(right, alphabet))
+    case Intersection(left, right) => NormTree.Intersection(normalize(left, alphabet), normalize(right, alphabet))
+    case Difference(left, right) => NormTree.Difference(normalize(left, alphabet), normalize(right, alphabet))
   }
 
 }

@@ -2,10 +2,10 @@ package dregex.impl
 
 object NormTree {
 
-  trait Node
+  sealed trait Node
 
-  trait Char extends Node
-  trait SglChar extends Char
+  sealed trait Char extends Node
+  sealed trait SglChar extends Char
 
   case object Other extends SglChar {
     override def toString = "other"
@@ -32,5 +32,11 @@ object NormTree {
   case class Juxt(values: Seq[Node]) extends Node {
     override def toString = s"Juxt(${values.mkString(", ")})"
   }
+  
+  case class Lookaround(dir: Direction.Value, cond: Condition.Value, value: Node) extends Node
+  
+  case class Union(left: Node, right: Node) extends Node
+  case class Intersection(left: Node, right: Node) extends Node
+  case class Difference(left: Node, right: Node) extends Node
 
 }
