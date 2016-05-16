@@ -21,17 +21,26 @@ object RegexTree {
     def values = Seq(value)
   }
 
-  sealed trait AtomPart extends Node
+  /**
+   * A single char or null char, includes epsilon values and character classes
+   */
+  sealed trait SimplePart extends Node
   
-  sealed trait NonExpandibleAtomPart extends AtomPart 
+  /**
+   * A single or null char, i.e., including epsilon values
+   */
+  sealed trait AtomPart extends SimplePart 
   
-  sealed trait SglChar extends NonExpandibleAtomPart
+  /**
+   * A single char, non empty, i.e, excluding epsilon values
+   */
+  sealed trait NonEmptyChar extends AtomPart
 
-  case object Other extends SglChar {
+  case object Other extends NonEmptyChar {
     override def toString = "other"
   }
 
-  case class Lit(char: Char) extends SglChar {
+  case class Lit(char: Char) extends NonEmptyChar {
     override def toString = char.toString
   }
 
@@ -43,39 +52,39 @@ object RegexTree {
     }
   }
 
-  case object Epsilon extends NonExpandibleAtomPart {
+  case object Epsilon extends AtomPart {
     override def toString = "ε"
   }
 
-  sealed trait ExpandibleAtomPart extends AtomPart 
+  sealed trait ExpandiblePart extends SimplePart 
   
-  case object Wildcard extends ExpandibleAtomPart
+  case object Wildcard extends ExpandiblePart
   
-  case class CharClass(sets: CharSet*) extends ExpandibleAtomPart
-  case class NegatedCharClass(sets: CharSet*) extends ExpandibleAtomPart
+  case class CharClass(sets: CharSet*) extends ExpandiblePart
+  case class NegatedCharClass(sets: CharSet*) extends ExpandiblePart
 
   trait CharSet {
     def chars: Seq[Char]
-    def resolve(alphabet: Set[SglChar]): Set[SglChar]
+    def resolve(alphabet: Set[NonEmptyChar]): Set[NonEmptyChar]
   }
 
   case class CompCharSet(charSet: CharSet) extends CharSet {
     def chars = charSet.chars
-    def resolve(alphabet: Set[SglChar]) = alphabet diff charSet.resolve(alphabet)
+    def resolve(alphabet: Set[NonEmptyChar]) = alphabet diff charSet.resolve(alphabet)
   }
 
   case class ExtensionCharSet(chars: Char*) extends CharSet {
-    def resolve(alphabet: Set[SglChar]) = chars.map(Lit(_)).toSet
+    def resolve(alphabet: Set[NonEmptyChar]) = chars.map(Lit(_)).toSet
   }
 
   case class RangeCharSet(from: Char, to: Char) extends CharSet {
     val chars = (from to to).toSeq
-    def resolve(alphabet: Set[SglChar]) = (from to to).map(Lit(_)).toSet
+    def resolve(alphabet: Set[NonEmptyChar]) = (from to to).map(Lit(_)).toSet
   }
 
   case class MultiRangeCharSet(ranges: CharSet*) extends CharSet {
     val chars = ranges.map(r => r.chars).flatten
-    def resolve(alphabet: Set[SglChar]) = ranges.map(_.chars).flatten.map(Lit(_)).toSet
+    def resolve(alphabet: Set[NonEmptyChar]) = ranges.map(_.chars).flatten.map(Lit(_)).toSet
   }
 
   case class Disj(values: Seq[Node]) extends ComplexPart {

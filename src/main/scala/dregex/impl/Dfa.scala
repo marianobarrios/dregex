@@ -7,7 +7,7 @@ import scala.collection.mutable
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import Util.StrictMap
-import dregex.impl.RegexTree.SglChar
+import dregex.impl.RegexTree.NonEmptyChar
 import dregex.impl.RegexTree.Epsilon
 
 class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends StrictLogging {
@@ -183,7 +183,8 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     val epsilon: RegexTree.AtomPart = RegexTree.Epsilon
     val first = Map(initial -> Map(epsilon -> impl.accepting))
     val rest = for ((from, fn) <- impl.defTransitions; (char, to) <- fn) yield {
-      Map(to -> Map[RegexTree.AtomPart, Set[State]](char -> Set(from)))
+      val genericChar: RegexTree.AtomPart = char
+      Map(to -> Map(genericChar -> Set(from)))
     }
     val accepting = Set(impl.initial)
     Nfa(initial, Compiler.mergeTransitions((first +: rest.toSeq): _*), accepting)
@@ -223,7 +224,7 @@ object Dfa extends StrictLogging {
    */
   def fromNfa(nfa: Nfa, minimal: Boolean = false): Dfa = {
     val epsilonFreeTransitions = nfa.transitions.mapValuesNow { trans =>
-      for ((char: RegexTree.SglChar, target) <- trans) yield char -> target // partial function!
+      for ((char: RegexTree.NonEmptyChar, target) <- trans) yield char -> target // partial function!
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
     // Given a transition map and a set of states of a NFA, this function augments that set, following all epsilon
@@ -245,7 +246,7 @@ object Dfa extends StrictLogging {
         followEpsilonImpl(expanded)
     }
     val dfaInitial = followEpsilon(Set(nfa.initial))
-    val dfaTransitions = mutable.Map[MultiState, Map[SglChar, MultiState]]()
+    val dfaTransitions = mutable.Map[MultiState, Map[NonEmptyChar, MultiState]]()
     val dfaStates = mutable.Set[MultiState]()
     val pending = mutable.Queue[MultiState](dfaInitial)
     while (!pending.isEmpty) {

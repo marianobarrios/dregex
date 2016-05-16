@@ -9,7 +9,7 @@ import dregex.impl.AlphabetCollector
  */
 class Universe(parsedRegex: Seq[ParsedRegex]) {
 
-  val alphabet: Set[RegexTree.SglChar] = {
+  val alphabet: Set[RegexTree.NonEmptyChar] = {
     val specifiedAlphabet = parsedRegex.map(r => AlphabetCollector.collect(r.tree)).flatten
     specifiedAlphabet.map(RegexTree.Lit(_)).toSet + RegexTree.Other
   }

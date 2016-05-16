@@ -8,7 +8,7 @@ import dregex.UnsupportedException
  * Except when noted the Thompson-McNaughton-Yamada algorithm is used.
  * Reference: http://stackoverflow.com/questions/11819185/steps-to-creating-an-nfa-from-a-regular-expression
  */
-class Compiler(alphabet: Set[RegexTree.SglChar]) {
+class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
 
   import RegexTree._
   import Compiler.mergeTransitions
@@ -27,9 +27,9 @@ class Compiler(alphabet: Set[RegexTree.SglChar]) {
   private def fromTreeImpl(node: Node, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
     node match {
       // base case
-      case char: NonExpandibleAtomPart => Map(from -> Map(char -> Set(to)))
+      case char: AtomPart => Map(from -> Map(char -> Set(to)))
       // recurse
-      case exp: ExpandibleAtomPart => processExpandibleAtom(exp, from, to)
+      case exp: ExpandiblePart => processExpandibleAtom(exp, from, to)
       case juxt: Juxt => processJuxt(combineNegLookaheads(juxt), from, to)
       case la: Lookaround => fromTreeImpl(Juxt(Seq(la)), from, to)
       case disj: Disj => processDisj(disj, from, to)
@@ -40,7 +40,7 @@ class Compiler(alphabet: Set[RegexTree.SglChar]) {
     }
   }
 
-  private def processExpandibleAtom(atom: ExpandibleAtomPart, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
+  private def processExpandibleAtom(atom: ExpandiblePart, from: State, to: State): Map[State, Map[AtomPart, Set[State]]] = {
     atom match {
       case Wildcard =>
         fromTreeImpl(Disj(alphabet.toSeq), from, to)

@@ -3,8 +3,8 @@ package dregex.impl
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import Util.StrictMap
 
-case class GenericDfa[A](initial: A, defTransitions: Map[A, Map[RegexTree.SglChar, A]], accepting: Set[A]) 
-    extends Automaton[A, RegexTree.SglChar] with StrictLogging {
+case class GenericDfa[A](initial: A, defTransitions: Map[A, Map[RegexTree.NonEmptyChar, A]], accepting: Set[A]) 
+    extends Automaton[A, RegexTree.NonEmptyChar] with StrictLogging {
 
   override def toString() = s"initial: $initial; transitions: $transitions; accepting: $accepting"
 
