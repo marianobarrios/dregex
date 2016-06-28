@@ -37,7 +37,7 @@ object AlphabetCollector {
 
   import RegexTree._
   
-  def collect(ast: Node): Set[Char] = ast match {
+  def collect(ast: Node): Set[UnicodeChar] = ast match {
     case complex: ComplexPart => complex.values.map(collect).reduce(_ union _)
     case Lit(char) => Set(char)
     case Epsilon => Set()

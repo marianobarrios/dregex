@@ -5,6 +5,8 @@ import dregex.impl.Dfa
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import dregex.impl.Util
 import dregex.impl.RegexTree
+import scala.collection.JavaConversions._
+import dregex.impl.UnicodeChar
 
 /**
  * A regular expression, ready to be tested against strings, or to take part in an operation against another.
@@ -39,7 +41,8 @@ trait Regex extends StrictLogging {
     val genDfa = dfa.impl
     var current = genDfa.initial
     var i = 0
-    for (char <- string) {
+    for (codePoint <- string.codePoints().iterator()) {
+      val char = UnicodeChar(codePoint)
       val currentTrans = genDfa.defTransitions.getOrElse(current, Map())
       val litChar = RegexTree.Lit(char)
       val effChar = if (universe.alphabet.contains(litChar))

@@ -40,16 +40,22 @@ object RegexTree {
     override def toString = "other"
   }
 
-  case class Lit(char: Char) extends NonEmptyChar {
+  case class Lit(char: UnicodeChar) extends NonEmptyChar {
     override def toString = char.toString
   }
 
   object Lit {
-    def apply(str: String) = {
+    
+    def fromChar(char: Char) = {
+      Lit(UnicodeChar(char))
+    }
+    
+    def fromSingletonString(str: String) = {
       if (str.length != 1)
         throw new IllegalAccessException("String is no char: " + str)
-      new Lit(str.head)
+      Lit.fromChar(str.head)
     }
+    
   }
 
   case object Epsilon extends AtomPart {
@@ -64,7 +70,7 @@ object RegexTree {
   case class NegatedCharClass(sets: CharSet*) extends ExpandiblePart
 
   trait CharSet {
-    def chars: Seq[Char]
+    def chars: Seq[UnicodeChar]
     def resolve(alphabet: Set[NonEmptyChar]): Set[NonEmptyChar]
   }
 
@@ -73,13 +79,25 @@ object RegexTree {
     def resolve(alphabet: Set[NonEmptyChar]) = alphabet diff charSet.resolve(alphabet)
   }
 
-  case class ExtensionCharSet(chars: Char*) extends CharSet {
+  case class ExtensionCharSet(chars: UnicodeChar*) extends CharSet {
     def resolve(alphabet: Set[NonEmptyChar]) = chars.map(Lit(_)).toSet
   }
+  
+  object ExtensionCharSet {
+    def fromCharLiterals(chars: Char*) = {
+      ExtensionCharSet(chars.map(UnicodeChar(_)): _*)
+    }
+  }
 
-  case class RangeCharSet(from: Char, to: Char) extends CharSet {
-    val chars = (from to to).toSeq
-    def resolve(alphabet: Set[NonEmptyChar]) = (from to to).map(Lit(_)).toSet
+  case class RangeCharSet(from: UnicodeChar, to: UnicodeChar) extends CharSet {
+    val chars = (from.codePoint to to.codePoint).map(UnicodeChar(_)).toSeq
+    def resolve(alphabet: Set[NonEmptyChar]) = (from.codePoint to to.codePoint).map(cp => Lit(UnicodeChar(cp))).toSet
+  }
+  
+  object RangeCharSet {
+    def fromCharLiterals(from: Char, to: Char) = {
+      RangeCharSet(UnicodeChar(from), UnicodeChar(to))
+    }
   }
 
   case class MultiRangeCharSet(ranges: CharSet*) extends CharSet {

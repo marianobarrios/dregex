@@ -28,16 +28,16 @@ class RegexParser extends JavaTokenParsers {
   def specialEscape = backslash ~ "[^dwsDWSuUxc01234567]".r ^^ {
     case _ ~ char =>
       char match {
-        case "n" => Lit('\n')
-        case "r" => Lit('\r')
-        case "t" => Lit('\t')
-        case "f" => Lit('\f')
-        case "b" => Lit('\b')
-        case "v" => Lit('\u000B') // vertical tab
-        case "a" => Lit('\u0007') // bell
-        case "e" => Lit('\u001B') // escape
-        case "B" => Lit('\\')
-        case c => Lit(c) // remaining escaped characters stand for themselves
+        case "n" => Lit.fromChar('\n')
+        case "r" => Lit.fromChar('\r')
+        case "t" => Lit.fromChar('\t')
+        case "f" => Lit.fromChar('\f')
+        case "b" => Lit.fromChar('\b')
+        case "v" => Lit.fromChar('\u000B') // vertical tab
+        case "a" => Lit.fromChar('\u0007') // bell
+        case "e" => Lit.fromChar('\u001B') // escape
+        case "B" => Lit.fromChar('\\')
+        case c => Lit.fromSingletonString(c) // remaining escaped characters stand for themselves
       }
   }
 
@@ -46,22 +46,22 @@ class RegexParser extends JavaTokenParsers {
 
   def unicodeEscape = backslash ~ "u" ~ repN(4, hexDigit) ^^ {
     case _ ~ _ ~ digits =>
-      Lit(Integer.parseInt(digits.mkString, 16).toChar)
+      Lit.fromChar(Integer.parseInt(digits.mkString, 16).toChar)
   }
 
   def longUnicodeEscape = backslash ~ "U" ~ repN(8, hexDigit) ^^ {
     case _ ~ _ ~ digits =>
-      Lit(Integer.parseInt(digits.mkString, 16).toChar)
+      Lit.fromChar(Integer.parseInt(digits.mkString, 16).toChar)
   }
 
   def hexEscape = backslash ~ "x" ~ hexDigit.+ ^^ {
     case _ ~ _ ~ digits =>
-      Lit(Integer.parseInt(digits.mkString, 16).toChar)
+      Lit.fromChar(Integer.parseInt(digits.mkString, 16).toChar)
   }
 
   def octalEscape = backslash ~ (repN(2, octalDigit) ||| repN(3, octalDigit)) ^^ {
     case _ ~ digits =>
-      Lit(Integer.parseInt(digits.mkString, 8).toChar)
+      Lit.fromChar(Integer.parseInt(digits.mkString, 8).toChar)
   }
 
   def controlEscape = (backslash ~ "c" ~ ".".r) ~> failure("Unsupported feature: control escape")
@@ -70,7 +70,7 @@ class RegexParser extends JavaTokenParsers {
 
   def anyEscape = specialEscape | unicodeEscape | hexEscape | longUnicodeEscape | octalEscape | controlEscape
 
-  def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(x)))
+  def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit.fromSingletonString(x)))
 
   def charLit = anchor | anythingExcept(charSpecial) | anyEscape
 
@@ -91,7 +91,7 @@ class RegexParser extends JavaTokenParsers {
   def charClass = "[" ~ "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? ~ "]" ^^ {
     case _ ~ negated ~ leftDash ~ charClass ~ rightDash ~ _ =>
       val chars = if (leftDash.isDefined || rightDash.isDefined)
-        charClass :+ ExtensionCharSet('-')
+        charClass :+ ExtensionCharSet.fromCharLiterals('-')
       else
         charClass
       negated.fold[Node](CharClass(chars: _*))(x => NegatedCharClass(chars: _*))
@@ -101,12 +101,18 @@ class RegexParser extends JavaTokenParsers {
   // not easily parsed by the general constructs.
   def dashClass = "[" ~ "^".? ~ "-" ~ "]" ^^ {
     case _ ~ negated ~ _ ~ _ =>
-      negated.fold[Node](CharClass(ExtensionCharSet('-')))(x => NegatedCharClass(ExtensionCharSet('-')))
+      negated.fold[Node](CharClass(ExtensionCharSet.fromCharLiterals('-'))) { x => 
+        NegatedCharClass(ExtensionCharSet.fromCharLiterals('-'))
+      }
   }
 
-  val numberSet = RangeCharSet('0', '9')
-  val spaceSet = ExtensionCharSet('\n', '\t', '\r', '\f', ' ')
-  val wordSet = MultiRangeCharSet(numberSet, RangeCharSet('a', 'z'), RangeCharSet('A', 'Z'), ExtensionCharSet('_'))
+  val numberSet = RangeCharSet.fromCharLiterals('0', '9')
+  val spaceSet = ExtensionCharSet.fromCharLiterals('\n', '\t', '\r', '\f', ' ')
+  val wordSet = MultiRangeCharSet(
+      numberSet, 
+      RangeCharSet.fromCharLiterals('a', 'z'), 
+      RangeCharSet.fromCharLiterals('A', 'Z'), 
+      ExtensionCharSet.fromCharLiterals('_'))
   
   def shorthandCharSet = backslash ~ "[DWSdws]".r ^^ {
     case _ ~ "d" => numberSet
