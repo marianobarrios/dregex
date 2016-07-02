@@ -51,9 +51,9 @@ object RegexTree {
     }
     
     def fromSingletonString(str: String) = {
-      if (str.length != 1)
+      if (Character.codePointCount(str, 0, str.size) > 1)
         throw new IllegalAccessException("String is no char: " + str)
-      Lit.fromChar(str.head)
+      Lit(UnicodeChar(Character.codePointAt(str, 0)))
     }
     
   }
