@@ -25,7 +25,7 @@ class RegexParser extends JavaTokenParsers {
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
 
-  def specialEscape = backslash ~ "[^dwsDWSuUxc01234567]".r ^^ {
+  def specialEscape = backslash ~ "[^dwsDWSuxc01234567]".r ^^ {
     case _ ~ char =>
       char match {
         case "n" => Lit.fromChar('\n')
@@ -44,31 +44,50 @@ class RegexParser extends JavaTokenParsers {
   def hexDigit = "[0-9A-Fa-f]".r
   def octalDigit = "[0-7]".r
 
+  def doubleUnicodeEscape = backslash ~ "u" ~ repN(4, hexDigit) ~ backslash ~ "u" ~ repN(4, hexDigit) ^? {
+    case _ ~ _ ~ highDigits ~ _ ~ _ ~ lowDigits if isHighSurrogate(highDigits) && isLowSurrogate(lowDigits) =>
+      val high = Integer.parseInt(highDigits.mkString, 16).toChar
+      val low = Integer.parseInt(lowDigits.mkString, 16).toChar
+      val codePoint = Character.toCodePoint(high, low)
+      Lit(UnicodeChar(codePoint))
+  }  
+  
+  private def isHighSurrogate(digits: List[String]) = {
+    Character.isHighSurrogate(Integer.parseInt(digits.mkString, 16).toChar)
+  }
+
+  private def isLowSurrogate(digits: List[String]) = {
+    Character.isLowSurrogate(Integer.parseInt(digits.mkString, 16).toChar)
+  }
+  
   def unicodeEscape = backslash ~ "u" ~ repN(4, hexDigit) ^^ {
     case _ ~ _ ~ digits =>
-      Lit.fromChar(Integer.parseInt(digits.mkString, 16).toChar)
+      Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
   }
 
-  def longUnicodeEscape = backslash ~ "U" ~ repN(8, hexDigit) ^^ {
+  def hexEscape = backslash ~ "x" ~ repN(2, hexDigit) ^^ {
     case _ ~ _ ~ digits =>
-      Lit.fromChar(Integer.parseInt(digits.mkString, 16).toChar)
+      Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
+  }
+  
+  def longHexEscape = backslash ~ "x" ~ "{" ~ hexDigit.+ ~ "}" ^^ {
+    case _ ~ _ ~ digits ~ _ =>
+      Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
   }
 
-  def hexEscape = backslash ~ "x" ~ hexDigit.+ ^^ {
+  def octalEscape = backslash ~ "0" ~ (repN(1, octalDigit) ||| repN(2, octalDigit) ||| repN(3, octalDigit)) ^^ {
     case _ ~ _ ~ digits =>
-      Lit.fromChar(Integer.parseInt(digits.mkString, 16).toChar)
-  }
-
-  def octalEscape = backslash ~ (repN(2, octalDigit) ||| repN(3, octalDigit)) ^^ {
-    case _ ~ digits =>
-      Lit.fromChar(Integer.parseInt(digits.mkString, 8).toChar)
+      Lit(UnicodeChar(Integer.parseInt(digits.mkString, 8)))
   }
 
   def controlEscape = (backslash ~ "c" ~ ".".r) ~> failure("Unsupported feature: control escape")
 
   def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
 
-  def anyEscape = specialEscape | unicodeEscape | hexEscape | longUnicodeEscape | octalEscape | controlEscape
+  /**
+   * Order between Unicode escapes is important
+   */
+  def anyEscape = specialEscape | doubleUnicodeEscape | unicodeEscape | hexEscape | longHexEscape | octalEscape | controlEscape
 
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit.fromSingletonString(x)))
 

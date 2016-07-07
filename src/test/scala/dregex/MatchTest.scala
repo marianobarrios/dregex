@@ -536,11 +536,11 @@ class MatchTest extends FunSuite {
     using(Regex.compile("""\B"""))(r => assertResult(true)(r.matches("""\""")))
     using(Regex.compile("""\\"""))(r => assertResult(true)(r.matches("""\""")))
 
-    using(Regex.compile("""\U00000041"""))(r => assertResult(true)(r.matches("A")))
     using(Regex.compile("""\u0041"""))(r => assertResult(true)(r.matches("A")))
     using(Regex.compile("""\x41"""))(r => assertResult(true)(r.matches("A")))
-    using(Regex.compile("""\x041"""))(r => assertResult(true)(r.matches("A")))
-    using(Regex.compile("""\101"""))(r => assertResult(true)(r.matches("A")))
+    using(Regex.compile("""\x{41}"""))(r => assertResult(true)(r.matches("A")))
+    using(Regex.compile("""\x{000041}"""))(r => assertResult(true)(r.matches("A")))
+    using(Regex.compile("""\0101"""))(r => assertResult(true)(r.matches("A")))
 
     using(Regex.compile("""\n"""))(r => assertResult(true)(r.matches("\n")))
     using(Regex.compile("""\r"""))(r => assertResult(true)(r.matches("\r")))
