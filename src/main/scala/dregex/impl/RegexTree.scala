@@ -62,12 +62,10 @@ object RegexTree {
     override def toString = "ε"
   }
 
-  sealed trait ExpandiblePart extends SimplePart 
+  case object Wildcard extends SimplePart
   
-  case object Wildcard extends ExpandiblePart
-  
-  case class CharClass(sets: CharSet*) extends ExpandiblePart
-  case class NegatedCharClass(sets: CharSet*) extends ExpandiblePart
+  case class CharClass(sets: CharSet*) extends SimplePart
+  case class NegatedCharClass(sets: CharSet*) extends SimplePart
 
   trait CharSet {
     def chars: Seq[UnicodeChar]

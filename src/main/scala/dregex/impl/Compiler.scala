@@ -26,30 +26,42 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
 
   private def fromTreeImpl(node: Node, from: State, to: State): Seq[NfaTransition] = {
     node match {
+      
       // base case
-      case char: AtomPart => Seq(NfaTransition(from, to, char))
+      case char: AtomPart => 
+        Seq(NfaTransition(from, to, char))
+      
       // recurse
-      case exp: ExpandiblePart => processExpandiblePart(exp, from, to)
-      case juxt: Juxt => processJuxt(combineNegLookaheads(juxt), from, to)
-      case la: Lookaround => fromTreeImpl(Juxt(Seq(la)), from, to)
-      case disj: Disj => processDisj(disj, from, to)
-      case rep: Rep => processRep(rep, from, to)
-      case Intersection(left, right) => processOp((l, r) => l intersect r, left, right, from, to)
-      case Union(left, right) => processOp((l, r) => l union r, left, right, from, to)
-      case Difference(left, right) => processOp((l, r) => l diff r, left, right, from, to)
-    }
-  }
-
-  private def processExpandiblePart(part: ExpandiblePart, from: State, to: State): Seq[NfaTransition] = {
-    part match {
+      
       case Wildcard =>
         fromTreeImpl(Disj(alphabet.toSeq), from, to)
-
+        
       case CharClass(sets @ _*) =>
         fromTreeImpl(Disj(sets.map(_.resolve(alphabet)).flatten), from, to)
 
       case NegatedCharClass(sets @ _*) =>
         fromTreeImpl(Disj((alphabet diff sets.map(_.resolve(alphabet)).flatten.toSet).toSeq), from, to)
+        
+      case juxt: Juxt => 
+        processJuxt(combineNegLookaheads(juxt), from, to)
+        
+      case la: Lookaround => 
+        fromTreeImpl(Juxt(Seq(la)), from, to)
+        
+      case disj: Disj => 
+        processDisj(disj, from, to)
+        
+      case rep: Rep => 
+        processRep(rep, from, to)
+        
+      case Intersection(left, right) => 
+        processOp((l, r) => l intersect r, left, right, from, to)
+        
+      case Union(left, right) => 
+        processOp((l, r) => l union r, left, right, from, to)
+        
+      case Difference(left, right) => 
+        processOp((l, r) => l diff r, left, right, from, to)
     }
   }
 
