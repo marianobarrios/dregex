@@ -1,5 +1,8 @@
 package dregex.impl
 
+import scala.Product
+import scala.runtime.ScalaRunTime
+
 object Direction extends Enumeration {
   val Behind, Ahead = Value
 }
@@ -10,119 +13,222 @@ object Condition extends Enumeration {
 
 object RegexTree {
 
-  sealed trait Node
+  sealed trait Node {
+    def toRegex: String
+    def canonical: Node
+    def precedence: Int
+  }
 
   sealed trait ComplexPart extends Node {
     def values: Seq[Node]
   }
 
-  sealed trait OneChildComplexPart extends ComplexPart {
-    def value: Node
-    def values = Seq(value)
-  }
-
-  /**
-   * A single char or null char, includes epsilon values and character classes
-   */
-  sealed trait SimplePart extends Node
-  
-  /**
-   * A single or null char, i.e., including epsilon values
-   */
-  sealed trait AtomPart extends SimplePart 
-  
   /**
    * A single char, non empty, i.e, excluding epsilon values
    */
-  sealed trait NonEmptyChar extends AtomPart
+  sealed trait AbstractRange extends Node with Product2[UnicodeChar, UnicodeChar] {
 
-  case object Other extends NonEmptyChar {
-    override def toString = "other"
-  }
+    def from: UnicodeChar
+    def to: UnicodeChar
 
-  case class Lit(char: UnicodeChar) extends NonEmptyChar {
-    override def toString = char.toString
-  }
+    def _1 = from
+    def _2 = to
 
-  object Lit {
-    
-    def fromChar(char: Char) = {
-      Lit(UnicodeChar(char))
+    override def equals(that: Any) = ScalaRunTime._equals(this, that)
+    override def hashCode() = ScalaRunTime._hashCode(this)
+
+    def canonical = {
+      (from, to) match {
+        case (a, b) if a == b => Lit(a)
+        case (UnicodeChar.min, UnicodeChar.max) => Wildcard
+        case (a, b) => CharRange(a, b)
+      }
     }
-    
-    def fromSingletonString(str: String) = {
-      if (Character.codePointCount(str, 0, str.size) > 1)
-        throw new IllegalAccessException("String is no char: " + str)
-      Lit(UnicodeChar(Character.codePointAt(str, 0)))
-    }
-    
+
+    def toCharClassLit: String
+
+    def size = to.codePoint - from.codePoint + 1
+
   }
 
-  case object Epsilon extends AtomPart {
-    override def toString = "ε"
+  case class CharRange(from: UnicodeChar, to: UnicodeChar) extends AbstractRange {
+
+    if (from > to)
+      throw new IllegalArgumentException("from value cannot be larger than to")
+
+    def toRegex = throw new UnsupportedOperationException("Cannot express a range outside a char class")
+    def toCharClassLit = s"${from.toRegex}-${to.toRegex}"
+    def precedence = throw new UnsupportedOperationException("Cannot express a range outside a char class")
+
   }
 
-  case object Wildcard extends SimplePart
-  
-  case class CharClass(sets: CharSet*) extends SimplePart
-  case class NegatedCharClass(sets: CharSet*) extends SimplePart
-
-  trait CharSet {
-    def chars: Seq[UnicodeChar]
-    def resolve(alphabet: Set[NonEmptyChar]): Set[NonEmptyChar]
+  case class Lit(char: UnicodeChar) extends AbstractRange with Product1[UnicodeChar] {
+    // Product1 extended to override toString
+    def from = char
+    def to = char
+    def toRegex = char.toRegex
+    def toCharClassLit = char.toRegex
+    def precedence = 1
   }
 
-  case class CompCharSet(charSet: CharSet) extends CharSet {
-    def chars = charSet.chars
-    def resolve(alphabet: Set[NonEmptyChar]) = alphabet diff charSet.resolve(alphabet)
-  }
-
-  case class ExtensionCharSet(chars: UnicodeChar*) extends CharSet {
-    def resolve(alphabet: Set[NonEmptyChar]) = chars.map(Lit(_)).toSet
-  }
-  
-  object ExtensionCharSet {
-    def fromCharLiterals(chars: Char*) = {
-      ExtensionCharSet(chars.map(UnicodeChar(_)): _*)
-    }
-  }
-
-  case class RangeCharSet(from: UnicodeChar, to: UnicodeChar) extends CharSet {
-    val chars = (from.codePoint to to.codePoint).map(UnicodeChar(_)).toSeq
-    def resolve(alphabet: Set[NonEmptyChar]) = (from.codePoint to to.codePoint).map(cp => Lit(UnicodeChar(cp))).toSet
+  case object Wildcard extends AbstractRange {
+    def from = UnicodeChar.min
+    def to = UnicodeChar.max
+    def toRegex = "."
+    def toCharClassLit = throw new UnsupportedOperationException("Cannot express a wildcard inside a char class")
+    def precedence = 1
   }
   
-  object RangeCharSet {
-    def fromCharLiterals(from: Char, to: Char) = {
-      RangeCharSet(UnicodeChar(from), UnicodeChar(to))
-    }
+  case class CharSet(ranges: Seq[AbstractRange]) extends Node {
+    lazy val complement = CharSet(RangeOps.diff(Wildcard, ranges))
+    def toRegex = s"[${ranges.map(_.toCharClassLit).mkString}]"
+    def canonical = this
+    def precedence = 1
   }
 
-  case class MultiRangeCharSet(ranges: CharSet*) extends CharSet {
-    val chars = ranges.map(r => r.chars).flatten
-    def resolve(alphabet: Set[NonEmptyChar]) = ranges.map(_.chars).flatten.map(Lit(_)).toSet
+  object CharSet {
+    def fromCharSets(charSets: CharSet*): CharSet = CharSet(charSets.map(_.ranges).flatten)
+    def fromRange(interval: AbstractRange) = CharSet(Seq(interval))
   }
 
   case class Disj(values: Seq[Node]) extends ComplexPart {
+
     override def toString = s"Disj(${values.mkString(", ")})"
+
+    def toRegex = values.map(_.toRegex).mkString("|")
+
+    override def canonical = {
+      def flattenValues(values: Seq[Node]): Seq[Node] = {
+        values.flatMap { value =>
+          value match {
+            case Disj(innerValues) => flattenValues(innerValues)
+            case other => Seq(other)
+          }
+        }
+      }
+      Disj(flattenValues(values).map(_.canonical))
+    }
+
+    def precedence = 4
+
   }
 
-  case class Lookaround(dir: Direction.Value, cond: Condition.Value, value: Node) extends OneChildComplexPart
+  case class Lookaround(dir: Direction.Value, cond: Condition.Value, value: Node) extends ComplexPart {
 
-  case class Rep(min: Int, max: Option[Int], value: Node) extends OneChildComplexPart
+    val values = Seq(value)
+
+    def toRegex = {
+      val dirStr = dir match {
+        case Direction.Ahead => ""
+        case Direction.Behind => "<"
+      }
+      var condStr = cond match {
+        case Condition.Negative => "!"
+        case Condition.Positive => "="
+      }
+      s"(?$dirStr$condStr${value.toRegex})"
+    }
+
+    def canonical = Lookaround(dir, cond, value.canonical)
+    def precedence = 1
+
+  }
+
+  case class Rep(min: Int, max: Option[Int], value: Node) extends ComplexPart {
+
+    if (min < 0)
+      throw new IllegalArgumentException
+
+    max match {
+      case Some(n) =>
+        if (min > n)
+          throw new IllegalArgumentException
+      case None => // ok
+    }
+
+    val values = Seq(value)
+
+    def toRegex = {
+      val suffix = (min, max) match {
+        case (0, None) => "*"
+        case (1, None) => "+"
+        case (n, None) => s"{$n,}"
+        case (0, Some(1)) => "?"
+        case (1, Some(1)) => ""
+        case (n, Some(m)) if n == m => s"{$n}"
+        case (n, Some(m)) if n != m => s"{$n,$m}"
+      }
+      /* 
+       * On top of precedence, check special case of nested repetitions,
+       * that are actually a grammar singularity. E.g., "a++" (invalid) 
+       * vs. "(a+)+" (valid)
+       */
+      val effValue = if (value.precedence > this.precedence || value.isInstanceOf[Rep])
+        s"(${value.toRegex})"
+      else
+        value.toRegex
+      s"$effValue$suffix"
+    }
+
+    override def canonical = {
+      (min, max) match {
+        case (1, Some(1)) => value.canonical
+        case other => Rep(min, max, value.canonical)
+      }
+    }
+
+    def precedence = 2
+
+  }
 
   case class Juxt(values: Seq[Node]) extends ComplexPart {
+
     override def toString = s"Juxt(${values.mkString(", ")})"
+
+    override def canonical = {
+      def flattenValues(values: Seq[Node]): Seq[Node] = {
+        values.flatMap { value =>
+          value match {
+            case Juxt(innerValues) => flattenValues(innerValues)
+            case other => Seq(other)
+          }
+        }
+      }
+      Juxt(flattenValues(values).map(_.canonical))
+    }
+
+    def toRegex = {
+      val effValues = for (value <- values) yield {
+        if (value.precedence > this.precedence)
+          s"(${value.toRegex})"
+        else
+          value.toRegex
+      }
+      effValues.mkString
+    }
+
+    def precedence = 3
+
   }
 
   sealed trait Operation extends ComplexPart {
     def left: Node
     def right: Node
     def values = Seq(left, right)
+    def toRegex = throw new UnsupportedOperationException("no regex expression for an operation")
+    def precedence = throw new UnsupportedOperationException("no regex precedence for an operation")
   }
 
-  case class Union(left: Node, right: Node) extends Operation
-  case class Intersection(left: Node, right: Node) extends Operation
-  case class Difference(left: Node, right: Node) extends Operation
-  
+  case class Union(left: Node, right: Node) extends Operation {
+    def canonical = Union(left.canonical, right.canonical)
+  }
+
+  case class Intersection(left: Node, right: Node) extends Operation {
+    def canonical = Intersection(left.canonical, right.canonical)
+  }
+
+  case class Difference(left: Node, right: Node) extends Operation {
+    def canonical = Difference(left.canonical, right.canonical)
+  }
+
 }

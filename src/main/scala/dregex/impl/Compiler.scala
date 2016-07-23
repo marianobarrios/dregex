@@ -1,6 +1,5 @@
 package dregex.impl
 
-import dregex.impl.RegexTree.AtomPart
 import dregex.UnsupportedException
 import scala.collection.mutable.Buffer
 
@@ -9,7 +8,7 @@ import scala.collection.mutable.Buffer
  * Except when noted the Thompson-McNaughton-Yamada algorithm is used.
  * Reference: http://stackoverflow.com/questions/11819185/steps-to-creating-an-nfa-from-a-regular-expression
  */
-class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
+class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]]) {
 
   import RegexTree._
 
@@ -26,41 +25,37 @@ class Compiler(alphabet: Set[RegexTree.NonEmptyChar]) {
 
   private def fromTreeImpl(node: Node, from: State, to: State): Seq[NfaTransition] = {
     node match {
-      
-      // base case
-      case char: AtomPart => 
-        Seq(NfaTransition(from, to, char))
-      
-      // recurse
-      
-      case Wildcard =>
-        fromTreeImpl(Disj(alphabet.toSeq), from, to)
-        
-      case CharClass(sets @ _*) =>
-        fromTreeImpl(Disj(sets.map(_.resolve(alphabet)).flatten), from, to)
 
-      case NegatedCharClass(sets @ _*) =>
-        fromTreeImpl(Disj((alphabet diff sets.map(_.resolve(alphabet)).flatten.toSet).toSeq), from, to)
-        
-      case juxt: Juxt => 
+      // base case
+      
+      case range: AbstractRange =>
+        val intervals = intervalMapping(range)
+        intervals.map(interval => NfaTransition(from, to, interval))
+
+      // recurse
+
+      case CharSet(intervals) =>
+        fromTreeImpl(Disj(intervals), from, to)
+
+      case juxt: Juxt =>
         processJuxt(combineNegLookaheads(juxt), from, to)
-        
-      case la: Lookaround => 
+
+      case la: Lookaround =>
         fromTreeImpl(Juxt(Seq(la)), from, to)
-        
-      case disj: Disj => 
+
+      case disj: Disj =>
         processDisj(disj, from, to)
-        
-      case rep: Rep => 
+
+      case rep: Rep =>
         processRep(rep, from, to)
-        
-      case Intersection(left, right) => 
+
+      case Intersection(left, right) =>
         processOp((l, r) => l intersect r, left, right, from, to)
-        
-      case Union(left, right) => 
+
+      case Union(left, right) =>
         processOp((l, r) => l union r, left, right, from, to)
-        
-      case Difference(left, right) => 
+
+      case Difference(left, right) =>
         processOp((l, r) => l diff r, left, right, from, to)
     }
   }

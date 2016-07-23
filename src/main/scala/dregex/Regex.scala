@@ -7,6 +7,10 @@ import dregex.impl.Util
 import dregex.impl.RegexTree
 import scala.collection.JavaConversions._
 import dregex.impl.UnicodeChar
+import dregex.impl.State
+import scala.collection.immutable.SortedMap
+import dregex.impl.RegexTree.Lit
+import dregex.impl.CharInterval
 
 /**
  * A regular expression, ready to be tested against strings, or to take part in an operation against another.
@@ -43,15 +47,21 @@ trait Regex extends StrictLogging {
     var i = 0
     for (codePoint <- string.codePoints().iterator()) {
       val char = UnicodeChar(codePoint)
-      val currentTrans = genDfa.defTransitions.getOrElse(current, Map())
-      val litChar = RegexTree.Lit(char)
-      val effChar = if (universe.alphabet.contains(litChar))
-        litChar
-      else
-        RegexTree.Other
-      current = currentTrans.get(effChar) match {
-        case Some(newState) => newState
-        case None => return (false, i)
+      val currentTrans = genDfa.defTransitions.getOrElse(current, SortedMap[CharInterval, State]())
+      // O(log transitions) search in the range tree
+      val newState = Util.floorEntry(currentTrans, CharInterval(from = char, to = char)).flatMap {
+        case (interval, state) =>
+          if (interval.to >= char) {
+            Some(state)
+          } else {
+            None
+          }
+      }
+      newState match {
+        case Some(state) =>
+          current = state
+        case None =>
+          return (false, i)
       }
       i += 1
     }
@@ -133,7 +143,6 @@ object Regex extends StrictLogging {
     val (parsedRegex, time) = Util.time {
       new ParsedRegex(RegexParser.parse(regex))
     }
-    // log parsing time as trace, because this is usually quite fast
     logger.trace(s"regex [$regex] parsed in $time")
     parsedRegex
   }
@@ -143,7 +152,7 @@ object Regex extends StrictLogging {
     val (compiled, time) = Util.time {
       new CompiledRegex(regex, tree, new Universe(Seq(tree)))
     }
-    logger.debug(s"$compiled compiled in $time")
+    logger.trace(s"$compiled compiled in $time")
     compiled
   }
 
@@ -151,7 +160,7 @@ object Regex extends StrictLogging {
     val (compiled, time) = Util.time {
       new CompiledRegex(originalString, tree, universe)
     }
-    logger.debug(s"$compiled compiled in $time")
+    logger.trace(s"$compiled compiled in $time")
     compiled
   }
 
@@ -162,7 +171,7 @@ object Regex extends StrictLogging {
       val (res, time) = Util.time {
         regex -> new CompiledRegex(regex, tree, universe)
       }
-      logger.debug(s"${res._2} compiled in $time")
+      logger.trace(s"${res._2} compiled in $time")
       res
     }
   }

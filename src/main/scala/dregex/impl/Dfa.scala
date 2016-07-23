@@ -7,20 +7,15 @@ import scala.collection.mutable
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 import Util.StrictMap
-import dregex.impl.RegexTree.NonEmptyChar
-import dregex.impl.RegexTree.Epsilon
+import Util.StrictSortedMap
+import scala.collection.immutable.SortedMap
 
 class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends StrictLogging {
 
   import State.NullState
-
+  import Dfa.BiState
+  
   override def toString() = impl.toString
-
-  case class BiState(first: State, second: State) {
-    override def toString() = {
-      s"$first,$second"
-    }
-  }
 
   lazy val stateCount = impl.stateCount
 
@@ -40,7 +35,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       (leftState, leftCharmap) <- left.defTransitions
       (rightState, rightCharmap) <- right.defTransitions
       charMap = for {
-        char <- commonChars
+        char <- commonChars.toSeq
         leftDestState <- leftCharmap.get(char)
         rightDestState <- rightCharmap.get(char)
       } yield {
@@ -48,7 +43,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       }
       if !charMap.isEmpty
     } yield {
-      BiState(leftState, rightState) -> charMap.toMap
+      BiState(leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the intersecting DFA
     val accepting = for (l <- left.accepting; r <- right.accepting) yield BiState(l, r)
@@ -67,7 +62,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       rightState <- right.allStates.toSeq :+ NullState
       rightCharmap = right.transitionMap(rightState)
       charMap = for {
-        char <- allChars
+        char <- allChars.toSeq
         leftDestState <- leftCharmap.get(char)
         rightDestState = rightCharmap.getOrElse(char, NullState)
       } yield {
@@ -75,7 +70,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       }
       if !charMap.isEmpty
     } yield {
-      BiState(leftState, rightState) -> charMap.toMap
+      BiState(leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of 
     // the right DFA that are no accepting
@@ -96,7 +91,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       rightState <- right.allStates.toSeq :+ NullState
       rightCharmap = right.transitionMap(rightState)
       charMap = for {
-        char <- allChars
+        char <- allChars.toSeq
         leftDestState = leftCharmap.getOrElse(char, NullState)
         rightDestState = rightCharmap.getOrElse(char, NullState)
         if leftDestState != NullState || rightDestState != NullState
@@ -105,7 +100,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       }
       if !charMap.isEmpty
     } yield {
-      BiState(leftState, rightState) -> charMap.toMap
+      BiState(leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of 
     // the right DFA that are no accepting
@@ -180,8 +175,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
 
   def reverse(): Nfa = {
     val initial = new State
-    val epsilon: RegexTree.AtomPart = RegexTree.Epsilon
-    val first = impl.accepting.toSeq.map(s => NfaTransition(initial, s, epsilon))
+    val first = impl.accepting.toSeq.map(s => NfaTransition(initial, s, Epsilon))
     val rest = for {
       (from, fn) <- impl.defTransitions
       (char, to) <- fn 
@@ -209,6 +203,12 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
 
 object Dfa extends StrictLogging {
 
+  case class BiState(first: State, second: State) {
+    override def toString() = {
+      s"$first,$second"
+    }
+  }
+  
   /**
    * Match-nothing DFA
    */
@@ -236,7 +236,7 @@ object Dfa extends StrictLogging {
     }
     val epsilonFreeTransitions = transitionMap.mapValuesNow { trans =>
       // warn: partial function in for comprehension!
-      for ((char: RegexTree.NonEmptyChar, target) <- trans) yield char -> target
+      for ((char: CharInterval, target) <- trans) yield char -> target
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
     // Given a transition map and a set of states of a NFA, this function augments that set, following all epsilon
@@ -258,7 +258,7 @@ object Dfa extends StrictLogging {
         followEpsilonImpl(expanded)
     }
     val dfaInitial = followEpsilon(Set(nfa.initial))
-    val dfaTransitions = mutable.Map[MultiState, Map[NonEmptyChar, MultiState]]()
+    val dfaTransitions = mutable.Map[MultiState, SortedMap[CharInterval, MultiState]]()
     val dfaStates = mutable.Set[MultiState]()
     val pending = mutable.Queue[MultiState](dfaInitial)
     while (!pending.isEmpty) {
@@ -278,7 +278,7 @@ object Dfa extends StrictLogging {
       }
       pending.enqueue(newPending.toSeq: _*)
       if (!dfaCurrentTrans.isEmpty)
-        dfaTransitions(current) = dfaCurrentTrans
+        dfaTransitions(current) = SortedMap(dfaCurrentTrans.toSeq: _*)
     }
     // a DFA state is accepting if any of its NFA member-states is
     val dfaAccepting = dfaStates.filter(st => Util.doIntersect(st.states, nfa.accepting)).toSet

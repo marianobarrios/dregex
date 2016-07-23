@@ -3,6 +3,7 @@ package dregex.extra
 import dregex.impl.Nfa
 import dregex.impl.Automaton
 import dregex.impl.RegexTree
+import dregex.impl.Epsilon
 
 object DotFormatter {
 
@@ -19,7 +20,7 @@ object DotFormatter {
       s""""${state.toString}" [shape=$shape,peripheries=$peripheries];"""
     }
     val transitions = for (transition <- nfa.transitions) yield {
-      val weight = if (transition.char == RegexTree.Epsilon)
+      val weight = if (transition.char == Epsilon)
         1
       else
         2

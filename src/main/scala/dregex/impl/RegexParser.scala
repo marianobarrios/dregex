@@ -1,10 +1,9 @@
 package dregex.impl
 
 import scala.util.parsing.combinator.JavaTokenParsers
-
 import com.typesafe.scalalogging.slf4j.StrictLogging
-
 import dregex.InvalidRegexException
+import dregex.impl.UnicodeChar.FromCharConversion
 
 class RegexParser extends JavaTokenParsers {
 
@@ -28,16 +27,16 @@ class RegexParser extends JavaTokenParsers {
   def specialEscape = backslash ~ "[^dwsDWSuxc01234567]".r ^^ {
     case _ ~ char =>
       char match {
-        case "n" => Lit.fromChar('\n')
-        case "r" => Lit.fromChar('\r')
-        case "t" => Lit.fromChar('\t')
-        case "f" => Lit.fromChar('\f')
-        case "b" => Lit.fromChar('\b')
-        case "v" => Lit.fromChar('\u000B') // vertical tab
-        case "a" => Lit.fromChar('\u0007') // bell
-        case "e" => Lit.fromChar('\u001B') // escape
-        case "B" => Lit.fromChar('\\')
-        case c => Lit.fromSingletonString(c) // remaining escaped characters stand for themselves
+        case "n" => Lit('\n'.u)
+        case "r" => Lit('\r'.u)
+        case "t" => Lit('\t'.u)
+        case "f" => Lit('\f'.u)
+        case "b" => Lit('\b'.u)
+        case "v" => Lit('\u000B'.u) // vertical tab
+        case "a" => Lit('\u0007'.u) // bell
+        case "e" => Lit('\u001B'.u) // escape
+        case "B" => Lit('\\'.u)
+        case c => Lit(UnicodeChar.fromSingletonString(c)) // remaining escaped characters stand for themselves
       }
   }
 
@@ -50,8 +49,8 @@ class RegexParser extends JavaTokenParsers {
       val low = Integer.parseInt(lowDigits.mkString, 16).toChar
       val codePoint = Character.toCodePoint(high, low)
       Lit(UnicodeChar(codePoint))
-  }  
-  
+  }
+
   private def isHighSurrogate(digits: List[String]) = {
     Character.isHighSurrogate(Integer.parseInt(digits.mkString, 16).toChar)
   }
@@ -59,7 +58,7 @@ class RegexParser extends JavaTokenParsers {
   private def isLowSurrogate(digits: List[String]) = {
     Character.isLowSurrogate(Integer.parseInt(digits.mkString, 16).toChar)
   }
-  
+
   def unicodeEscape = backslash ~ "u" ~ repN(4, hexDigit) ^^ {
     case _ ~ _ ~ digits =>
       Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
@@ -69,7 +68,7 @@ class RegexParser extends JavaTokenParsers {
     case _ ~ _ ~ digits =>
       Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
   }
-  
+
   def longHexEscape = backslash ~ "x" ~ "{" ~ hexDigit.+ ~ "}" ^^ {
     case _ ~ _ ~ digits ~ _ =>
       Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
@@ -89,20 +88,16 @@ class RegexParser extends JavaTokenParsers {
    */
   def anyEscape = specialEscape | doubleUnicodeEscape | unicodeEscape | hexEscape | longHexEscape | octalEscape | controlEscape
 
-  def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit.fromSingletonString(x)))
+  def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(UnicodeChar.fromSingletonString(x))))
 
   def charLit = anchor | anythingExcept(charSpecial) | anyEscape
 
   def characterClassLit = anythingExcept(charSpecialInsideClasses) | anyEscape
 
-  def singleCharacterClassLit = characterClassLit ^^ (lit => ExtensionCharSet(lit.char))
+  def singleCharacterClassLit = characterClassLit ^^ (lit => CharSet(Seq(lit)))
 
-  /*
-  * For convenience, character class ranges are implemented at the parser level. This method directly
-  * returns a list of all the characters included in the range 
-  */
   def charClassRange = characterClassLit ~ "-" ~ characterClassLit ^^ {
-    case start ~ _ ~ end => RangeCharSet(start.char, end.char)
+    case start ~ _ ~ end => CharSet.fromRange(CharRange(start.char, end.char))
   }
 
   def charClassAtom = charClassRange | singleCharacterClassLit | shorthandCharSet
@@ -110,39 +105,29 @@ class RegexParser extends JavaTokenParsers {
   def charClass = "[" ~ "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? ~ "]" ^^ {
     case _ ~ negated ~ leftDash ~ charClass ~ rightDash ~ _ =>
       val chars = if (leftDash.isDefined || rightDash.isDefined)
-        charClass :+ ExtensionCharSet.fromCharLiterals('-')
+        charClass :+ CharSet.fromRange(Lit('-'.u))
       else
         charClass
-      negated.fold[Node](CharClass(chars: _*))(x => NegatedCharClass(chars: _*))
+      val set = CharSet.fromCharSets(chars: _*)
+      negated.fold[Node](set)(_ => set.complement)
   }
 
   // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
   def dashClass = "[" ~ "^".? ~ "-" ~ "]" ^^ {
     case _ ~ negated ~ _ ~ _ =>
-      negated.fold[Node](CharClass(ExtensionCharSet.fromCharLiterals('-'))) { x => 
-        NegatedCharClass(ExtensionCharSet.fromCharLiterals('-'))
-      }
+      val set = CharSet.fromRange(Lit('-'.u))
+      negated.fold[Node](set)(_ => set.complement)
   }
 
-  val numberSet = RangeCharSet.fromCharLiterals('0', '9')
-  val spaceSet = ExtensionCharSet.fromCharLiterals('\n', '\t', '\r', '\f', ' ')
-  val wordSet = MultiRangeCharSet(
-      numberSet, 
-      RangeCharSet.fromCharLiterals('a', 'z'), 
-      RangeCharSet.fromCharLiterals('A', 'Z'), 
-      ExtensionCharSet.fromCharLiterals('_'))
-  
   def shorthandCharSet = backslash ~ "[DWSdws]".r ^^ {
-    case _ ~ "d" => numberSet
-    case _ ~ "D" => CompCharSet(numberSet)
-    case _ ~ "s" => spaceSet
-    case _ ~ "S" => CompCharSet(spaceSet)
-    case _ ~ "w" => wordSet
-    case _ ~ "W" => CompCharSet(wordSet)
+    case _ ~ "d" => PredefinedCharSets.digit
+    case _ ~ "D" => PredefinedCharSets.digit.complement
+    case _ ~ "s" => PredefinedCharSets.space
+    case _ ~ "S" => PredefinedCharSets.space.complement
+    case _ ~ "w" => PredefinedCharSets.wordChar
+    case _ ~ "W" => PredefinedCharSets.wordChar.complement
   }
-
-  def shorthandCharClass = shorthandCharSet ^^ (set => CharClass(set))
 
   def group = "(" ~ ("?" ~ "<".? ~ "[:=!]".r).? ~ regex ~ ")" ^^ {
     case _ ~ modifiers ~ value ~ _ =>
@@ -163,7 +148,7 @@ class RegexParser extends JavaTokenParsers {
   def charWildcard = "." ^^^ Wildcard
 
   def regexAtom =
-    charLit | charWildcard | charClass | dashClass | shorthandCharClass | group
+    charLit | charWildcard | charClass | dashClass | shorthandCharSet | group
 
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
 
@@ -198,8 +183,8 @@ class RegexParser extends JavaTokenParsers {
     case parts => Juxt(parts)
   }
 
-  def emptyRegex = "" ^^^ Epsilon
-
+  def emptyRegex = "" ^^^ Juxt(Seq())
+  
   def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~ regex).? ^^ {
     case left ~ Some(_ ~ right) => Disj(Seq(left, right))
     case left ~ None => left

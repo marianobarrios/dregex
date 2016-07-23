@@ -2,6 +2,7 @@ package dregex.impl
 
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import java.time.Duration
+import scala.collection.immutable.SortedMap
 
 object Util extends StrictLogging {
 
@@ -27,9 +28,19 @@ object Util extends StrictLogging {
     (res, time)
   }
 
+  implicit class StrictSortedMap[K <: Ordered[K], A](map: SortedMap[K, A]) {
+    def mapValuesNow[B](f: A => B): SortedMap[K, B] = {
+      val a = map.toSeq.map { case (a, b) => (a, f(b)) }
+      SortedMap(a: _*)
+    }
+  }
   
   implicit class StrictMap[K, A](map: Map[K, A]) {
     def mapValuesNow[B](f: A => B): Map[K, B] = map.map { case (a, b) => (a, f(b)) }
+  }  
+  
+  def floorEntry[A, B](sortedMap: SortedMap[A, B], key: A): Option[(A, B)] = {
+    sortedMap.to(key).lastOption
   }
   
 }

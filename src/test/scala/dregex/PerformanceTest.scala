@@ -43,5 +43,12 @@ class PerformanceTest extends FunSuite {
     compare(regex = "(x+x+)+y", text = "xxxxxxxxxxxxxxxxxxxxxxxxxxxx", shouldMatch = false)
     compare(regex = "(.*?,){27}P", text = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27", shouldMatch = false)
   }
+  
+  test("large character classes") {
+    val (regex, elapsed) = Util.time {
+      Regex.compile("""[\x{0}-\x{10FFFF}]""")
+    }
+    info(s"compilation time: $elapsed")
+  }
 
 }
