@@ -13,9 +13,9 @@ case class UnicodeChar(codePoint: Int) extends Ordered[UnicodeChar] {
    */
   override def toString() = {
     if (Character.isLetterOrDigit(codePoint))
-      new String(Character.toChars(codePoint))
+      s"‘${new String(Character.toChars(codePoint))}’"
     else
-      f"0x$codePoint%x"
+      f"$codePoint%X₁₆"
   }
 
   def +(that: Int): UnicodeChar = UnicodeChar(codePoint + that)
@@ -25,7 +25,7 @@ case class UnicodeChar(codePoint: Int) extends Ordered[UnicodeChar] {
     if (Character.isLetterOrDigit(codePoint))
       new String(Character.toChars(codePoint))
     else
-      f"\\x{$codePoint%x}"
+      f"\\x{$codePoint%X}"
   }
 
   def toJavaString = new String(Character.toChars(codePoint))
@@ -49,6 +49,10 @@ object UnicodeChar {
 
   implicit class FromCharConversion(val char: Char) extends AnyVal {
     def u = UnicodeChar.fromChar(char)
+  }
+
+  implicit class FromIntConversion(val int: Int) extends AnyVal {
+    def u = UnicodeChar(int)
   }
 
 }

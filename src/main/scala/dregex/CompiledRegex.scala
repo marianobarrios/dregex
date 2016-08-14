@@ -15,6 +15,6 @@ class CompiledRegex private[dregex] (originalString: String, val parsedRegex: Pa
     new Compiler(universe.alphabet).fromTree(parsedRegex.tree)
   }
 
-  override def toString = s"[$originalString] (DFA states: ${dfa.stateCount})"
+  override def toString = s"⟪$originalString⟫ (DFA states: ${dfa.stateCount})"
 
 }

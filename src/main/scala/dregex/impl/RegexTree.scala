@@ -59,6 +59,7 @@ object RegexTree {
     def toRegex = throw new UnsupportedOperationException("Cannot express a range outside a char class")
     def toCharClassLit = s"${from.toRegex}-${to.toRegex}"
     def precedence = throw new UnsupportedOperationException("Cannot express a range outside a char class")
+    override def toString = s"$from–$to"
 
   }
 
@@ -69,6 +70,7 @@ object RegexTree {
     def toRegex = char.toRegex
     def toCharClassLit = char.toRegex
     def precedence = 1
+    override def toString = char.toString
   }
 
   case object Wildcard extends AbstractRange {
@@ -77,6 +79,7 @@ object RegexTree {
     def toRegex = "."
     def toCharClassLit = throw new UnsupportedOperationException("Cannot express a wildcard inside a char class")
     def precedence = 1
+    override def toString = "✶"
   }
   
   case class CharSet(ranges: Seq[AbstractRange]) extends Node {
@@ -84,6 +87,7 @@ object RegexTree {
     def toRegex = s"[${ranges.map(_.toCharClassLit).mkString}]"
     def canonical = this
     def precedence = 1
+    override def toString = s"${getClass.getSimpleName}(${ranges.mkString(",")})"
   }
 
   object CharSet {
@@ -93,7 +97,7 @@ object RegexTree {
 
   case class Disj(values: Seq[Node]) extends ComplexPart {
 
-    override def toString = s"Disj(${values.mkString(", ")})"
+    override def toString = s"${getClass.getSimpleName}(${values.mkString(",")})"
 
     def toRegex = values.map(_.toRegex).mkString("|")
 
@@ -179,11 +183,19 @@ object RegexTree {
 
     def precedence = 2
 
+    override def toString = {
+      val range = (min, max) match {
+        case (mn, None) => s"$mn–∞"
+        case (mn, Some(mx)) if mn == mx => mn
+        case (mn, Some(mx)) => s"$mn–$mx"
+      }
+      s"${getClass.getSimpleName}($range,$value)"
+    }
   }
 
   case class Juxt(values: Seq[Node]) extends ComplexPart {
 
-    override def toString = s"Juxt(${values.mkString(", ")})"
+    override def toString = s"Juxt(${values.mkString(",")})"
 
     override def canonical = {
       def flattenValues(values: Seq[Node]): Seq[Node] = {

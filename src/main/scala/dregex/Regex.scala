@@ -78,7 +78,7 @@ trait Regex extends StrictLogging {
       checkUniverse(other)
       new SynteticRegex(dfa intersect other.dfa, universe)
     }
-    logger.debug(s"$this and $other intersected in $time")
+    logger.trace(s"$this and $other intersected in $time")
     res
   }
 
@@ -92,7 +92,7 @@ trait Regex extends StrictLogging {
       checkUniverse(other)
       new SynteticRegex(dfa diff other.dfa, universe)
     }
-    logger.debug(s"$this and $other diffed in $time")
+    logger.trace(s"$this and $other diffed in $time")
     res
   }
 
@@ -106,7 +106,7 @@ trait Regex extends StrictLogging {
       checkUniverse(other)
       new SynteticRegex(dfa union other.dfa, universe)
     }
-    logger.debug(s"$this and $other unioned in $time")
+    logger.trace(s"$this and $other unioned in $time")
     res
   }
 
@@ -143,7 +143,7 @@ object Regex extends StrictLogging {
     val (parsedRegex, time) = Util.time {
       new ParsedRegex(RegexParser.parse(regex))
     }
-    logger.trace(s"regex [$regex] parsed in $time")
+    logger.trace(s"⟪$regex⟫ parsed in $time: ${parsedRegex.tree}")
     parsedRegex
   }
 

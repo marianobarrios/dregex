@@ -13,14 +13,14 @@
 		<encoder>
 			<pattern>${isoDate} %-5level [%.-40thread] %logger{55} - %msg%n</pattern>
 		</encoder>
-<!-- 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-        	<level>TRACE</level>
-    	</filter> -->
+ 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        	<level>debug</level>
+    	</filter>
 	</appender>
 	
-	<root level="debug">
-		<appender-ref ref="FILE" />
+	<root level="trace">
 		<appender-ref ref="STDOUT"/>
+		<appender-ref ref="FILE" />
 	</root>
 	
 </configuration>

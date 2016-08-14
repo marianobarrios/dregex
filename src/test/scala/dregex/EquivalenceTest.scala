@@ -75,10 +75,28 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(equiv("(?=a|b).*", "[ab].*"))
   }
     
-  test("shortcut characted classes") {
+  test("shortcut character classes") {
     assertResult(true)(equiv("""\d""", "[0-9]"))
     assertResult(true)(equiv("""\w""", "[a-zA-Z0-9_]"))
-    assertResult(true)(equiv("""\s""", """[ \t\n\r\f]"""))
+    assertResult(true)(equiv("""\s""", """[ \t\n\r\f\x{B}]"""))
+    assertResult(true)(equiv("""\d""", """[\d]"""))
+  }
+  
+  test("posix character classes") {
+    assertResult(true)(equiv("""\p{Lower}""", "[a-z]"))
+    assertResult(true)(equiv("""\p{Upper}""", "[A-Z]"))
+    assertResult(true)(equiv("""\p{ASCII}""", """[\x{0}-\x{7F}]"""))
+    assertResult(true)(equiv("""\p{Alpha}""", """[\p{Lower}\p{Upper}]"""))
+    assertResult(true)(equiv("""\p{Digit}""", "[0-9]"))
+    assertResult(true)(equiv("""\p{Alnum}""", """[\p{Alpha}\p{Digit}]"""))
+    assertResult(true)(equiv("""\p{Punct}""", """[!"#$%&'()*+,-./:;<=>?@[\\\]\^_`{|}~]"""))
+    assertResult(true)(equiv("""\p{Graph}""", """[\p{Alnum}\p{Punct}]"""))
+    assertResult(true)(equiv("""\p{Print}""", """[\p{Graph}\x{20}]"""))
+    assertResult(true)(equiv("""\p{Blank}""", """[ \t]"""))
+    assertResult(true)(equiv("""\p{Cntrl}""", """[\x{0}-\x{1F}\x{7F}]"""))
+    assertResult(true)(equiv("""\p{XDigit}""", "[0-9a-fA-F]"))
+    assertResult(true)(equiv("""\p{Space}""", """[ \t\n\x0B\f\r]"""))
+    assertResult(true)(equiv("""\p{Lower}""", """[\p{Lower}]"""))
   }
   
   test("disjunctions") {

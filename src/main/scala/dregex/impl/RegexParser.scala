@@ -24,7 +24,7 @@ class RegexParser extends JavaTokenParsers {
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
 
-  def specialEscape = backslash ~ "[^dwsDWSuxc01234567]".r ^^ {
+  def specialEscape = backslash ~ "[^dwsDWSuxcp01234567]".r ^^ {
     case _ ~ char =>
       char match {
         case "n" => Lit('\n'.u)
@@ -40,7 +40,7 @@ class RegexParser extends JavaTokenParsers {
       }
   }
 
-  def hexDigit = "[0-9A-Fa-f]".r
+  def hexDigit = """\p{XDigit}""".r
   def octalDigit = "[0-7]".r
 
   def doubleUnicodeEscape = backslash ~ "u" ~ repN(4, hexDigit) ~ backslash ~ "u" ~ repN(4, hexDigit) ^? {
@@ -100,7 +100,13 @@ class RegexParser extends JavaTokenParsers {
     case start ~ _ ~ end => CharSet.fromRange(CharRange(start.char, end.char))
   }
 
-  def charClassAtom = charClassRange | singleCharacterClassLit | shorthandCharSet
+  def posixCharSet = backslash ~ "p" ~ "{" ~ "[a-zA-Z]+".r ~ "}" ^^ {
+    case _ ~ _ ~ _ ~ posixProperty ~ _ => 
+      PredefinedCharSets.posixClasses.getOrElse(posixProperty, 
+          throw new InvalidRegexException("Invalid POSIX character property: " + posixProperty))
+  }
+    
+  def charClassAtom = charClassRange | singleCharacterClassLit | shorthandCharSet | posixCharSet
 
   def charClass = "[" ~ "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? ~ "]" ^^ {
     case _ ~ negated ~ leftDash ~ charClass ~ rightDash ~ _ =>
@@ -148,7 +154,7 @@ class RegexParser extends JavaTokenParsers {
   def charWildcard = "." ^^^ Wildcard
 
   def regexAtom =
-    charLit | charWildcard | charClass | dashClass | shorthandCharSet | group
+    charLit | charWildcard | charClass | dashClass | shorthandCharSet | posixCharSet | group
 
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
 
