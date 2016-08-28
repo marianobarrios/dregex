@@ -23,16 +23,17 @@ Supported regex flavor
 
 * Literals
 * Escaped characters
-* Standard regular language constructs: `|`, `?`, `*` and `+` and parenthesis grouping.
+* Standard regular language constructs: `|`, `?`, `*` and `+`, and parenthesis grouping.
 * General quantifiers: `{n}`, `{n,m}`, `{n,}`
 * Dot wildcards
 * Simple character classes: `[abc]`
 * Simple negated character classes: `[^abc]`
 * Ranges in character classes: `[a-z]`
-* Special character classes: `\w`, `\s`, `\d`.
-* Negated special character classes: `\W`, `\S`, `\D`.
+* Special character classes, including negated versions: `\w`, `\s`, `\d`, `\W`, `\S`, `\D`
+* POSIX character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)), e.g., `\p{Lower}`, `\p{Punct}`, `\P{Lower}`
+* Unicode block character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)), e.g., `\p{InGreek}`
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
-* Lookahead (positive and negative)
+* Lookahead (positive and negative) (see note below)
 
 ### Not (yet) supported
 

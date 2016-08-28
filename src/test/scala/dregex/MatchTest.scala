@@ -223,7 +223,7 @@ class MatchTest extends FunSuite {
     }
 
     {
-      val Seq(a1, a2, a3, b1, b2, b3, c) = 
+      val Seq(a1, a2, a3, b1, b2, b3, c) =
         Regex.compile(Seq("""\S""", """[\S]""", """[^\s]""", """\s""", """[\s]""", """[^\S]""", ".")).unzip._2
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
@@ -236,7 +236,7 @@ class MatchTest extends FunSuite {
     }
 
     {
-      val Seq(a1, a2, a3, b1, b2, b3, c) = 
+      val Seq(a1, a2, a3, b1, b2, b3, c) =
         Regex.compile(Seq("""\D""", """[\D]""", """[^\d]""", """\d""", """[\d]""", """[^\D]""", ".")).unzip._2
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
@@ -249,7 +249,7 @@ class MatchTest extends FunSuite {
     }
 
     {
-      val Seq(a1, a2, a3, b1, b2, b3, c) = 
+      val Seq(a1, a2, a3, b1, b2, b3, c) =
         Regex.compile(Seq("""\W""", """[\W]""", """[^\w]""", """\w""", """[\w]""", """[^\W]""", ".")).unzip._2
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
@@ -265,7 +265,7 @@ class MatchTest extends FunSuite {
       val Seq(a, b) = Regex.compile(Seq("""\d""", """[^\D\W]""")).unzip._2
       assertResult(true)(a equiv b)
     }
-    
+
   }
 
   test("quantifiers") {
@@ -574,7 +574,7 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matches("ac"))
       assertResult(false)(r.matches("ab"))
     }
-    
+
     using(Regex.compile("a(?!b).|other")) { r =>
       assertResult(true)(r.matchesAnything)
       assertResult(false)(r.matches("a"))
@@ -599,7 +599,7 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matches("aaotheraa"))
       assertResult(false)(r.matches("aabotherab"))
     }
-    
+
     using(Regex.compile("([ax]+(?!b).|other)+")) { r =>
       assertResult(true)(r.matchesAnything)
       assertResult(false)(r.matches("x"))
@@ -615,7 +615,7 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matches("xaotheraa"))
       assertResult(false)(r.matches("xabotherab"))
     }
-    
+
     using(Regex.compile("a+(?!b).")) { r =>
       assertResult(true)(r.matchesAnything)
       assertResult(false)(r.matches("a"))
@@ -627,14 +627,14 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matches("aac"))
       assertResult(false)(r.matches("aab"))
     }
-    
+
     using(Regex.compile(".*(?!a).*")) { r =>
       assertResult(true)(r.matchesAnything)
       assertResult(true)(r.matches("a"))
       assertResult(true)(r.matches("aa"))
       assertResult(true)(r.matches("aaa"))
     }
-    
+
     using(Regex.compile("(?!.?)")) { r =>
       assertResult(false)(r.matchesAnything)
     }
@@ -840,17 +840,17 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matches("aaccd"))
       assertResult(true)(r.matches("aacce"))
     }
-    
+
     using(Regex.compile("(?!bb)b")) { r =>
       assertResult(true)(r.matches("b"))
     }
-    
+
     using(Regex.compile("((?!bb)b)+")) { r =>
       assertResult(true)(r.matches("b"))
       // true because lookahead cannot "escape" the expression it's in 
       assertResult(true)(r.matches("bb"))
     }
-    
+
   }
 
 }

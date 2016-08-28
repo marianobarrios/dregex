@@ -100,12 +100,26 @@ class RegexParser extends JavaTokenParsers {
     case start ~ _ ~ end => CharSet.fromRange(CharRange(start.char, end.char))
   }
 
-  def posixCharSet = backslash ~ "p" ~ "{" ~ "[a-zA-Z]+".r ~ "}" ^^ {
-    case _ ~ _ ~ _ ~ posixProperty ~ _ => 
-      PredefinedCharSets.posixClasses.getOrElse(posixProperty, 
-          throw new InvalidRegexException("Invalid POSIX character property: " + posixProperty))
+  def posixCharSet = backslash ~ "p" ~ "{" ~ "[a-zA-Z =]+".r ~ "}" ^^ {
+    case _ ~ _ ~ _ ~ prop ~ _ =>
+      if (prop.startsWith("In") || prop.startsWith("block=") || prop.startsWith("blk=")) {
+        val blockName = if (prop.startsWith("In")) {
+          prop.substring(2)
+        } else if (prop.startsWith("block=")) {
+          prop.substring(6)
+        } else if (prop.startsWith("blk=")) {
+          prop.substring(4)
+        } else {
+          throw new IllegalStateException
+        }
+        PredefinedCharSets.unicodeBlocks.getOrElse(blockName.toUpperCase(),
+          throw new InvalidRegexException("Invalid Unicode block: " + blockName))
+      } else {
+        PredefinedCharSets.posixClasses.getOrElse(prop,
+          throw new InvalidRegexException("Invalid POSIX character property: " + prop))
+      }
   }
-    
+
   def charClassAtom = charClassRange | singleCharacterClassLit | shorthandCharSet | posixCharSet
 
   def charClass = "[" ~ "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? ~ "]" ^^ {
@@ -190,7 +204,7 @@ class RegexParser extends JavaTokenParsers {
   }
 
   def emptyRegex = "" ^^^ Juxt(Seq())
-  
+
   def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~ regex).? ^^ {
     case left ~ Some(_ ~ right) => Disj(Seq(left, right))
     case left ~ None => left
