@@ -114,6 +114,18 @@ class RegexParser extends JavaTokenParsers {
         }
         PredefinedCharSets.unicodeBlocks.getOrElse(blockName.toUpperCase(),
           throw new InvalidRegexException("Invalid Unicode block: " + blockName))
+      } else if (prop.startsWith("Is") || prop.startsWith("script=") || prop.startsWith("sc=")) {
+        val scriptName = if (prop.startsWith("Is")) {
+          prop.substring(2)
+        } else if (prop.startsWith("script=")) {
+          prop.substring(7)
+        } else if (prop.startsWith("sc=")) {
+          prop.substring(3)
+        } else {
+          throw new IllegalStateException
+        }
+        PredefinedCharSets.unicodeScripts.getOrElse(scriptName.toUpperCase(),
+          throw new InvalidRegexException("Invalid Unicode script: " + scriptName))
       } else {
         PredefinedCharSets.posixClasses.getOrElse(prop,
           throw new InvalidRegexException("Invalid POSIX character property: " + prop))

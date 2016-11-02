@@ -31,7 +31,9 @@ Supported regex flavor
 * Ranges in character classes: `[a-z]`
 * Special character classes, including negated versions: `\w`, `\s`, `\d`, `\W`, `\S`, `\D`
 * POSIX character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)), e.g., `\p{Lower}`, `\p{Punct}`, `\P{Lower}`
-* Unicode block character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)), e.g., `\p{InGreek}`
+* Unicode character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)):
+	* [Blocks](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ubc), e.g., `\p{InGreek}`, `\p{block=Greek}`, `\p{blk=Greek}`
+	* [Scripts](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#usc), e.g., `\p{IsLatin}`, `\p{script=Latin}`, `\p{sc=Latin}`
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
 * Lookahead (positive and negative) (see note below)
 

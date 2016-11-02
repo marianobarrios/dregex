@@ -71,22 +71,53 @@ class UnicodeTest extends FunSuite {
       assertResult(true)(r.matches("α"))
       assertResult(false)(r.matches("a"))
     }
-    
+
     using(Regex.compile("""\p{InGreek and Coptic}""")) { r =>
       assertResult(true)(r.matches("α"))
       assertResult(false)(r.matches("a"))
     }
-    
+
     using(Regex.compile("""\p{block=Greek}""")) { r =>
       assertResult(true)(r.matches("α"))
       assertResult(false)(r.matches("a"))
     }
-    
+
     using(Regex.compile("""\p{blk=Greek}""")) { r =>
       assertResult(true)(r.matches("α"))
       assertResult(false)(r.matches("a"))
     }
+
+  }
+
+  test("scripts") {
+
+    using(Regex.compile("""\p{IsGreek}""")) { r =>
+      assertResult(true)(r.matches("α"))
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("Ω"))
+      assertResult(false)(r.matches("z"))
+    }
+
+    using(Regex.compile("""\p{IsGREEK}""")) { r =>
+      assertResult(true)(r.matches("α"))
+      assertResult(false)(r.matches("a"))
+    }
+
+    using(Regex.compile("""\p{IsGREEK}""")) { r =>
+      assertResult(true)(r.matches("α"))
+      assertResult(false)(r.matches("a"))
+    }
     
+    using(Regex.compile("""\p{script=GREK}""")) { r =>
+      assertResult(true)(r.matches("α"))
+      assertResult(false)(r.matches("a"))
+    }
+
+    using(Regex.compile("""\p{sc=Greek}""")) { r =>
+      assertResult(true)(r.matches("α"))
+      assertResult(false)(r.matches("a"))
+    }
+
   }
 
 }

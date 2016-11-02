@@ -10,6 +10,7 @@ import dregex.impl.RegexTree.CharRange
 import java.lang.Character.UnicodeBlock
 import scala.collection.JavaConversions._
 import scala.collection.breakOut
+import java.lang.Character.UnicodeScript
 
 object PredefinedCharSets {
 
@@ -32,7 +33,7 @@ object PredefinedCharSets {
       javaBlocks.lift(i).map { block =>
         block -> CharSet.fromRange(CharRange(from.u, to.u))
       }
-    } (breakOut)
+    }(breakOut)
     val alias = getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").toMap
     alias.mapValues { javaUnicodeBlock =>
       blockToSetMap.get(javaUnicodeBlock).getOrElse {
@@ -43,6 +44,33 @@ object PredefinedCharSets {
         CharSet(Seq())
       }
     }
+  }
+
+  val unicodeScripts: Map[String, CharSet] = {
+    val scriptStarts = getPrivateStaticField[Array[Int]](classOf[UnicodeScript], "scriptStarts")
+    val javaScripts = getPrivateStaticField[Array[UnicodeScript]](classOf[UnicodeScript], "scripts").toSeq
+    val scriptToSetMap = {
+      val builder = collection.mutable.Map[UnicodeScript, CharSet]()
+      for (i <- 0 until scriptStarts.length) {
+        val from = scriptStarts(i)
+        val to = if (i == scriptStarts.length - 1)
+          UnicodeChar.max.codePoint
+        else
+          scriptStarts(i + 1)
+        // skip unassigned scripts
+        javaScripts.lift(i).foreach { script =>
+          val CharSet(existing) = builder.getOrElse(script, CharSet(Seq()))
+          builder.put(script, CharSet(existing :+ CharRange(from.u, to.u)))
+        }
+      }
+      builder.toMap
+    }
+    val aliases = getPrivateStaticField[java.util.Map[String, UnicodeScript]](classOf[UnicodeScript], "aliases").toMap
+    val canonicalNames = scriptToSetMap.map {
+      case (script, charSet) =>
+        (script.name(), charSet)
+    }
+    canonicalNames ++ aliases.mapValues(scriptToSetMap)
   }
 
   val lower = CharSet.fromRange(CharRange(from = 'a'.u, to = 'z'.u))
