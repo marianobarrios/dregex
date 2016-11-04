@@ -100,39 +100,48 @@ class RegexParser extends JavaTokenParsers {
     case start ~ _ ~ end => CharSet.fromRange(CharRange(start.char, end.char))
   }
 
-  def posixCharSet = backslash ~ "p" ~ "{" ~ "[a-zA-Z =]+".r ~ "}" ^^ {
-    case _ ~ _ ~ _ ~ prop ~ _ =>
-      if (prop.startsWith("In") || prop.startsWith("block=") || prop.startsWith("blk=")) {
-        val blockName = if (prop.startsWith("In")) {
-          prop.substring(2)
-        } else if (prop.startsWith("block=")) {
-          prop.substring(6)
-        } else if (prop.startsWith("blk=")) {
-          prop.substring(4)
-        } else {
-          throw new IllegalStateException
-        }
-        PredefinedCharSets.unicodeBlocks.getOrElse(blockName.toUpperCase(),
-          throw new InvalidRegexException("Invalid Unicode block: " + blockName))
-      } else if (prop.startsWith("Is") || prop.startsWith("script=") || prop.startsWith("sc=")) {
-        val scriptName = if (prop.startsWith("Is")) {
-          prop.substring(2)
-        } else if (prop.startsWith("script=")) {
-          prop.substring(7)
-        } else if (prop.startsWith("sc=")) {
-          prop.substring(3)
-        } else {
-          throw new IllegalStateException
-        }
-        PredefinedCharSets.unicodeScripts.getOrElse(scriptName.toUpperCase(),
-          throw new InvalidRegexException("Invalid Unicode script: " + scriptName))
+  def specialCharSetByName = backslash ~ "p" ~ "{" ~ "[a-z_]+".r ~ "=" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
+    case _ ~ _ ~ propName ~ _ ~ propValue ~ _ =>
+      if (propName == "block" || propName == "blk") {
+        PredefinedCharSets.unicodeBlocks.getOrElse(propValue.toUpperCase(),
+          throw new InvalidRegexException("Invalid Unicode block: " + propValue))
+      } else if (propName == "script" || propName == "sc") {
+        PredefinedCharSets.unicodeScripts.getOrElse(propValue.toUpperCase(),
+          throw new InvalidRegexException("Invalid Unicode script: " + propValue))
+      } else if (propName == "general_category" || propName == "gc") {
+        PredefinedCharSets.unicodeGeneralCategories.getOrElse(propValue,
+          throw new InvalidRegexException("Invalid Unicode general category: " + propValue))
       } else {
-        PredefinedCharSets.posixClasses.getOrElse(prop,
-          throw new InvalidRegexException("Invalid POSIX character property: " + prop))
+        throw new InvalidRegexException("Invalid Unicode character property name: " + propName)
       }
   }
 
-  def charClassAtom = charClassRange | singleCharacterClassLit | shorthandCharSet | posixCharSet
+  def specialCharSetWithIs = backslash ~ "p" ~ "{" ~ "Is" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
+    case _ ~ _ ~ _ ~ _ ~ propName ~ _ =>
+      /*
+       * If the property starts with "Is" it could be both a script or a general category. Look for both.
+       */
+      PredefinedCharSets.unicodeScripts.get(propName.toUpperCase()).orElse(
+        PredefinedCharSets.unicodeGeneralCategories.get(propName)).getOrElse {
+          throw new InvalidRegexException("Invalid Unicode script or general category: " + propName)
+        }
+  }
+
+  def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
+    case _ ~ _ ~ _ ~ _ ~ blockName ~ _ =>
+      PredefinedCharSets.unicodeBlocks.getOrElse(blockName.toUpperCase(),
+        throw new InvalidRegexException("Invalid Unicode block: " + blockName))
+  }
+
+  def specialCharSetImplicit = backslash ~ "p" ~ "{" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
+    case _ ~ _ ~ _ ~ name ~ _ =>
+      PredefinedCharSets.posixClasses.getOrElse(name,
+        throw new InvalidRegexException("Invalid POSIX character class: " + name))
+  }
+
+  def specialCharSet = specialCharSetByName | specialCharSetWithIs | specialCharSetWithIn | specialCharSetImplicit
+
+  def charClassAtom = charClassRange | singleCharacterClassLit | shorthandCharSet | specialCharSet
 
   def charClass = "[" ~ "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? ~ "]" ^^ {
     case _ ~ negated ~ leftDash ~ charClass ~ rightDash ~ _ =>
@@ -180,7 +189,7 @@ class RegexParser extends JavaTokenParsers {
   def charWildcard = "." ^^^ Wildcard
 
   def regexAtom =
-    charLit | charWildcard | charClass | dashClass | shorthandCharSet | posixCharSet | group
+    charLit | charWildcard | charClass | dashClass | shorthandCharSet | specialCharSet | group
 
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
 

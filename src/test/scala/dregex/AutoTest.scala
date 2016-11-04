@@ -20,7 +20,7 @@ class AutoTest extends FunSuite with StrictLogging {
     val generator = new TreeGenerator
     var totalTrees = 0
     var totalStrings = 0
-    val (_, elapsed) = Util.time {
+    val elapsed = Util.time {
       for (tree <- generator.generate(maxDepth = 3)) {
         totalTrees += 1
         val parsedRegex = new ParsedRegex(tree)

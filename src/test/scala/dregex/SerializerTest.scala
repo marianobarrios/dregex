@@ -13,7 +13,7 @@ class SerializerTest extends FunSuite with StrictLogging {
   test("serialize") {
     val generator = new TreeGenerator
     var i = 0
-    val (_, elapsed) = Util.time {
+    val elapsed = Util.time {
       for (tree <- generator.generate(maxDepth = 3)) {
         i += 1
         val canonicalTree = tree.canonical

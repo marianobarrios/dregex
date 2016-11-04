@@ -107,7 +107,7 @@ class UnicodeTest extends FunSuite {
       assertResult(true)(r.matches("α"))
       assertResult(false)(r.matches("a"))
     }
-    
+
     using(Regex.compile("""\p{script=GREK}""")) { r =>
       assertResult(true)(r.matches("α"))
       assertResult(false)(r.matches("a"))
@@ -118,6 +118,30 @@ class UnicodeTest extends FunSuite {
       assertResult(false)(r.matches("a"))
     }
 
+  }
+
+  test("general categories") {
+
+    using(Regex.compile("""\p{IsLu}""")) { r =>
+      assertResult(true)(r.matches("A"))
+      assertResult(false)(r.matches("a"))
+    }    
+    
+    using(Regex.compile("""\p{general_category=Lu}""")) { r =>
+      assertResult(true)(r.matches("A"))
+      assertResult(false)(r.matches("a"))
+    }
+
+    using(Regex.compile("""\p{gc=Lu}""")) { r =>
+      assertResult(true)(r.matches("A"))
+      assertResult(false)(r.matches("a"))
+    }
+
+    using(Regex.compile("""\p{general_category=L}""")) { r =>
+      assertResult(true)(r.matches("A"))
+      assertResult(false)(r.matches("-"))
+    }
+    
   }
 
 }

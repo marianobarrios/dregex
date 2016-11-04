@@ -11,8 +11,11 @@ import java.lang.Character.UnicodeBlock
 import scala.collection.JavaConversions._
 import scala.collection.breakOut
 import java.lang.Character.UnicodeScript
+import com.typesafe.scalalogging.slf4j.StrictLogging
+import scala.collection.mutable.MultiMap
+import scala.collection.mutable.ArrayBuffer
 
-object PredefinedCharSets {
+object PredefinedCharSets extends StrictLogging {
 
   private def getPrivateStaticField[A](clazz: Class[_], name: String): A = {
     val field = clazz.getDeclaredField(name)
@@ -71,6 +74,30 @@ object PredefinedCharSets {
         (script.name(), charSet)
     }
     canonicalNames ++ aliases.mapValues(scriptToSetMap)
+  }
+
+  /*
+   * Use a lazy val because collecting the ranges takes some time: only do it if used.
+   */
+  lazy val unicodeGeneralCategories: Map[String, CharSet] = {
+    val (categories, elapsed) = Util.time {
+      val categoryMapping: Map[Int, String] = GeneralCategory.categories.map {
+        case (name, value) =>
+          value.toInt -> name
+      }(breakOut)
+      val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
+      for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+        val categoryValue = Character.getType(codePoint)
+        val category = categoryMapping(categoryValue)
+        val parentCategory = category.head.toString // first letter
+        val char = Lit(codePoint.u)
+        builder.getOrElseUpdate(category, ArrayBuffer()) += char
+        builder.getOrElseUpdate(parentCategory, ArrayBuffer()) += char
+      }
+      builder.mapValues(ranges => CharSet(RangeOps.union(ranges))).toMap
+    }
+    logger.trace(s"Collected unicode general categories in $elapsed")
+    categories
   }
 
   val lower = CharSet.fromRange(CharRange(from = 'a'.u, to = 'z'.u))

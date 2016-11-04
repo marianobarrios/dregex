@@ -19,7 +19,7 @@ class PerformanceTest extends FunSuite {
         )).unzip._2
     }
     info(s"compilation time: $elapsed1")
-    val (_, elapsed2) = Util.time {
+    val elapsed2 = Util.time {
       regexes.tail.foreach(_ doIntersect regexes.head)
     }
     info(s"intersection time: $elapsed2")
@@ -29,11 +29,11 @@ class PerformanceTest extends FunSuite {
     info(s"matching '$text' with /$regex/")
     val nfa = Pattern.compile(regex)
     val dfa = Regex.compile(regex)
-    val (_, nfaElapsed) = Util.time {
+    val nfaElapsed = Util.time {
       assertResult(shouldMatch)(nfa.matcher(text).matches())
     }
     info(s"NFA (java.util.regex) time: $nfaElapsed")
-    val (_, dfaElapsed) = Util.time {
+    val dfaElapsed = Util.time {
       assertResult(shouldMatch)(dfa.matches(text))
     }
     info(s"DFA (dregex) time: $dfaElapsed")

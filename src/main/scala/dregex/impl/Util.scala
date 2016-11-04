@@ -27,6 +27,12 @@ object Util extends StrictLogging {
     val time = Duration.ofNanos(System.nanoTime() - start)
     (res, time)
   }
+  
+  def time(thunk: => Unit): Duration = {
+    val start = System.nanoTime()
+    thunk
+    Duration.ofNanos(System.nanoTime() - start)
+  }
 
   implicit class StrictSortedMap[K <: Ordered[K], A](map: SortedMap[K, A]) {
     def mapValuesNow[B](f: A => B): SortedMap[K, B] = {
