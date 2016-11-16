@@ -49,4 +49,11 @@ object Util extends StrictLogging {
     sortedMap.to(key).lastOption
   }
   
+  def getPrivateStaticField[A](clazz: Class[_], name: String): A = {
+    val field = clazz.getDeclaredField(name)
+    field.setAccessible(true)
+    field.get(null).asInstanceOf[A]
+  }
+    
+  
 }

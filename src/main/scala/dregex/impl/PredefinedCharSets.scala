@@ -17,15 +17,9 @@ import scala.collection.mutable.ArrayBuffer
 
 object PredefinedCharSets extends StrictLogging {
 
-  private def getPrivateStaticField[A](clazz: Class[_], name: String): A = {
-    val field = clazz.getDeclaredField(name)
-    field.setAccessible(true)
-    field.get(null).asInstanceOf[A]
-  }
-
   val unicodeBlocks: Map[String, CharSet] = {
-    val blockStarts = getPrivateStaticField[Array[Int]](classOf[UnicodeBlock], "blockStarts")
-    val javaBlocks = getPrivateStaticField[Array[UnicodeBlock]](classOf[UnicodeBlock], "blocks").toSeq
+    val blockStarts = Util.getPrivateStaticField[Array[Int]](classOf[UnicodeBlock], "blockStarts")
+    val javaBlocks = Util.getPrivateStaticField[Array[UnicodeBlock]](classOf[UnicodeBlock], "blocks").toSeq
     val blockToSetMap: Map[UnicodeBlock, CharSet] = (0 until blockStarts.length).flatMap { i =>
       val from = blockStarts(i)
       val to = if (i == blockStarts.length - 1)
@@ -37,7 +31,7 @@ object PredefinedCharSets extends StrictLogging {
         block -> CharSet.fromRange(CharRange(from.u, to.u))
       }
     }(breakOut)
-    val alias = getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").toMap
+    val alias = Util.getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").toMap
     alias.mapValues { javaUnicodeBlock =>
       blockToSetMap.get(javaUnicodeBlock).getOrElse {
         /*
@@ -50,8 +44,8 @@ object PredefinedCharSets extends StrictLogging {
   }
 
   val unicodeScripts: Map[String, CharSet] = {
-    val scriptStarts = getPrivateStaticField[Array[Int]](classOf[UnicodeScript], "scriptStarts")
-    val javaScripts = getPrivateStaticField[Array[UnicodeScript]](classOf[UnicodeScript], "scripts").toSeq
+    val scriptStarts = Util.getPrivateStaticField[Array[Int]](classOf[UnicodeScript], "scriptStarts")
+    val javaScripts = Util.getPrivateStaticField[Array[UnicodeScript]](classOf[UnicodeScript], "scripts").toSeq
     val scriptToSetMap = {
       val builder = collection.mutable.Map[UnicodeScript, CharSet]()
       for (i <- 0 until scriptStarts.length) {
@@ -68,7 +62,7 @@ object PredefinedCharSets extends StrictLogging {
       }
       builder.toMap
     }
-    val aliases = getPrivateStaticField[java.util.Map[String, UnicodeScript]](classOf[UnicodeScript], "aliases").toMap
+    val aliases = Util.getPrivateStaticField[java.util.Map[String, UnicodeScript]](classOf[UnicodeScript], "aliases").toMap
     val canonicalNames = scriptToSetMap.map {
       case (script, charSet) =>
         (script.name(), charSet)
@@ -77,29 +71,40 @@ object PredefinedCharSets extends StrictLogging {
   }
 
   /*
-   * Use a lazy val because collecting the ranges takes some time: only do it if used.
+   * Use a lazy val because collecting the categories and the properties 
+   * takes some time: only do it if used. This is because
+   * we don't use a static definition, but iterate over all code points 
+   * and evaluate every property and the category.
    */
-  lazy val unicodeGeneralCategories: Map[String, CharSet] = {
-    val (categories, elapsed) = Util.time {
-      val categoryMapping: Map[Int, String] = GeneralCategory.categories.map {
-        case (name, value) =>
-          value.toInt -> name
-      }(breakOut)
-      val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
+  lazy val (unicodeGeneralCategories, unicodeBinaryProperties): (Map[String, CharSet], Map[String, CharSet]) = {
+    val (ret, elapsed) = Util.time {
+      val categoryBuilder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
+      val propertyBuilder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
       for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
-        val categoryValue = Character.getType(codePoint)
-        val category = categoryMapping(categoryValue)
-        val parentCategory = category.head.toString // first letter
+        
         val char = Lit(codePoint.u)
-        builder.getOrElseUpdate(category, ArrayBuffer()) += char
-        builder.getOrElseUpdate(parentCategory, ArrayBuffer()) += char
-      }
-      builder.mapValues(ranges => CharSet(RangeOps.union(ranges))).toMap
-    }
-    logger.trace(s"Collected unicode general categories in $elapsed")
-    categories
-  }
 
+        // category
+        val categoryJavaId = Character.getType(codePoint).toByte
+        val category = GeneralCategory.categories(categoryJavaId)
+        categoryBuilder.getOrElseUpdate(category, ArrayBuffer()) += char
+        val parentCategory = category.substring(0, 1) // first letter
+        categoryBuilder.getOrElseUpdate(parentCategory, ArrayBuffer()) += char
+        
+        // properties
+        for ((prop, fn) <- GeneralCategory.binaryProperties if fn(codePoint)) {
+          propertyBuilder.getOrElseUpdate(prop, ArrayBuffer()) += char
+        }
+        
+      }
+      val categorySets = categoryBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges))).toMap
+      val propertySets = propertyBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges))).toMap
+      (categorySets, propertySets)
+    }
+    logger.debug(s"Initialized Unicode general category and binary property catalog in $elapsed")
+    ret
+  }
+  
   val lower = CharSet.fromRange(CharRange(from = 'a'.u, to = 'z'.u))
   val upper = CharSet.fromRange(CharRange(from = 'A'.u, to = 'Z'.u))
   val alpha = CharSet.fromCharSets(lower, upper)

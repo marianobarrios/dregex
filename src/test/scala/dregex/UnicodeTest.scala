@@ -122,6 +122,11 @@ class UnicodeTest extends FunSuite {
 
   test("general categories") {
 
+    using(Regex.compile("""\p{Lu}""")) { r =>
+      assertResult(true)(r.matches("A"))
+      assertResult(false)(r.matches("a"))
+    }    
+    
     using(Regex.compile("""\p{IsLu}""")) { r =>
       assertResult(true)(r.matches("A"))
       assertResult(false)(r.matches("a"))
@@ -141,6 +146,21 @@ class UnicodeTest extends FunSuite {
       assertResult(true)(r.matches("A"))
       assertResult(false)(r.matches("-"))
     }
+    
+  }
+  
+  test("binary properties") {
+      
+    using(Regex.compile("""\p{IsAlphabetic}""")) { r =>
+      assertResult(true)(r.matches("A"))
+      assertResult(true)(r.matches("a"))
+      assertResult(false)(r.matches("*"))
+    } 
+
+    using(Regex.compile("""\p{IsHex_Digit}""")) { r =>
+      assertResult(true)(r.matches("f"))
+      assertResult(false)(r.matches("g"))
+    } 
     
   }
 

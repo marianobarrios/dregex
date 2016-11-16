@@ -116,15 +116,17 @@ class RegexParser extends JavaTokenParsers {
       }
   }
 
-  def specialCharSetWithIs = backslash ~ "p" ~ "{" ~ "Is" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
-    case _ ~ _ ~ _ ~ _ ~ propName ~ _ =>
+  def specialCharSetWithIs = backslash ~ "p" ~ "{" ~ "Is" ~ "[a-zA-Z_ ]+".r ~ "}" ^^ {
+    case _ ~ _ ~ _ ~ _ ~ name ~ _ =>
       /*
-       * If the property starts with "Is" it could be both a script or a general category. Look for both.
+       * If the property starts with "Is" it could be either a script, 
+       * general category or a binary property. Look for all.
        */
-      PredefinedCharSets.unicodeScripts.get(propName.toUpperCase()).orElse(
-        PredefinedCharSets.unicodeGeneralCategories.get(propName)).getOrElse {
-          throw new InvalidRegexException("Invalid Unicode script or general category: " + propName)
-        }
+      PredefinedCharSets.unicodeScripts.get(name.toUpperCase()).orElse(
+        PredefinedCharSets.unicodeGeneralCategories.get(name)).orElse(
+          PredefinedCharSets.unicodeBinaryProperties.get(name.toUpperCase())).getOrElse {
+            throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + name)
+          }
   }
 
   def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
@@ -135,8 +137,10 @@ class RegexParser extends JavaTokenParsers {
 
   def specialCharSetImplicit = backslash ~ "p" ~ "{" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
     case _ ~ _ ~ _ ~ name ~ _ =>
-      PredefinedCharSets.posixClasses.getOrElse(name,
-        throw new InvalidRegexException("Invalid POSIX character class: " + name))
+      PredefinedCharSets.posixClasses.get(name).orElse(
+        PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
+          throw new InvalidRegexException("Invalid POSIX character class: " + name)
+        }
   }
 
   def specialCharSet = specialCharSetByName | specialCharSetWithIs | specialCharSetWithIn | specialCharSetImplicit
