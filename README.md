@@ -60,10 +60,10 @@ Character classes are expanded as disjunctions before NFA creation. However, bec
 
 #### Example:
 
-* [abc]     → a-c
-* [^efg]    → 0-c|h-MAX
-* mno[^efg] → def(0-c|h-l|m|n|o|p-MAX)
-* .         → 0-MAX
+* `[abc]`     → `[a-c]`
+* `[^efg]`    → `[0-d]|[h-MAX]`
+* `mno[^efg]` → `mno(0-d|h-l|m|n|o|p-MAX)`
+* `.`         → `[0-MAX]`
 
 ### Set operations
 
