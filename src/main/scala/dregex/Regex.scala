@@ -2,15 +2,14 @@ package dregex
 
 import dregex.impl.RegexParser
 import dregex.impl.Dfa
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import dregex.impl.Util
-import dregex.impl.RegexTree
-import scala.collection.JavaConversions._
 import dregex.impl.UnicodeChar
 import dregex.impl.State
 import scala.collection.immutable.SortedMap
-import dregex.impl.RegexTree.Lit
 import dregex.impl.CharInterval
+import scala.collection.immutable.Seq
+import scala.collection.JavaConverters.asScalaIteratorConverter
 
 /**
  * A regular expression, ready to be tested against strings, or to take part in an operation against another.
@@ -45,7 +44,7 @@ trait Regex extends StrictLogging {
     val genDfa = dfa.impl
     var current = genDfa.initial
     var i = 0
-    for (codePoint <- string.codePoints().iterator()) {
+    for (codePoint <- string.codePoints.iterator.asScala) {
       val char = UnicodeChar(codePoint)
       val currentTrans = genDfa.defTransitions.getOrElse(current, SortedMap[CharInterval, State]())
       // O(log transitions) search in the range tree
@@ -114,11 +113,11 @@ trait Regex extends StrictLogging {
    * Return whether this expression matches at least one string in common with another. Intersections take O(n*m) time,
    * where n and m are the number of states of the DFA of the operands.
    */
-  def doIntersect(other: Regex): Boolean = intersect(other).matchesAnything()
+  def doIntersect(other: Regex): Boolean = (this intersect other).matchesAnything
 
-  def isSubsetOf(other: Regex): Boolean = !(this diff other matchesAnything)
+  def isSubsetOf(other: Regex): Boolean = !(this diff other).matchesAnything()
 
-  def isProperSubsetOf(other: Regex): Boolean = (this isSubsetOf other) && (other diff this matchesAnything)
+  def isProperSubsetOf(other: Regex): Boolean = (this isSubsetOf other) && (other diff this).matchesAnything()
 
   /**
    * Return whether this regular expression is equivalent to other. Two regular expressions are equivalent if they

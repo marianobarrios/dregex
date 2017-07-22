@@ -1,8 +1,6 @@
 package dregex.extra
 
-import dregex.impl.Nfa
 import dregex.impl.Automaton
-import dregex.impl.RegexTree
 import dregex.impl.Epsilon
 
 object DotFormatter {

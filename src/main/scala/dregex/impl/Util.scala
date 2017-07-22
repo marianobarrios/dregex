@@ -1,6 +1,6 @@
 package dregex.impl
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import java.time.Duration
 import scala.collection.immutable.SortedMap
 

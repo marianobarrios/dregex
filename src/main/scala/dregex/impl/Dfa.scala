@@ -1,14 +1,13 @@
 package dregex.impl
 
-import scala.annotation.migration
 import scala.annotation.tailrec
 import scala.collection.mutable
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 
 import Util.StrictMap
-import Util.StrictSortedMap
 import scala.collection.immutable.SortedMap
+import scala.collection.immutable.Seq
 
 class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends StrictLogging {
 
@@ -41,7 +40,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       } yield {
         char -> BiState(leftDestState, rightDestState)
       }
-      if !charMap.isEmpty
+      if charMap.nonEmpty
     } yield {
       BiState(leftState, rightState) -> SortedMap(charMap: _*)
     }
@@ -68,7 +67,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       } yield {
         char -> BiState(leftDestState, rightDestState)
       }
-      if !charMap.isEmpty
+      if charMap.nonEmpty
     } yield {
       BiState(leftState, rightState) -> SortedMap(charMap: _*)
     }
@@ -98,7 +97,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       } yield {
         char -> BiState(leftDestState, rightDestState)
       }
-      if !charMap.isEmpty
+      if charMap.nonEmpty
     } yield {
       BiState(leftState, rightState) -> SortedMap(charMap: _*)
     }
@@ -143,21 +142,25 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
   def removeUnreachableStates(): Dfa = {
     val visited = collection.mutable.Set[State]()
     val pending = collection.mutable.Queue(impl.initial)
-    while (!pending.isEmpty) {
+    while (pending.nonEmpty) {
       val currentState = pending.dequeue()
       visited += currentState
-      for {
-        targetState <- impl.transitionMap(currentState).values.toSet
-        if !visited.contains(targetState)
-      } {
+      val currentTransitions = impl.transitionMap(currentState)
+      val currentPossibleTargets = currentTransitions.values.toSet
+      for (targetState <- currentPossibleTargets if !visited.contains(targetState)) {
         pending.enqueue(targetState)
       }
     }
-    // using set as function
-    val filteredTransitions = impl.defTransitions.filterKeys(visited)
-    val filteredAccepting = impl.accepting.filter(visited)
-    val genericDfa = GenericDfa(impl.initial, filteredTransitions, filteredAccepting)
-    Dfa.fromGenericDfa(genericDfa)
+    val filteredTransitions = impl.defTransitions
+      .filterKeys(visited) // using set as function
+      .view.force // fix filterKeys laziness
+    val filteredAccepting = impl.accepting
+      .filter(visited) // using set as function
+    Dfa.fromGenericDfa(
+      GenericDfa(
+        initial = impl.initial,
+        defTransitions = filteredTransitions,
+        accepting = filteredAccepting))
   }
 
   /**
@@ -175,7 +178,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
 
   def reverse(): Nfa = {
     val initial = new State
-    val first = impl.accepting.toSeq.map(s => NfaTransition(initial, s, Epsilon))
+    val first = impl.accepting.to[Seq].map(s => NfaTransition(initial, s, Epsilon))
     val rest = for {
       (from, fn) <- impl.defTransitions
       (char, to) <- fn 
@@ -183,7 +186,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
       NfaTransition(to, from, char)
     }
     val accepting = Set(impl.initial)
-    Nfa(initial, first ++ rest.toSeq, accepting)
+    Nfa(initial, first ++ rest.to[Seq], accepting)
   }
   
   /** 
@@ -196,7 +199,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
     } yield {
         NfaTransition(state, target, char)
     }
-    Nfa(impl.initial, transitions.toSeq, impl.accepting)
+    Nfa(impl.initial, transitions.to[Seq], impl.accepting)
   }
 
 }
@@ -261,7 +264,7 @@ object Dfa extends StrictLogging {
     val dfaTransitions = mutable.Map[MultiState, SortedMap[CharInterval, MultiState]]()
     val dfaStates = mutable.Set[MultiState]()
     val pending = mutable.Queue[MultiState](dfaInitial)
-    while (!pending.isEmpty) {
+    while (pending.nonEmpty) {
       val current = pending.dequeue()
       dfaStates.add(current)
       // The set of all transition maps of the members of the current state
@@ -277,7 +280,7 @@ object Dfa extends StrictLogging {
         char -> targetState
       }
       pending.enqueue(newPending.toSeq: _*)
-      if (!dfaCurrentTrans.isEmpty)
+      if (dfaCurrentTrans.nonEmpty)
         dfaTransitions(current) = SortedMap(dfaCurrentTrans.toSeq: _*)
     }
     // a DFA state is accepting if any of its NFA member-states is

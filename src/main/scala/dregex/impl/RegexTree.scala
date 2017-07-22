@@ -1,14 +1,18 @@
 package dregex.impl
 
-import scala.Product
 import scala.runtime.ScalaRunTime
+import scala.collection.immutable.Seq
 
-object Direction extends Enumeration {
-  val Behind, Ahead = Value
+sealed trait Direction
+object Direction {
+  case object Behind extends Direction
+  case object Ahead extends Direction
 }
 
-object Condition extends Enumeration {
-  val Positive, Negative = Value
+sealed trait Condition
+object Condition {
+  case object Positive extends Condition
+  case object Negative extends Condition
 }
 
 object RegexTree {
@@ -34,7 +38,11 @@ object RegexTree {
     def _1 = from
     def _2 = to
 
-    override def equals(that: Any) = ScalaRunTime._equals(this, that)
+    override def equals(anyThat: Any) = anyThat match {
+      case that: AbstractRange => this.from == that.from && this.to == that.to
+      case _ => false
+    }
+
     override def hashCode() = ScalaRunTime._hashCode(this)
 
     def canonical = {
@@ -91,7 +99,7 @@ object RegexTree {
   }
 
   object CharSet {
-    def fromCharSets(charSets: CharSet*): CharSet = CharSet(charSets.map(_.ranges).flatten)
+    def fromCharSets(charSets: CharSet*): CharSet = CharSet(charSets.to[Seq].map(_.ranges).flatten)
     def fromRange(interval: AbstractRange) = CharSet(Seq(interval))
   }
 
@@ -117,7 +125,7 @@ object RegexTree {
 
   }
 
-  case class Lookaround(dir: Direction.Value, cond: Condition.Value, value: Node) extends ComplexPart {
+  case class Lookaround(dir: Direction, cond: Condition, value: Node) extends ComplexPart {
 
     val values = Seq(value)
 

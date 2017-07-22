@@ -2,6 +2,7 @@ package dregex
 
 import dregex.impl.RegexTree
 import dregex.impl.CharInterval
+import scala.collection.immutable.Seq
 
 /**
  * Represent the set of characters that is the union of the sets of characters of a group of regular expressions.

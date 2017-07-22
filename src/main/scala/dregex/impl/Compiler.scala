@@ -2,6 +2,7 @@ package dregex.impl
 
 import dregex.UnsupportedException
 import scala.collection.mutable.Buffer
+import scala.collection.immutable.Seq
 
 /**
  * Take a regex AST and produce a NFA.
@@ -139,7 +140,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
           prev = int
         }
         transitions ++= fromTreeImpl(last, prev, to)
-        transitions.toSeq
+        transitions.to[Seq]
     }
   }
 
@@ -207,7 +208,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         }
         transitions ++= fromTreeImpl(value, prev, to)
         transitions += NfaTransition(prev, to, Epsilon)
-        transitions.toSeq
+        transitions.to[Seq]
 
       case Rep(0, Some(m), value) if m > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
@@ -221,6 +222,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         }
         transitions ++= fromTreeImpl(value, prev, to)
         transitions += NfaTransition(prev, to, Epsilon)
+        transitions.to[Seq]
 
     }
   }
@@ -230,7 +232,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     val rightDfa = fromTree(right)
     val result = operation(leftDfa, rightDfa).toNfa()
     result.transitions ++
-      result.accepting.toSeq.map(acc => NfaTransition(acc, to, Epsilon)) :+
+      result.accepting.to[Seq].map(acc => NfaTransition(acc, to, Epsilon)) :+
       NfaTransition(from, result.initial, Epsilon)
   }
 

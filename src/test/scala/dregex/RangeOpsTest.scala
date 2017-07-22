@@ -3,11 +3,9 @@ package dregex
 import org.scalatest.FunSuite
 import dregex.impl.UnicodeChar
 import org.scalatest.Matchers
-import dregex.impl.RegexTree
-import dregex.impl.RegexTree.AbstractRange
-import dregex.impl.CharInterval
 import dregex.impl.RegexTree.CharRange
 import dregex.impl.RangeOps
+import scala.collection.immutable.Seq
 
 class RangeOpsTest extends FunSuite with Matchers {
 

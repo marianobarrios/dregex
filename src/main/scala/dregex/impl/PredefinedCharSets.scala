@@ -2,18 +2,17 @@ package dregex.impl
 
 import dregex.impl.RegexTree.AbstractRange
 import dregex.impl.RegexTree.Lit
-import dregex.impl.RegexTree.Wildcard
 import dregex.impl.UnicodeChar.FromCharConversion
 import dregex.impl.UnicodeChar.FromIntConversion
 import dregex.impl.RegexTree.CharSet
 import dregex.impl.RegexTree.CharRange
 import java.lang.Character.UnicodeBlock
-import scala.collection.JavaConversions._
 import scala.collection.breakOut
 import java.lang.Character.UnicodeScript
-import com.typesafe.scalalogging.slf4j.StrictLogging
-import scala.collection.mutable.MultiMap
+import com.typesafe.scalalogging.StrictLogging
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConverters.mapAsScalaMapConverter
+import scala.collection.immutable.Seq
 
 object PredefinedCharSets extends StrictLogging {
 
@@ -31,7 +30,8 @@ object PredefinedCharSets extends StrictLogging {
         block -> CharSet.fromRange(CharRange(from.u, to.u))
       }
     }(breakOut)
-    val alias = Util.getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").toMap
+    val alias =
+      Util.getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").asScala.toMap
     alias.mapValues { javaUnicodeBlock =>
       blockToSetMap.get(javaUnicodeBlock).getOrElse {
         /*
@@ -62,7 +62,8 @@ object PredefinedCharSets extends StrictLogging {
       }
       builder.toMap
     }
-    val aliases = Util.getPrivateStaticField[java.util.Map[String, UnicodeScript]](classOf[UnicodeScript], "aliases").toMap
+    val aliases =
+      Util.getPrivateStaticField[java.util.Map[String, UnicodeScript]](classOf[UnicodeScript], "aliases").asScala.toMap
     val canonicalNames = scriptToSetMap.map {
       case (script, charSet) =>
         (script.name(), charSet)
@@ -97,8 +98,8 @@ object PredefinedCharSets extends StrictLogging {
         }
         
       }
-      val categorySets = categoryBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges))).toMap
-      val propertySets = propertyBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges))).toMap
+      val categorySets = categoryBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
+      val propertySets = propertyBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
       (categorySets, propertySets)
     }
     logger.debug(s"Initialized Unicode general category and binary property catalog in $elapsed")

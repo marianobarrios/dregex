@@ -1,6 +1,6 @@
 package dregex
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 
 import dregex.impl.Dfa
 import dregex.impl.Compiler

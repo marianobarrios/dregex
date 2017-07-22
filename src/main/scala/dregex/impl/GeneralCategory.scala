@@ -1,7 +1,6 @@
 package dregex.impl
 
 import scala.collection.breakOut
-import java.util.regex.UnicodeProp
 
 object GeneralCategory {
 

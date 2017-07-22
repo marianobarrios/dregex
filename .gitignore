@@ -7,3 +7,4 @@ target/
 /bin/
 *.log
 .settings
+.idea/

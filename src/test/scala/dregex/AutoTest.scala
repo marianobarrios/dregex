@@ -1,12 +1,9 @@
 package dregex
 
-import scala.collection.mutable.MultiMap
-import dregex.impl.RegexTree
 import org.scalatest.FunSuite
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import dregex.impl.Util
-import dregex.impl.RegexParser
-import org.scalatest.Assertions
+import scala.collection.immutable.Seq
 
 /**
  * This test generates possible regex trees, and then generates strings

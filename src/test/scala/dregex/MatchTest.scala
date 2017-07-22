@@ -2,6 +2,7 @@ package dregex
 
 import org.scalatest.FunSuite
 import TestUtil.using
+import scala.collection.immutable.Seq
 
 class MatchTest extends FunSuite {
 

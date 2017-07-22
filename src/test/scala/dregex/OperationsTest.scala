@@ -1,6 +1,7 @@
 package dregex
 
 import org.scalatest.FunSuite
+import scala.collection.immutable.Seq
 
 class OperationsTest extends FunSuite {
 

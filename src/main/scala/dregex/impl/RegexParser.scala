@@ -1,9 +1,10 @@
 package dregex.impl
 
 import scala.util.parsing.combinator.JavaTokenParsers
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import dregex.InvalidRegexException
 import dregex.impl.UnicodeChar.FromCharConversion
+import scala.collection.immutable.Seq
 
 class RegexParser extends JavaTokenParsers {
 
@@ -172,6 +173,7 @@ class RegexParser extends JavaTokenParsers {
     case _ ~ "S" => PredefinedCharSets.space.complement
     case _ ~ "w" => PredefinedCharSets.wordChar
     case _ ~ "W" => PredefinedCharSets.wordChar.complement
+    case _ => throw new AssertionError
   }
 
   def group = "(" ~ ("?" ~ "<".? ~ "[:=!]".r).? ~ regex ~ ")" ^^ {

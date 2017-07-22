@@ -2,7 +2,7 @@ package dregex
 
 import org.scalatest.FunSuite
 import dregex.impl.RegexParser
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import dregex.impl.Util
 
 /**

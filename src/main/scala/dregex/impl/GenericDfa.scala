@@ -1,8 +1,7 @@
 package dregex.impl
 
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import Util.StrictSortedMap
-import dregex.impl.RegexTree.AbstractRange
 import scala.collection.immutable.SortedMap
 
 case class GenericDfa[A](initial: A, defTransitions: Map[A, SortedMap[CharInterval, A]], accepting: Set[A]) 

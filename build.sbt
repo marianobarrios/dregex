@@ -5,8 +5,8 @@ description := "Deterministic Regular Expressions Engine"
 homepage := Some(url("https://github.com/marianobarrios/dregex"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
 
-scalaVersion := "2.11.8"
-crossScalaVersions := Seq("2.10.6", "2.11.8")
+scalaVersion := "2.12.2"
+crossScalaVersions := Seq("2.11.8", "2.12.2")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
@@ -17,32 +17,25 @@ publishTo := {
 }
 
 scalacOptions := Seq(
-	"-feature", 
-	"-deprecation", 
-	"-optimize",
+	"-feature",
 	"-unchecked",
-	"-language:postfixOps", 
-	"-language:reflectiveCalls", 
+  "-deprecation",
+	"-language:reflectiveCalls",
 	"-language:implicitConversions", 
 	"-Ywarn-dead-code",
 	"-Ywarn-inaccessible",
 	"-Ywarn-nullary-unit",
-	"-Ywarn-nullary-override")
+	"-Ywarn-nullary-override",
+  "-Ywarn-unused-import",
+  "-Xfuture",
+  "-Xfatal-warnings")
 	
 libraryDependencies ++= 
-  "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2" ::
-  "org.scalatest" %% "scalatest" % "3.0.0" % "test" ::
-  "ch.qos.logback" % "logback-classic" % "1.1.7" % Test ::
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.7.1" ::
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6" ::
+  "org.scalatest" %% "scalatest" % "3.0.2" % Test ::
+  "ch.qos.logback" % "logback-classic" % "1.2.3" % Test ::
   Nil
-
-libraryDependencies := {
-  CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, major)) if major >= 11 =>
-      libraryDependencies.value ++ Seq("org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4")
-    case _ =>
-      libraryDependencies.value
-  }
-}
 
 // Do not include src/{main,test}/java in the configuration, to avoid having sbt-eclipse generate them empty
 unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil

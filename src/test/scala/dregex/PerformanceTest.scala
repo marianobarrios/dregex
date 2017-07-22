@@ -3,6 +3,7 @@ package dregex
 import org.scalatest.FunSuite
 import dregex.impl.Util
 import java.util.regex.Pattern
+import scala.collection.immutable.Seq
 
 class PerformanceTest extends FunSuite {
 
@@ -25,7 +26,7 @@ class PerformanceTest extends FunSuite {
     info(s"intersection time: $elapsed2")
   }
   
-  private def compare(regex: String, text: String, shouldMatch: Boolean) {
+  private def compare(regex: String, text: String, shouldMatch: Boolean): Unit = {
     info(s"matching '$text' with /$regex/")
     val nfa = Pattern.compile(regex)
     val dfa = Regex.compile(regex)
