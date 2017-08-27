@@ -58,6 +58,9 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
 
       case Difference(left, right) =>
         processOp((l, r) => l diff r, left, right, from, to)
+
+      case cg: CaptureGroup =>
+        processCaptureGroup(cg.value, from, to)
     }
   }
 
@@ -234,6 +237,14 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     result.transitions ++
       result.accepting.to[Seq].map(acc => NfaTransition(acc, to, Epsilon)) :+
       NfaTransition(from, result.initial, Epsilon)
+  }
+
+  def processCaptureGroup(value: Node, from: State, to: State): Seq[NfaTransition] = {
+    val int1 = new State
+    val int2 = new State
+    fromTreeImpl(value, int1, int2) :+
+      NfaTransition(from, int1, Epsilon) :+
+      NfaTransition(int2, to, Epsilon)
   }
 
 }

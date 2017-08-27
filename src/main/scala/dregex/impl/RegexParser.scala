@@ -181,7 +181,7 @@ class RegexParser extends JavaTokenParsers {
       import Direction._
       import Condition._
       modifiers match {
-        case None => value // Naked parenthesis
+        case None => PositionalCaptureGroup(value) // Naked parenthesis
         case Some(_ ~ None ~ ":") => value // Non-capturing group
         case Some(_ ~ None ~ "=") => Lookaround(Ahead, Positive, value)
         case Some(_ ~ None ~ "!") => Lookaround(Ahead, Negative, value)
@@ -192,10 +192,14 @@ class RegexParser extends JavaTokenParsers {
       }
   }
 
+  def namedGroup = "(" ~ "?" ~ "<" ~ "[a-zA-Z][a-zA-Z0-9]*".r ~ ">" ~ regex ~ ")" ^^ {
+    case _ ~ _ ~_ ~ name ~ _ ~ value ~ _ => NamedCaptureGroup(name, value)
+  }
+
   def charWildcard = "." ^^^ Wildcard
 
   def regexAtom =
-    charLit | charWildcard | charClass | dashClass | shorthandCharSet | specialCharSet | group
+    charLit | charWildcard | charClass | dashClass | shorthandCharSet | specialCharSet | group | namedGroup
 
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
 

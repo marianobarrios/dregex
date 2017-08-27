@@ -176,7 +176,7 @@ object RegexTree {
        * vs. "(a+)+" (valid)
        */
       val effValue = if (value.precedence > this.precedence || value.isInstanceOf[Rep])
-        s"(${value.toRegex})"
+        s"(?:${value.toRegex})"
       else
         value.toRegex
       s"$effValue$suffix"
@@ -220,7 +220,7 @@ object RegexTree {
     def toRegex = {
       val effValues = for (value <- values) yield {
         if (value.precedence > this.precedence)
-          s"(${value.toRegex})"
+          s"(?:${value.toRegex})"
         else
           value.toRegex
       }
@@ -249,6 +249,21 @@ object RegexTree {
 
   case class Difference(left: Node, right: Node) extends Operation {
     def canonical = Difference(left.canonical, right.canonical)
+  }
+
+  trait CaptureGroup extends ComplexPart {
+    def value: Node
+    override def values = Seq(value)
+    override def canonical = this
+    override def precedence = 1
+  }
+
+  case class PositionalCaptureGroup(value: Node) extends CaptureGroup {
+    override def toRegex = s"(${value.toRegex})"
+  }
+
+  case class NamedCaptureGroup(name: String, value: Node) extends CaptureGroup {
+    override def toRegex = s"(?<$name>${value.toRegex})"
   }
 
 }
