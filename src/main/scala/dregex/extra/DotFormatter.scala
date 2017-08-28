@@ -1,11 +1,11 @@
 package dregex.extra
 
-import dregex.impl.Automaton
 import dregex.impl.Epsilon
+import dregex.impl.Nfa
 
 object DotFormatter {
 
-  def format[A, B](nfa: Automaton[A, B]): String = {
+  def format(nfa: Nfa): String = {
     val states = for (state <- nfa.allStates) yield {
       val shape = if (state == nfa.initial)
         "square"
