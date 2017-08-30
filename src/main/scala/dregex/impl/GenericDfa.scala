@@ -5,8 +5,12 @@ import dregex.impl.Util.StrictSortedMap
 
 import scala.collection.immutable.SortedMap
 
-case class GenericDfa[A](initial: A, defTransitions: Map[A, SortedMap[CharInterval, A]], accepting: Set[A]) 
-    extends StrictLogging {
+case class GenericDfa[A](
+    initial: A,
+    defTransitions: Map[A, SortedMap[CharInterval, A]],
+    accepting: Set[A],
+    minimal: Boolean = false
+  ) extends StrictLogging {
 
   override def toString() = s"initial: $initial; transitions: $defTransitions; accepting: $accepting"
 

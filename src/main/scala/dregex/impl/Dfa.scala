@@ -9,7 +9,7 @@ import Util.StrictMap
 import scala.collection.immutable.SortedMap
 import scala.collection.immutable.Seq
 
-class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends StrictLogging {
+class Dfa(val impl: GenericDfa[State]) extends StrictLogging {
 
   import State.NullState
   import Dfa.BiState
@@ -168,7 +168,7 @@ class Dfa(val impl: GenericDfa[State], val minimal: Boolean = false) extends Str
    * http://cs.stackexchange.com/questions/1872/brzozowskis-algorithm-for-dfa-minimization
    */
   def minimize(): Dfa = {
-    if (minimal) {
+    if (impl.minimal) {
       this
     } else {
       val reversed = Dfa.fromNfa(reverse())
@@ -285,11 +285,11 @@ object Dfa extends StrictLogging {
     }
     // a DFA state is accepting if any of its NFA member-states is
     val dfaAccepting = dfaStates.filter(st => Util.doIntersect(st.states, nfa.accepting)).toSet
-    val genericDfa = GenericDfa(dfaInitial, dfaTransitions.toMap, dfaAccepting)
-    fromGenericDfa(genericDfa, minimal)
+    val genericDfa = GenericDfa(dfaInitial, dfaTransitions.toMap, dfaAccepting, minimal)
+    fromGenericDfa(genericDfa)
   }
 
-  def fromGenericDfa[A](genericDfa: GenericDfa[A], minimal: Boolean = false) =
-    new Dfa(genericDfa.rewrite(() => new State), minimal)
+  def fromGenericDfa[A](genericDfa: GenericDfa[A]) =
+    new Dfa(genericDfa.rewrite(() => new State))
 
 }
