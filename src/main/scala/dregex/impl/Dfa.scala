@@ -4,17 +4,16 @@ import com.typesafe.scalalogging.StrictLogging
 
 class Dfa(val impl: GenericDfa[State]) extends StrictLogging {
 
-  type BinarySetOperation = (GenericDfa[State], GenericDfa[State]) => GenericDfa[BiState]
+  type BinarySetOperation[A <: DfaState] = (GenericDfa[A], GenericDfa[A]) => GenericDfa[BiState[A]]
 
   override def toString() = impl.toString
   def stateCount = impl.stateCount
 
-  private def doSetOperation(other: Dfa, op: BinarySetOperation) = {
+  private def doSetOperation(other: Dfa, op: BinarySetOperation[State]) = {
     new Dfa(
       DfaAlgorithms.rewriteWithSimpleStates(
         DfaAlgorithms.removeUnreachableStates(
-          DfaAlgorithms.rewriteWithSimpleStates(
-            op(this.impl, other.impl)))))
+          op(this.impl, other.impl))))
   }
 
   def intersect(other: Dfa): Dfa = {

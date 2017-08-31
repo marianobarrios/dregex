@@ -1,7 +1,5 @@
 package dregex.impl
 
-import dregex.impl.State.NullState
-
 import scala.annotation.tailrec
 import scala.collection.immutable.SortedMap
 import scala.collection.mutable
@@ -18,9 +16,9 @@ object DfaAlgorithms {
    * http://cs.stackexchange.com/a/7108
    */
 
-  def intersect(left: GenericDfa[State], right: GenericDfa[State]): GenericDfa[BiState] = {
+  def intersect[A <: DfaState](left: GenericDfa[A], right: GenericDfa[A]): GenericDfa[BiState[A]] = {
     val commonChars = left.allChars intersect right.allChars
-    val newInitial = BiState(left.initial, right.initial)
+    val newInitial = BiState[A](left.initial, right.initial)
     val newTransitions = for {
       (leftState, leftCharmap) <- left.defTransitions
       (rightState, rightCharmap) <- right.defTransitions
@@ -29,20 +27,21 @@ object DfaAlgorithms {
         leftDestState <- leftCharmap.get(char)
         rightDestState <- rightCharmap.get(char)
       } yield {
-        char -> BiState(leftDestState, rightDestState)
+        char -> BiState[A](leftDestState, rightDestState)
       }
       if charMap.nonEmpty
     } yield {
-      BiState(leftState, rightState) -> SortedMap(charMap: _*)
+      BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the intersecting DFA
     val accepting = for (l <- left.accepting; r <- right.accepting) yield BiState(l, r)
-    GenericDfa[BiState](newInitial, newTransitions, accepting)
+    GenericDfa[BiState[A]](newInitial, newTransitions, accepting)
   }
 
-  def diff(left: GenericDfa[State], right: GenericDfa[State]): GenericDfa[BiState] = {
+  def diff[A <: DfaState](left: GenericDfa[A], right: GenericDfa[A]): GenericDfa[BiState[A]] = {
+    val NullState = null.asInstanceOf[A]
     val allChars = left.allChars union right.allChars
-    val newInitial = BiState(left.initial, right.initial)
+    val newInitial = BiState[A](left.initial, right.initial)
     val newTransitions = for {
       (leftState, leftCharmap) <- left.defTransitions
       rightState <- right.allStates.toSeq :+ NullState
@@ -52,21 +51,22 @@ object DfaAlgorithms {
         leftDestState <- leftCharmap.get(char)
         rightDestState = rightCharmap.getOrElse(char, NullState)
       } yield {
-        char -> BiState(leftDestState, rightDestState)
+        char -> BiState[A](leftDestState, rightDestState)
       }
       if charMap.nonEmpty
     } yield {
-      BiState(leftState, rightState) -> SortedMap(charMap: _*)
+      BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of
     // the right DFA that are no accepting
-    val accepting = for (l <- left.accepting; r <- right.allButAccepting + NullState) yield BiState(l, r)
-    GenericDfa[BiState](newInitial, newTransitions, accepting)
+    val accepting = for (l <- left.accepting; r <- right.allButAccepting + NullState) yield BiState[A](l, r)
+    GenericDfa[BiState[A]](newInitial, newTransitions, accepting)
   }
 
-  def union(left: GenericDfa[State], right: GenericDfa[State]): GenericDfa[BiState] = {
+  def union[A <: DfaState](left: GenericDfa[A], right: GenericDfa[A]): GenericDfa[BiState[A]] = {
+    val NullState = null.asInstanceOf[A]
     val allChars = left.allChars union right.allChars
-    val newInitial = BiState(left.initial, right.initial)
+    val newInitial = BiState[A](left.initial, right.initial)
     val newTransitions = for {
       leftState <- left.allStates.toSeq :+ NullState
       leftCharmap = left.transitionMap(leftState)
@@ -82,7 +82,7 @@ object DfaAlgorithms {
       }
       if charMap.nonEmpty
     } yield {
-      BiState(leftState, rightState) -> SortedMap(charMap: _*)
+      BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of
     // the right DFA that are no accepting
@@ -91,9 +91,9 @@ object DfaAlgorithms {
       r <- right.allStates + NullState
       if left.accepting.contains(l) || right.accepting.contains(r)
     } yield {
-      BiState(l, r)
+      BiState[A](l, r)
     }
-    GenericDfa[BiState](newInitial, newTransitions.toMap, accepting)
+    GenericDfa[BiState[A]](newInitial, newTransitions.toMap, accepting)
   }
 
   /**

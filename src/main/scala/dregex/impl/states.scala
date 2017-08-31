@@ -11,10 +11,9 @@ class State() extends DfaState {
 
 object State {
   private val counter = new AtomicInteger
-  val NullState = new State
 }
 
-case class BiState(first: State, second: State) extends DfaState  {
+case class BiState[A <: DfaState](first: A, second: A) extends DfaState  {
   override def toString() = {
     s"$first,$second"
   }
