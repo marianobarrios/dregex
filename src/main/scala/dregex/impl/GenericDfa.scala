@@ -5,7 +5,7 @@ import dregex.impl.Util.StrictSortedMap
 
 import scala.collection.immutable.SortedMap
 
-case class GenericDfa[A](
+case class GenericDfa[A <: DfaState](
     initial: A,
     defTransitions: Map[A, SortedMap[CharInterval, A]],
     accepting: Set[A],
@@ -34,7 +34,7 @@ case class GenericDfa[A](
    * Useful for simplifying the DFA product of intersections or NFA conversions.
    * This function does not change the language matched by the DFA
    */
-  def rewrite[B](stateFactory: () => B): GenericDfa[B] = {
+  def rewrite[B <: DfaState](stateFactory: () => B): GenericDfa[B] = {
     val mapping = (for (state <- allStates) yield state -> stateFactory()).toMap
     GenericDfa[B](
       initial = mapping(initial),

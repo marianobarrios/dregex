@@ -233,7 +233,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
   private def processOp(operation: (Dfa, Dfa) => Dfa, left: Node, right: Node, from: State, to: State): Seq[NfaTransition] = {
     val leftDfa = fromTree(left)
     val rightDfa = fromTree(right)
-    val result = operation(leftDfa, rightDfa).toNfa()
+    val result = DfaAlgorithms.toNfa(operation(leftDfa, rightDfa).impl)
     result.transitions ++
       result.accepting.to[Seq].map(acc => NfaTransition(acc, to, Epsilon)) :+
       NfaTransition(from, result.initial, Epsilon)
