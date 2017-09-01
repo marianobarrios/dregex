@@ -4,7 +4,7 @@ import dregex.impl.RegexParser
 import com.typesafe.scalalogging.StrictLogging
 import dregex.impl.Util
 import dregex.impl.UnicodeChar
-import dregex.impl.State
+import dregex.impl.SimpleState
 
 import scala.collection.immutable.SortedMap
 import dregex.impl.CharInterval
@@ -20,7 +20,7 @@ import scala.collection.JavaConverters.asScalaIteratorConverter
  */
 trait Regex extends StrictLogging {
 
-  def dfa: Dfa[State]
+  def dfa: Dfa[SimpleState]
   def universe: Universe
 
   private def checkUniverse(other: Regex): Unit = {
@@ -48,7 +48,7 @@ trait Regex extends StrictLogging {
     var i = 0
     for (codePoint <- string.codePoints.iterator.asScala) {
       val char = UnicodeChar(codePoint)
-      val currentTrans = dfa.defTransitions.getOrElse(current, SortedMap[CharInterval, State]())
+      val currentTrans = dfa.defTransitions.getOrElse(current, SortedMap[CharInterval, SimpleState]())
       // O(log transitions) search in the range tree
       val newState = Util.floorEntry(currentTrans, CharInterval(from = char, to = char)).flatMap {
         case (interval, state) =>

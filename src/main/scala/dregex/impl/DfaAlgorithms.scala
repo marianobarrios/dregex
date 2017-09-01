@@ -16,7 +16,7 @@ object DfaAlgorithms {
    * http://cs.stackexchange.com/a/7108
    */
 
-  def intersect[A <: DfaState](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+  def intersect[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val commonChars = left.allChars intersect right.allChars
     val newInitial = BiState[A](left.initial, right.initial)
     val newTransitions = for {
@@ -38,7 +38,7 @@ object DfaAlgorithms {
     Dfa[BiState[A]](newInitial, newTransitions, accepting)
   }
 
-  def diff[A <: DfaState](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+  def diff[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val NullState = null.asInstanceOf[A]
     val allChars = left.allChars union right.allChars
     val newInitial = BiState[A](left.initial, right.initial)
@@ -63,7 +63,7 @@ object DfaAlgorithms {
     Dfa[BiState[A]](newInitial, newTransitions, accepting)
   }
 
-  def union[A <: DfaState](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+  def union[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val NullState = null.asInstanceOf[A]
     val allChars = left.allChars union right.allChars
     val newInitial = BiState[A](left.initial, right.initial)
@@ -100,7 +100,7 @@ object DfaAlgorithms {
     * Return whether a DFA matches anything. A DFA matches at least some language if there is a path from the initial
     * state to any of the accepting states
     */
-  def matchesAnything[A <: DfaState](dfa: Dfa[A]): Boolean = {
+  def matchesAnything[A <: State](dfa: Dfa[A]): Boolean = {
     val visited = mutable.Set[A]()
     def hasPathToAccepting(current: A): Boolean = {
       if (dfa.accepting.contains(current)) {
@@ -120,7 +120,7 @@ object DfaAlgorithms {
     hasPathToAccepting(dfa.initial)
   }
 
-  def removeUnreachableStates[A <: DfaState](dfa: Dfa[A]): Dfa[A] = {
+  def removeUnreachableStates[A <: State](dfa: Dfa[A]): Dfa[A] = {
     val visited = collection.mutable.Set[A]()
     val pending = collection.mutable.Queue(dfa.initial)
     while (pending.nonEmpty) {
@@ -208,8 +208,8 @@ object DfaAlgorithms {
     Dfa(dfaInitial, dfaTransitions.toMap, dfaAccepting, minimal)
   }
 
-  def reverse(dfa: Dfa[State]): Nfa = {
-    val initial = new State
+  def reverse[A <: State](dfa: Dfa[A]): Nfa = {
+    val initial: State = new SimpleState
     val first = dfa.accepting.to[Seq].map(s => NfaTransition(initial, s, Epsilon))
     val rest = for {
       (from, fn) <- dfa.defTransitions
@@ -217,32 +217,33 @@ object DfaAlgorithms {
     } yield {
       NfaTransition(to, from, char)
     }
-    val accepting = Set(dfa.initial)
+    val accepting = Set[State](dfa.initial)
     Nfa(initial, first ++ rest.to[Seq], accepting)
   }
 
   /**
     * Each DFA is also trivially a NFA, return it.
     */
-  def toNfa(dfa: Dfa[State]): Nfa = {
+  def toNfa[A <: State](dfa: Dfa[A]): Nfa = {
     val transitions = for {
       (state, transitionMap) <- dfa.defTransitions
       (char, target) <- transitionMap
     } yield {
       NfaTransition(state, target, char)
     }
-    Nfa(dfa.initial, transitions.to[Seq], dfa.accepting)
+    val accepting: Set[State] = dfa.accepting.asInstanceOf[Set[State]] // fake covariance
+    Nfa(dfa.initial, transitions.to[Seq], accepting)
   }
 
-  def rewriteWithSimpleStates[A <: DfaState](genericDfa: Dfa[A]): Dfa[State] = {
-    genericDfa.rewrite(() => new State)
+  def rewriteWithSimpleStates[A <: State](genericDfa: Dfa[A]): Dfa[SimpleState] = {
+    genericDfa.rewrite(() => new SimpleState)
   }
 
   /**
     * DFA minimization, using Brzozowski's algorithm
     * http://cs.stackexchange.com/questions/1872/brzozowskis-algorithm-for-dfa-minimization
     */
-  def minimize(dfa: Dfa[State]): Dfa[State] = {
+  def minimize(dfa: Dfa[SimpleState]): Dfa[SimpleState] = {
     if (dfa.minimal) {
       dfa
     } else {

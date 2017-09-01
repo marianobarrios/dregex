@@ -2,24 +2,24 @@ package dregex.impl
 
 import java.util.concurrent.atomic.AtomicInteger
 
-trait DfaState
+trait State
 
-class State() extends DfaState {
-  val id = State.counter.getAndIncrement()
+class SimpleState extends State {
+  val id = SimpleState.counter.getAndIncrement()
   override def toString() = s"s$id"
 }
 
-object State {
+object SimpleState {
   private val counter = new AtomicInteger
 }
 
-case class BiState[A <: DfaState](first: A, second: A) extends DfaState  {
+case class BiState[A <: State](first: A, second: A) extends State  {
   override def toString() = {
     s"$first,$second"
   }
 }
 
-case class MultiState(states: Set[State]) extends DfaState  {
+case class MultiState(states: Set[State]) extends State  {
   override def toString() = {
     states.mkString(",")
   }

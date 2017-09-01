@@ -16,16 +16,16 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
   /**
    * Transform a regular expression abstract syntax tree into a corresponding NFA
    */
-  def fromTree(ast: Node): Dfa[State] = {
-    val initial = new State
-    val accepting = new State
+  def fromTree(ast: Node): Dfa[SimpleState] = {
+    val initial = new SimpleState
+    val accepting = new SimpleState
     val transitions = fromTreeImpl(ast, initial, accepting)
     val nfa = Nfa(initial, transitions, Set(accepting))
     DfaAlgorithms.rewriteWithSimpleStates(
       DfaAlgorithms.fromNfa(nfa))
   }
 
-  private def fromTreeImpl(node: Node, from: State, to: State): Seq[NfaTransition] = {
+  private def fromTreeImpl(node: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     node match {
 
       // base case
@@ -76,7 +76,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
    *
    * NOTE: Only lookahead is currently implemented
    */
-  private def processJuxt(juxt: Juxt, from: State, to: State): Seq[NfaTransition] = {
+  private def processJuxt(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     import Direction._
     import Condition._
     findLookaround(juxt.values) match {
@@ -126,7 +126,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     Juxt(newValues)
   }
 
-  private def processJuxtNoLookaround(juxt: Juxt, from: State, to: State): Seq[NfaTransition] = {
+  private def processJuxtNoLookaround(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     juxt match {
       case Juxt(Seq()) =>
         Seq(NfaTransition(from, to, Epsilon))
@@ -139,7 +139,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         val transitions = Buffer[NfaTransition]()
         var prev = from
         for (part <- init) {
-          val int = new State
+          val int = new SimpleState
           transitions ++= fromTreeImpl(part, prev, int)
           prev = int
         }
@@ -148,7 +148,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     }
   }
 
-  private def processDisj(disj: Disj, from: State, to: State): Seq[NfaTransition] = {
+  private def processDisj(disj: Disj, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     disj match {
       case Disj(Seq()) =>
         Seq()
@@ -157,7 +157,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     }
   }
 
-  private def processRep(rep: Rep, from: State, to: State): Seq[NfaTransition] = {
+  private def processRep(rep: Rep, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     rep match {
 
       // trivial cases
@@ -175,16 +175,16 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         fromTreeImpl(juxt, from, to)
 
       case Rep(1, None, value) =>
-        val int1 = new State
-        val int2 = new State
+        val int1 = new SimpleState
+        val int2 = new SimpleState
         fromTreeImpl(value, int1, int2) :+
           NfaTransition(from, int1, Epsilon) :+
           NfaTransition(int2, to, Epsilon) :+
           NfaTransition(int2, int1, Epsilon)
 
       case Rep(0, None, value) =>
-        val int1 = new State
-        val int2 = new State
+        val int1 = new SimpleState
+        val int2 = new SimpleState
         fromTreeImpl(value, int1, int2) :+
           NfaTransition(from, int1, Epsilon) :+
           NfaTransition(int2, to, Epsilon) :+
@@ -200,12 +200,12 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
 
       case Rep(1, Some(m), value) if m > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
-        val int1 = new State
+        val int1 = new SimpleState
         val transitions = Buffer[NfaTransition]()
         transitions ++= fromTreeImpl(value, from, int1)
         var prev = int1
         for (i <- 1 until m - 1) {
-          val int = new State
+          val int = new SimpleState
           transitions ++= fromTreeImpl(value, prev, int)
           transitions += NfaTransition(prev, to, Epsilon)
           prev = int
@@ -219,7 +219,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         val transitions = Buffer[NfaTransition]()
         var prev = from
         for (i <- 0 until m - 1) {
-          val int = new State
+          val int = new SimpleState
           transitions ++= fromTreeImpl(value, prev, int)
           transitions += NfaTransition(prev, to, Epsilon)
           prev = int
@@ -231,21 +231,21 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     }
   }
 
-  private def processOp(operation: (Dfa[State], Dfa[State]) => Dfa[BiState[State]], left: Node, right: Node, from: State, to: State): Seq[NfaTransition] = {
+  private def processOp(operation: (Dfa[SimpleState], Dfa[SimpleState]) => Dfa[BiState[SimpleState]], left: Node, right: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     val leftDfa = fromTree(left)
     val rightDfa = fromTree(right)
-    val resultDfa = DfaAlgorithms.rewriteWithSimpleStates(
-      DfaAlgorithms.removeUnreachableStates(
-        operation(leftDfa, rightDfa)))
-    val result = DfaAlgorithms.toNfa(resultDfa)
+    val result =
+      DfaAlgorithms.toNfa(
+        DfaAlgorithms.removeUnreachableStates(
+          operation(leftDfa, rightDfa)))
     result.transitions ++
       result.accepting.to[Seq].map(acc => NfaTransition(acc, to, Epsilon)) :+
       NfaTransition(from, result.initial, Epsilon)
   }
 
-  def processCaptureGroup(value: Node, from: State, to: State): Seq[NfaTransition] = {
-    val int1 = new State
-    val int2 = new State
+  def processCaptureGroup(value: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+    val int1 = new SimpleState
+    val int2 = new SimpleState
     fromTreeImpl(value, int1, int2) :+
       NfaTransition(from, int1, Epsilon) :+
       NfaTransition(int2, to, Epsilon)
