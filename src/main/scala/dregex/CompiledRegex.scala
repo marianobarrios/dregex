@@ -1,9 +1,9 @@
 package dregex
 
 import com.typesafe.scalalogging.StrictLogging
-
-import dregex.impl.Dfa
 import dregex.impl.Compiler
+import dregex.impl.Dfa
+import dregex.impl.State
 
 /**
  * A fully-compiled regular expression that was generated from a string literal.
@@ -11,7 +11,7 @@ import dregex.impl.Compiler
 class CompiledRegex private[dregex] (originalString: String, val parsedRegex: ParsedRegex, val universe: Universe)
     extends Regex with StrictLogging {
 
-  val dfa: Dfa = {
+  val dfa: Dfa[State] = {
     new Compiler(universe.alphabet).fromTree(parsedRegex.tree)
   }
 

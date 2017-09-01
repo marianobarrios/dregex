@@ -1,54 +1,54 @@
 package dregex.impl
 
 import com.typesafe.scalalogging.StrictLogging
+import dregex.impl.Util.StrictSortedMap
 
-class Dfa(val impl: GenericDfa[State]) extends StrictLogging {
+import scala.collection.immutable.SortedMap
 
-  type BinarySetOperation[A <: DfaState] = (GenericDfa[A], GenericDfa[A]) => GenericDfa[BiState[A]]
+case class Dfa[A <: DfaState](
+    initial: A,
+    defTransitions: Map[A, SortedMap[CharInterval, A]],
+    accepting: Set[A],
+    minimal: Boolean = false
+  ) extends StrictLogging {
 
-  override def toString() = impl.toString
-  def stateCount = impl.stateCount
+  override def toString() = s"initial: $initial; transitions: $defTransitions; accepting: $accepting"
 
-  private def doSetOperation(other: Dfa, op: BinarySetOperation[State]) = {
-    new Dfa(
-      DfaAlgorithms.rewriteWithSimpleStates(
-        DfaAlgorithms.removeUnreachableStates(
-          op(this.impl, other.impl))))
+  lazy val allStates = {
+    Set(initial) ++
+      defTransitions.keySet ++
+      defTransitions.values.map(_.values).flatten.toSet ++
+      accepting
   }
 
-  def intersect(other: Dfa): Dfa = {
-    doSetOperation(other, DfaAlgorithms.intersect)
-  }
+  lazy val allButAccepting = allStates diff accepting
 
-  def diff(other: Dfa): Dfa = {
-    doSetOperation(other, DfaAlgorithms.diff)
-  }
+  lazy val allChars = defTransitions.values.map(_.keys).flatten.toSet
 
-  def union(other: Dfa): Dfa = {
-    doSetOperation(other, DfaAlgorithms.union)
-  }
+  lazy val stateCount = allStates.size
 
-  def matchesAnything(): Boolean = {
-    DfaAlgorithms.matchesAnything(impl)
-  }
+  def transitionMap(state: A): SortedMap[CharInterval, A] = defTransitions.getOrElse(state, SortedMap.empty)
 
-  def minimize(): Dfa = {
-    new Dfa(DfaAlgorithms.minimize(impl))
+  /**
+   * Rewrite a DFA using canonical names for the states.
+   * Useful for simplifying the DFA product of intersections or NFA conversions.
+   * This function does not change the language matched by the DFA
+   */
+  def rewrite[B <: DfaState](stateFactory: () => B): Dfa[B] = {
+    val mapping = (for (state <- allStates) yield state -> stateFactory()).toMap
+    Dfa[B](
+      initial = mapping(initial),
+      defTransitions = for ((s, fn) <- defTransitions) yield mapping(s) -> fn.mapValuesNow(mapping),
+      accepting = accepting.map(mapping))
   }
 
 }
 
-object Dfa extends StrictLogging {
+object Dfa {
 
   /**
-   * Match-nothing DFA
-   */
-  val NothingDfa = new Dfa(GenericDfa[State](initial = new State, defTransitions = Map(), accepting = Set()))
-
-  def fromNfa(nfa: Nfa, minimal: Boolean = false): Dfa = {
-    new Dfa(
-      DfaAlgorithms.rewriteWithSimpleStates(
-        DfaAlgorithms.fromNfa(nfa)))
-  }
+    * Match-nothing DFA
+    */
+  val NothingDfa = Dfa[State](initial = new State, defTransitions = Map(), accepting = Set())
 
 }

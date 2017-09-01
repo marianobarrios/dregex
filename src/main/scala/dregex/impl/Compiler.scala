@@ -16,19 +16,20 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
   /**
    * Transform a regular expression abstract syntax tree into a corresponding NFA
    */
-  def fromTree(ast: Node): Dfa = {
+  def fromTree(ast: Node): Dfa[State] = {
     val initial = new State
     val accepting = new State
     val transitions = fromTreeImpl(ast, initial, accepting)
     val nfa = Nfa(initial, transitions, Set(accepting))
-    Dfa.fromNfa(nfa)
+    DfaAlgorithms.rewriteWithSimpleStates(
+      DfaAlgorithms.fromNfa(nfa))
   }
 
   private def fromTreeImpl(node: Node, from: State, to: State): Seq[NfaTransition] = {
     node match {
 
       // base case
-      
+
       case range: AbstractRange =>
         val intervals = intervalMapping(range)
         intervals.map(interval => NfaTransition(from, to, interval))
@@ -51,13 +52,13 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         processRep(rep, from, to)
 
       case Intersection(left, right) =>
-        processOp((l, r) => l intersect r, left, right, from, to)
+        processOp((l, r) => DfaAlgorithms.intersect(l, r), left, right, from, to)
 
       case Union(left, right) =>
-        processOp((l, r) => l union r, left, right, from, to)
+        processOp((l, r) => DfaAlgorithms.union(l, r), left, right, from, to)
 
       case Difference(left, right) =>
-        processOp((l, r) => l diff r, left, right, from, to)
+        processOp((l, r) => DfaAlgorithms.diff(l, r), left, right, from, to)
 
       case cg: CaptureGroup =>
         processCaptureGroup(cg.value, from, to)
@@ -134,7 +135,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         fromTreeImpl(head, from, to)
 
       case Juxt(init :+ last) =>
-        // doing this iteratively prevents stack overflows in the case of long literal strings 
+        // doing this iteratively prevents stack overflows in the case of long literal strings
         val transitions = Buffer[NfaTransition]()
         var prev = from
         for (part <- init) {
@@ -230,10 +231,13 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     }
   }
 
-  private def processOp(operation: (Dfa, Dfa) => Dfa, left: Node, right: Node, from: State, to: State): Seq[NfaTransition] = {
+  private def processOp(operation: (Dfa[State], Dfa[State]) => Dfa[BiState[State]], left: Node, right: Node, from: State, to: State): Seq[NfaTransition] = {
     val leftDfa = fromTree(left)
     val rightDfa = fromTree(right)
-    val result = DfaAlgorithms.toNfa(operation(leftDfa, rightDfa).impl)
+    val resultDfa = DfaAlgorithms.rewriteWithSimpleStates(
+      DfaAlgorithms.removeUnreachableStates(
+        operation(leftDfa, rightDfa)))
+    val result = DfaAlgorithms.toNfa(resultDfa)
     result.transitions ++
       result.accepting.to[Seq].map(acc => NfaTransition(acc, to, Epsilon)) :+
       NfaTransition(from, result.initial, Epsilon)
