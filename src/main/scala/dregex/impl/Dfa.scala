@@ -1,7 +1,6 @@
 package dregex.impl
 
 import com.typesafe.scalalogging.StrictLogging
-import dregex.impl.Util.StrictSortedMap
 
 import scala.collection.immutable.SortedMap
 
@@ -28,19 +27,6 @@ case class Dfa[A <: State](
   lazy val stateCount = allStates.size
 
   def transitionMap(state: A): SortedMap[CharInterval, A] = defTransitions.getOrElse(state, SortedMap.empty)
-
-  /**
-   * Rewrite a DFA using canonical names for the states.
-   * Useful for simplifying the DFA product of intersections or NFA conversions.
-   * This function does not change the language matched by the DFA
-   */
-  def rewrite[B <: State](stateFactory: () => B): Dfa[B] = {
-    val mapping = (for (state <- allStates) yield state -> stateFactory()).toMap
-    Dfa[B](
-      initial = mapping(initial),
-      defTransitions = for ((s, fn) <- defTransitions) yield mapping(s) -> fn.mapValuesNow(mapping),
-      accepting = accepting.map(mapping))
-  }
 
 }
 

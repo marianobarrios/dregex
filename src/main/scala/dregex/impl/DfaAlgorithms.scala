@@ -6,8 +6,27 @@ import scala.collection.mutable
 import Util.StrictMap
 
 import scala.collection.immutable.Seq
+import scala.collection.JavaConverters.asScalaIteratorConverter
+import dregex.impl.Util.StrictSortedMap
 
 object DfaAlgorithms {
+
+  type BinaryOp[A <: State] = (Dfa[A], Dfa[A]) => Dfa[BiState[A]]
+
+  def union[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+    removeUnreachableStates(
+      doUnion(left, right))
+  }
+
+  def intersect[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+    removeUnreachableStates(
+      doIntersection(left, right))
+  }
+
+  def diff[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+    removeUnreachableStates(
+      doDifference(left, right))
+  }
 
   /*
    * Intersections, unions and differences between DFA are done using the "product construction"
@@ -16,7 +35,7 @@ object DfaAlgorithms {
    * http://cs.stackexchange.com/a/7108
    */
 
-  def intersect[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+  private def doIntersection[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val commonChars = left.allChars intersect right.allChars
     val newInitial = BiState[A](left.initial, right.initial)
     val newTransitions = for {
@@ -38,7 +57,7 @@ object DfaAlgorithms {
     Dfa[BiState[A]](newInitial, newTransitions, accepting)
   }
 
-  def diff[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+  private def doDifference[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val NullState = null.asInstanceOf[A]
     val allChars = left.allChars union right.allChars
     val newInitial = BiState[A](left.initial, right.initial)
@@ -63,7 +82,7 @@ object DfaAlgorithms {
     Dfa[BiState[A]](newInitial, newTransitions, accepting)
   }
 
-  def union[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
+  private def doUnion[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val NullState = null.asInstanceOf[A]
     val allChars = left.allChars union right.allChars
     val newInitial = BiState[A](left.initial, right.initial)
@@ -236,7 +255,7 @@ object DfaAlgorithms {
   }
 
   def rewriteWithSimpleStates[A <: State](genericDfa: Dfa[A]): Dfa[SimpleState] = {
-    genericDfa.rewrite(() => new SimpleState)
+    rewrite(genericDfa, () => new SimpleState)
   }
 
   /**
@@ -247,9 +266,68 @@ object DfaAlgorithms {
     if (dfa.minimal) {
       dfa
     } else {
-      val reversed = rewriteWithSimpleStates(fromNfa(reverse(dfa)))
-      rewriteWithSimpleStates(fromNfa(reverse(reversed), minimal = true))
+      val reversedDfa = reverseAsDfa(dfa)
+      rewriteWithSimpleStates(reverseAsDfa(reversedDfa)).copy(minimal = true)
     }
+  }
+
+  def reverseAsDfa[A <: State](dfa: Dfa[A]): Dfa[MultiState] = {
+    fromNfa(reverse(dfa))
+  }
+
+  def matchString[A <: State](dfa: Dfa[A], string: String): (Boolean, Int) = {
+    var current = dfa.initial
+    var i = 0
+    for (codePoint <- string.codePoints.iterator.asScala) {
+      val char = UnicodeChar(codePoint)
+      val currentTrans = dfa.defTransitions.getOrElse(current, SortedMap[CharInterval, A]())
+      // O(log transitions) search in the range tree
+      val newState = Util.floorEntry(currentTrans, CharInterval(from = char, to = char)).flatMap {
+        case (interval, state) =>
+          if (interval.to >= char) {
+            Some(state)
+          } else {
+            None
+          }
+      }
+      newState match {
+        case Some(state) =>
+          current = state
+        case None =>
+          return (false, i)
+      }
+      i += 1
+    }
+    (dfa.accepting.contains(current), i)
+  }
+
+  def equivalent[A <: State](left: Dfa[A], right: Dfa[A]): Boolean = {
+    !matchesAnything(doDifference(left, right)) && !matchesAnything(doDifference(right, left))
+  }
+
+  def isProperSubset[A <: State](left: Dfa[A], right: Dfa[A]) = {
+    !matchesAnything(doDifference(left, right)) && matchesAnything(doDifference(right, left))
+  }
+
+  def isSubsetOf[A <: State](left: Dfa[A], right: Dfa[A]) = {
+    !matchesAnything(doDifference(left, right))
+  }
+
+  def isIntersectionNotEmpty[A <: State](left: Dfa[A], right: Dfa[A]) = {
+    matchesAnything(doIntersection(left, right))
+  }
+
+  /**
+    * Rewrite a DFA using canonical names for the states.
+    * Useful for simplifying the DFA product of intersections or NFA conversions.
+    * This function does not change the language matched by the DFA
+    */
+  def rewrite[A <: State, B <: State](dfa: Dfa[A], stateFactory: () => B): Dfa[B] = {
+    val mapping = (for (state <- dfa.allStates) yield state -> stateFactory()).toMap
+    Dfa[B](
+      initial = mapping(dfa.initial),
+      defTransitions = for ((s, fn) <- dfa.defTransitions) yield mapping(s) -> fn.mapValuesNow(mapping),
+      accepting = dfa.accepting.map(mapping))
   }
 
 }

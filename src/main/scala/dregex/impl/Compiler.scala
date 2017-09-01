@@ -52,13 +52,13 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         processRep(rep, from, to)
 
       case Intersection(left, right) =>
-        processOp((l, r) => DfaAlgorithms.intersect(l, r), left, right, from, to)
+        processOp(DfaAlgorithms.intersect, left, right, from, to)
 
       case Union(left, right) =>
-        processOp((l, r) => DfaAlgorithms.union(l, r), left, right, from, to)
+        processOp(DfaAlgorithms.union, left, right, from, to)
 
       case Difference(left, right) =>
-        processOp((l, r) => DfaAlgorithms.diff(l, r), left, right, from, to)
+        processOp(DfaAlgorithms.diff, left, right, from, to)
 
       case cg: CaptureGroup =>
         processCaptureGroup(cg.value, from, to)
@@ -231,13 +231,12 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     }
   }
 
-  private def processOp(operation: (Dfa[SimpleState], Dfa[SimpleState]) => Dfa[BiState[SimpleState]], left: Node, right: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+  private def processOp(operation: DfaAlgorithms.BinaryOp[SimpleState], left: Node, right: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     val leftDfa = fromTree(left)
     val rightDfa = fromTree(right)
     val result =
       DfaAlgorithms.toNfa(
-        DfaAlgorithms.removeUnreachableStates(
-          operation(leftDfa, rightDfa)))
+        operation(leftDfa, rightDfa))
     result.transitions ++
       result.accepting.to[Seq].map(acc => NfaTransition(acc, to, Epsilon)) :+
       NfaTransition(from, result.initial, Epsilon)

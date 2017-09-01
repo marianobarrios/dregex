@@ -3,16 +3,11 @@ package dregex
 import dregex.impl.RegexParser
 import com.typesafe.scalalogging.StrictLogging
 import dregex.impl.Util
-import dregex.impl.UnicodeChar
 import dregex.impl.SimpleState
-
-import scala.collection.immutable.SortedMap
-import dregex.impl.CharInterval
 import dregex.impl.DfaAlgorithms
 import dregex.impl.Dfa
 
 import scala.collection.immutable.Seq
-import scala.collection.JavaConverters.asScalaIteratorConverter
 
 /**
  * A regular expression, ready to be tested against strings, or to take part in an operation against another.
@@ -44,29 +39,7 @@ trait Regex extends StrictLogging {
    * failure.
    */
   def matchAndReport(string: String): (Boolean, Int) = {
-    var current = dfa.initial
-    var i = 0
-    for (codePoint <- string.codePoints.iterator.asScala) {
-      val char = UnicodeChar(codePoint)
-      val currentTrans = dfa.defTransitions.getOrElse(current, SortedMap[CharInterval, SimpleState]())
-      // O(log transitions) search in the range tree
-      val newState = Util.floorEntry(currentTrans, CharInterval(from = char, to = char)).flatMap {
-        case (interval, state) =>
-          if (interval.to >= char) {
-            Some(state)
-          } else {
-            None
-          }
-      }
-      newState match {
-        case Some(state) =>
-          current = state
-        case None =>
-          return (false, i)
-      }
-      i += 1
-    }
-    (dfa.accepting.contains(current), i)
+    DfaAlgorithms.matchString(dfa, string)
   }
 
   /**
@@ -77,10 +50,10 @@ trait Regex extends StrictLogging {
   def intersect(other: Regex): Regex = {
     val (res, time) = Util.time {
       checkUniverse(other)
-      val result = DfaAlgorithms.rewriteWithSimpleStates(
-        DfaAlgorithms.removeUnreachableStates(
-          DfaAlgorithms.intersect(dfa, other.dfa)))
-      new SynteticRegex(result, universe)
+      new SynteticRegex(
+        DfaAlgorithms.rewriteWithSimpleStates(
+          DfaAlgorithms.intersect(this.dfa, other.dfa)),
+        universe)
     }
     logger.trace(s"$this and $other intersected in $time")
     res
@@ -94,10 +67,10 @@ trait Regex extends StrictLogging {
   def diff(other: Regex): Regex = {
     val (res, time) = Util.time {
       checkUniverse(other)
-      val result = DfaAlgorithms.rewriteWithSimpleStates(
-        DfaAlgorithms.removeUnreachableStates(
-          DfaAlgorithms.diff(dfa, other.dfa)))
-      new SynteticRegex(result, universe)
+      new SynteticRegex(
+        DfaAlgorithms.rewriteWithSimpleStates(
+          DfaAlgorithms.diff(this.dfa, other.dfa)),
+        universe)
     }
     logger.trace(s"$this and $other diffed in $time")
     res
@@ -111,10 +84,10 @@ trait Regex extends StrictLogging {
   def union(other: Regex): Regex = {
     val (res, time) = Util.time {
       checkUniverse(other)
-      val result = DfaAlgorithms.rewriteWithSimpleStates(
-        DfaAlgorithms.removeUnreachableStates(
-          DfaAlgorithms.union(dfa, other.dfa)))
-      new SynteticRegex(result, universe)
+      new SynteticRegex(
+        DfaAlgorithms.rewriteWithSimpleStates(
+          DfaAlgorithms.union(this.dfa, other.dfa)),
+        universe)
     }
     logger.trace(s"$this and $other unioned in $time")
     res
@@ -124,11 +97,20 @@ trait Regex extends StrictLogging {
    * Return whether this expression matches at least one string in common with another. Intersections take O(n*m) time,
    * where n and m are the number of states of the DFA of the operands.
    */
-  def doIntersect(other: Regex): Boolean = (this intersect other).matchesAnything
+  def doIntersect(other: Regex): Boolean = {
+    checkUniverse(other)
+    DfaAlgorithms.isIntersectionNotEmpty(this.dfa, other.dfa)
+  }
 
-  def isSubsetOf(other: Regex): Boolean = !(this diff other).matchesAnything()
+  def isSubsetOf(other: Regex): Boolean = {
+    checkUniverse(other)
+    DfaAlgorithms.isSubsetOf(this.dfa, other.dfa)
+  }
 
-  def isProperSubsetOf(other: Regex): Boolean = (this isSubsetOf other) && (other diff this).matchesAnything()
+  def isProperSubsetOf(other: Regex): Boolean = {
+    checkUniverse(other)
+    DfaAlgorithms.isProperSubset(this.dfa, other.dfa)
+  }
 
   /**
    * Return whether this regular expression is equivalent to other. Two regular expressions are equivalent if they
@@ -137,8 +119,7 @@ trait Regex extends StrictLogging {
    */
   def equiv(other: Regex): Boolean = {
     checkUniverse(other)
-    !DfaAlgorithms.matchesAnything(DfaAlgorithms.diff(dfa, other.dfa)) &&
-        !DfaAlgorithms.matchesAnything(DfaAlgorithms.diff(other.dfa, dfa))
+    DfaAlgorithms.equivalent(this.dfa, other.dfa)
   }
 
   /**
