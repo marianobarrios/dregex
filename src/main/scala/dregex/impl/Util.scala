@@ -2,7 +2,9 @@ package dregex.impl
 
 import com.typesafe.scalalogging.StrictLogging
 import java.time.Duration
+
 import scala.collection.immutable.SortedMap
+import scala.collection.JavaConverters._
 
 object Util extends StrictLogging {
 
@@ -54,6 +56,13 @@ object Util extends StrictLogging {
     field.setAccessible(true)
     field.get(null).asInstanceOf[A]
   }
-    
+
+  def toSubscriptString(number: Int): String = {
+    val string = number.toString
+    val subScriptString = string.codePoints.iterator.asScala.flatMap { codePoint =>
+      Character.toChars(codePoint + 8272).toSeq
+    }
+    new String(subScriptString.toArray)
+  }
   
 }

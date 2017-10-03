@@ -17,6 +17,14 @@ case class CharInterval(from: UnicodeChar, to: UnicodeChar) extends AtomPart wit
 
   def compare(that: CharInterval): Int = this.from compare that.from
 
+  override def toString = {
+    if (from == to) {
+      from.toString
+    } else {
+      s"[$from-$to]"
+    }
+  }
+
 }
 
 case object Epsilon extends AtomPart {

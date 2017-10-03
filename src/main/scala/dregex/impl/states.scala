@@ -6,7 +6,7 @@ trait State
 
 class SimpleState extends State {
   val id = SimpleState.counter.getAndIncrement()
-  override def toString() = s"s$id"
+  override def toString() = s"s${Util.toSubscriptString(id)}"
 }
 
 object SimpleState {

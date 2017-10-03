@@ -7,7 +7,9 @@ case class NfaTransition(from: State, to: State, char: AtomPart)
 case class Nfa(initial: State, transitions: Seq[NfaTransition], accepting: Set[State]) {
 
   override def toString() = {
-    s"initial: $initial; transitions: $transitions; accepting: $accepting"
+    val transStr = transitions.mkString("[", "; ", "]")
+    val acceptStr = accepting.mkString("{", "; ", "}")
+    s"initial: $initial; transitions: $transStr; accepting: $acceptStr"
   }
 
   lazy val allStates = {
