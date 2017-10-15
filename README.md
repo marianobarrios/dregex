@@ -38,10 +38,11 @@ Supported regex flavor
 	* [Binary properties](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ubpc), e.g., `\p{IsAlphabetic}`
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
 * Lookahead (positive and negative) (see note below)
+* Set operations (union, intersection, difference) between regular expressions.
 
 ### Not (yet) supported
 
-* Searching
+* Searching (the engine matches only against the full input string)
 * Lookbehind
 * Capturing groups
 
