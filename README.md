@@ -41,7 +41,9 @@ Supported regex flavor
 
 ### Not (yet) supported
 
+* Searching
 * Lookbehind
+* Capturing groups
 
 ### Not supported
 
