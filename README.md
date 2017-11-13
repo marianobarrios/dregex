@@ -1,7 +1,7 @@
 Dregex - Deterministic Regular Expression Engine
 ================================================
 
-Dregex is a Scala/JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time.
+Dregex is a Scala/JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, difference).
 
 Most mainstream engines work with flavors of regular expressions based on the one that appeared Perl 5 in 1994. Those flavors include a wide range of features, which make state-machine based implementation impossible. As they rely on recursive backtracking, these engines can also have exponential matching time.
 
@@ -42,12 +42,12 @@ Supported regex flavor
 
 ### Not (yet) supported
 
-* Searching (the engine matches only against the full input string)
 * Lookbehind
-* Capturing groups
 
 ### Not supported
 
+* Searching (the engine matches only against the full input string)
+* Capturing groups
 * Backreferences
 
 Internals
@@ -99,5 +99,6 @@ Similar efforts
 ---------------
 
 * [RE2](https://github.com/google/re2) is an efficient (linear) C++ library that implements a subset of Perl features, writen by Russ Cox. The author has written a [set of articles](http://swtch.com/~rsc/regexp/regexp1.html) explaining the problem.
-* [TRE](https://github.com/laurikari/tre/) is an efficient C library and command-line tool that implements POSIX-compliant and approximate (fuzzy) regex matching. It is written by Ville Laurikari.
+* [TRE](https://github.com/laurikari/tre/) is an efficient C library and command-line tool that implements POSIX-compliant and approximate (fuzzy) regex matching, using "tagged DFA". It is written by Ville Laurikari.
 * [Plan 9 grep](http://swtch.com/usr/local/plan9/src/cmd/grep/) is an efficient DFA implementation that supports egrep syntax. It was written by Ken Thompson.
+* [regex-tdfa](https://github.com/ChrisKuklewicz/regex-tdfa) is a "tagged DFA" implementation written in Haskell by Chris Kuklewicz.
