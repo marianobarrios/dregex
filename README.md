@@ -15,18 +15,18 @@ On the other hand, there is a mathematical definition of regular expressions, as
 
 There are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). There are also some other features that, albeit not infeasible, complicate a DFA solution quite significantly, like search and capturing groups. On the other hand, on top of the performance benefits, using a DFA also allows to do set operations; i.e., union, intersection and difference. 
 
-It can seem that no solution is ideal. But it should be observed that regular expression uses can almost always be classified in either of these two use cases:
+It can seem that no solution is ideal. But it should be observed that regular expression uses can almost always be classified in either of these two cases:
 
 - Search
 - Matching
 
 <b>Search</b> is about finding some pattern in a (usually large) text. Beyond the search functionality itself, capture groups are also very important. Mainstream Perl-like implementations do this well.
 
-<b>Matching</b> is about fully matching (usually small) texts against a regular expression, sometimes against several expressions in a sequence. Here matching speed is tends to be important, and capturing submatches less so, as the interest is whether the expressions match the whole text or not.
+<b>Matching</b> is about fully matching (usually small) texts against a regular expression, sometimes against several expressions in a sequence. Here matching speed tends to be important, and capturing submatches less so, as the interest is whether the expressions match the whole text or not.
 
 Using DFA-based matching can be useful in the second case. For example, non-intersecting DFA can be tested in any order (even if stopping at the first match), allowing for otherwise impossible optimizations.
 
-Dregex is an attempt to implement a useful subset of Perl-like engines, using a DFA, for the Java Virtual Machine.
+Dregex is an attempt to implement a useful subset of the functionality offered by Perl-like engines, using a DFA, for the Java Virtual Machine.
 
 ## Supported regex flavor
 
