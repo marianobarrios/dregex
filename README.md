@@ -62,6 +62,8 @@ Unless specified, the regular expression flavor supported attempts to be compati
 * Searching (the engine matches only against the full input string)
 * Capturing groups
 * Backreferences
+* Anchors (`ˆ` and `$`), because they are redundant, as the expressions only operate over the complete text.
+* Reluctant quantifiers (`+?`, `*?`, `??`, `{...}?`), because they are meaningless, as they, by definition, only affect capturing groups, not whether the expressions match or not.
 
 ## Internals
 
