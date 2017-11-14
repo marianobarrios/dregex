@@ -1,23 +1,36 @@
-Dregex - Deterministic Regular Expression Engine
-================================================
+# Dregex - Deterministic Regular Expression Engine
 
 Dregex is a Scala/JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, difference).
-
-Most mainstream engines work with flavors of regular expressions based on the one that appeared Perl 5 in 1994. Those flavors include a wide range of features, which make state-machine based implementation impossible. As they rely on recursive backtracking, these engines can also have exponential matching time.
-
-On the other hand, there is a mathematical definition of regular expressions, as they were invented by Stephen Kleene in 1956. In the most minimalistic version these expressions consist of just literal characters, alternation ("|") and repetition ("*"). They can be matched again arbitrary text of length n in O(n), using a Definite Finite Automaton (DFA). Using DFA also allows to do set operations; i.e., union, intersection and difference.
-
-There are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). Nevertheless, backreferences are seldom used in practice and it is possible to select a practical subset of the Perl flavor substantially bigger than their mathematical counterpart (or the POSIX's regex) yet expressible using standard DFA.
-
-Dregex is an attempt to implement such a subset and make a fast implementation for the Java Virtual Machine.
 
 [![Build Status](https://travis-ci.org/marianobarrios/dregex.svg?branch=master)](https://travis-ci.org/marianobarrios/dregex)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.11)
 [![Scaladoc](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.11.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.11)
 
-Supported regex flavor
-----------------------
+## Rationale
+
+Most mainstream engines work with flavors of regular expressions based on the one that appeared Perl 5 in 1994. Those flavors include a wide range of features, which make state-machine based implementation impossible. As they rely on recursive backtracking, these engines can also have exponential matching time.
+
+On the other hand, there is a mathematical definition of regular expressions, as they were invented by Stephen Kleene in 1956. In the most minimalistic version these expressions consist of just literal characters, alternation ("|") and repetition ("*"). They can be matched again arbitrary text of length n in O(n), using a Definite Finite Automaton (DFA). 
+
+There are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). There are also some other features that, albeit not infeasible, complicate a DFA solution quite significantly, like search and capturing groups. On the other hand, on top of the performance benefits, using a DFA also allows to do set operations; i.e., union, intersection and difference. 
+
+It can seem that no solution is ideal. But it should be observed that regular expression uses can almost always be classified in either of these two use cases:
+
+- Search
+- Matching
+
+<b>Search</b> is about finding some pattern in a (usually large) text. Beyond the search functionality itself, capture groups are also very important. Mainstream Perl-like implementations do this well.
+
+<b>Matching</b> is about fully matching (usually small) texts against a regular expression, sometimes against several expressions in a sequence. Here matching speed is tends to be important, and capturing submatches less so, as the interest is whether the expressions match the whole text or not.
+
+Using DFA-based matching can be useful in the second case. For example, non-intersecting DFA can be tested in any order (even if stopping at the first match), allowing for otherwise impossible optimizations.
+
+Dregex is an attempt to implement a useful subset of Perl-like engines, using a DFA, for the Java Virtual Machine.
+
+## Supported regex flavor
+
+Unless specified, the regular expression flavor supported attempts to be compatible with the [Java flavor](https://docs.oracle.com/javase/9/docs/api/java/util/regex/Pattern.html).
 
 ### Supported features
 
@@ -50,8 +63,7 @@ Supported regex flavor
 * Capturing groups
 * Backreferences
 
-Internals
----------
+## Internals
 
 ### DFA construction
 
@@ -93,10 +105,8 @@ Lookaround expressions are supported anywhere in the regex, including inside rep
 This expression matches, in this engine, `a`, `aa`, `aaa` and so on, being effectively equivalent to `a+`, because the negative condition (`aa`) can never happen inside `a`. The fact that the expression is repeated does not change its inner logic. However, in Perl-like engines, the aforementioned regex does not match any `a` longer than one character, because those engines treat lookarounds specially, effectively running a sub-regex at the point of occurrence, irrespective of the context.
 
 The different behavior of this engine is, of course, a direct consequence of the way lookarounds are implemented. Nevertheless, it can be argued that this definition is conceptually simpler and, more importantly, easier to reason about in the context of complex expression. Regarding practical uses, looped lookarounds like the one in the example are quite rare anyway.
- 
 
-Similar efforts
----------------
+## Similar efforts
 
 * [RE2](https://github.com/google/re2) is an efficient (linear) C++ library that implements a subset of Perl features, writen by Russ Cox. The author has written a [set of articles](http://swtch.com/~rsc/regexp/regexp1.html) explaining the problem.
 * [TRE](https://github.com/laurikari/tre/) is an efficient C library and command-line tool that implements POSIX-compliant and approximate (fuzzy) regex matching, using "tagged DFA". It is written by Ville Laurikari.
