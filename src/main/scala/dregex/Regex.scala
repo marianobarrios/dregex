@@ -1,11 +1,11 @@
 package dregex
 
 import dregex.impl.RegexParser
-import com.typesafe.scalalogging.StrictLogging
 import dregex.impl.Util
 import dregex.impl.SimpleState
 import dregex.impl.DfaAlgorithms
 import dregex.impl.Dfa
+import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.Seq
 
@@ -13,7 +13,9 @@ import scala.collection.immutable.Seq
  * A regular expression, ready to be tested against strings, or to take part in an operation against another.
  * Internally, instances of this type have a DFA (Deterministic Finite Automaton).
  */
-trait Regex extends StrictLogging {
+trait Regex {
+
+  private[this] val logger = LoggerFactory.getLogger(classOf[Regex])
 
   def dfa: Dfa[SimpleState]
   def universe: Universe
@@ -55,7 +57,7 @@ trait Regex extends StrictLogging {
           DfaAlgorithms.intersect(this.dfa, other.dfa)),
         universe)
     }
-    logger.trace(s"$this and $other intersected in $time")
+    logger.trace("{} and {} intersected in {}", this, other, time)
     res
   }
 
@@ -72,7 +74,7 @@ trait Regex extends StrictLogging {
           DfaAlgorithms.diff(this.dfa, other.dfa)),
         universe)
     }
-    logger.trace(s"$this and $other diffed in $time")
+    logger.trace("{} and {} diffed in {}", this, other, time)
     res
   }
 
@@ -89,7 +91,7 @@ trait Regex extends StrictLogging {
           DfaAlgorithms.union(this.dfa, other.dfa)),
         universe)
     }
-    logger.trace(s"$this and $other unioned in $time")
+    logger.trace("{} and {} unioned in {}", this, other, time)
     res
   }
 
@@ -129,13 +131,15 @@ trait Regex extends StrictLogging {
 
 }
 
-object Regex extends StrictLogging {
+object Regex {
+
+  private[this] val logger = LoggerFactory.getLogger(Regex.getClass)
 
   def parse(regex: String): ParsedRegex = {
     val (parsedRegex, time) = Util.time {
       new ParsedRegex(RegexParser.parse(regex))
     }
-    logger.trace(s"⟪$regex⟫ parsed in $time: ${parsedRegex.tree}")
+    logger.trace("⟪{}⟫ parsed in {}: {}", regex, time, parsedRegex.tree)
     parsedRegex
   }
 
@@ -144,7 +148,7 @@ object Regex extends StrictLogging {
     val (compiled, time) = Util.time {
       new CompiledRegex(regex, tree, new Universe(Seq(tree)))
     }
-    logger.trace(s"$compiled compiled in $time")
+    logger.trace("{} compiled in {}", compiled, time: Any)
     compiled
   }
 
@@ -152,7 +156,7 @@ object Regex extends StrictLogging {
     val (compiled, time) = Util.time {
       new CompiledRegex(originalString, tree, universe)
     }
-    logger.trace(s"$compiled compiled in $time")
+    logger.trace("{} compiled in {}", compiled, time: Any)
     compiled
   }
 
@@ -163,7 +167,7 @@ object Regex extends StrictLogging {
       val (res, time) = Util.time {
         regex -> new CompiledRegex(regex, tree, universe)
       }
-      logger.trace(s"${res._2} compiled in $time")
+      logger.trace("{} compiled in {}", res._2, time: Any)
       res
     }
   }

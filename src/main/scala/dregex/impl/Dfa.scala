@@ -1,7 +1,5 @@
 package dregex.impl
 
-import com.typesafe.scalalogging.StrictLogging
-
 import scala.collection.immutable.SortedMap
 
 case class Dfa[A <: State](
@@ -9,7 +7,7 @@ case class Dfa[A <: State](
     defTransitions: Map[A, SortedMap[CharInterval, A]],
     accepting: Set[A],
     minimal: Boolean = false
-  ) extends StrictLogging {
+  ) {
 
   override def toString() = s"initial: $initial; transitions: $defTransitions; accepting: $accepting"
 

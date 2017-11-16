@@ -1,8 +1,9 @@
 package dregex
 
 import org.scalatest.FunSuite
-import com.typesafe.scalalogging.StrictLogging
 import dregex.impl.Util
+import org.slf4j.LoggerFactory
+
 import scala.collection.immutable.Seq
 
 /**
@@ -11,7 +12,9 @@ import scala.collection.immutable.Seq
  * many regex and strings as wanted. Note that this test is designed to
  * catch false negatives, but no false positives.
  */
-class AutoTest extends FunSuite with StrictLogging {
+class AutoTest extends FunSuite {
+
+  private[this] val logger = LoggerFactory.getLogger(classOf[AutoTest])
 
   test("generate examples") {
     val generator = new TreeGenerator
@@ -25,13 +28,14 @@ class AutoTest extends FunSuite with StrictLogging {
         val regex = new CompiledRegex(regexString, parsedRegex, new Universe(Seq(parsedRegex)))
         val strings = StringGenerator.generate(tree, maxAlternatives = 3, maxRepeat = 3)
         totalStrings += strings.size
-        logger.debug(s"Testing: $regexString, generated: ${strings.size}")
+        logger.debug("Testing: {}, generated: {}", regexString, strings.size)
         for (string <- strings) {
           assertResult(true)(regex.matches(string))
         }
       }
     }
-    logger.debug(s"Trees iteration took: $elapsed; trees generated: $totalTrees; strings tested: $totalStrings")
+    logger.debug("Trees iteration took: {}; trees generated: {}; strings tested: {}",
+      elapsed, new java.lang.Integer(totalTrees), new java.lang.Integer(totalStrings))
   }
 
 }

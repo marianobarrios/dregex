@@ -1,7 +1,6 @@
 package dregex.impl
 
 import scala.util.parsing.combinator.JavaTokenParsers
-import com.typesafe.scalalogging.StrictLogging
 import dregex.InvalidRegexException
 import dregex.impl.UnicodeChar.FromCharConversion
 import scala.collection.immutable.Seq
@@ -245,7 +244,7 @@ class RegexParser extends JavaTokenParsers {
 
 }
 
-object RegexParser extends StrictLogging {
+object RegexParser {
 
   def parse(regex: String) = {
     val parser = new RegexParser()

@@ -7,19 +7,24 @@ import dregex.impl.UnicodeChar.FromIntConversion
 import dregex.impl.RegexTree.CharSet
 import dregex.impl.RegexTree.CharRange
 import java.lang.Character.UnicodeBlock
+
 import scala.collection.breakOut
 import java.lang.Character.UnicodeScript
-import com.typesafe.scalalogging.StrictLogging
+
+import org.slf4j.LoggerFactory
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.immutable.Seq
 
-object PredefinedCharSets extends StrictLogging {
+object PredefinedCharSets {
+
+  private[this] val logger = LoggerFactory.getLogger(PredefinedCharSets.getClass)
 
   val unicodeBlocks: Map[String, CharSet] = {
     val blockStarts = Util.getPrivateStaticField[Array[Int]](classOf[UnicodeBlock], "blockStarts")
     val javaBlocks = Util.getPrivateStaticField[Array[UnicodeBlock]](classOf[UnicodeBlock], "blocks").toSeq
-    val blockToSetMap: Map[UnicodeBlock, CharSet] = (0 until blockStarts.length).flatMap { i =>
+    val blockToSetMap: Map[UnicodeBlock, CharSet] = blockStarts.indices.flatMap { i =>
       val from = blockStarts(i)
       val to = if (i == blockStarts.length - 1)
         UnicodeChar.max.codePoint
@@ -33,13 +38,11 @@ object PredefinedCharSets extends StrictLogging {
     val alias =
       Util.getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").asScala.toMap
     alias.mapValues { javaUnicodeBlock =>
-      blockToSetMap.get(javaUnicodeBlock).getOrElse {
-        /*
-         * As of Java 1.8, there exists one deprecated block (UnicodeBlock.SURROGATES_AREA) 
-         * that doesn't have any range assigned. Respect Java behavior and make it match nothing. 
-         */
-        CharSet(Seq())
-      }
+      /*
+       * As of Java 1.8, there exists one deprecated block (UnicodeBlock.SURROGATES_AREA)
+       * that doesn't have any range assigned. Respect Java behavior and make it match nothing.
+       */
+      blockToSetMap.getOrElse(javaUnicodeBlock, CharSet(Seq()))
     }
   }
 

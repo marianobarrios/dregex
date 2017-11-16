@@ -9,7 +9,6 @@ object RangeOps {
 
   def diff(left: AbstractRange, right: Seq[AbstractRange]): Seq[AbstractRange] = {
     right.foldLeft(Seq(left))(diff _)
-    //right.map(diff(left, _)).flatten
   }
 
   def diff(left: Seq[AbstractRange], right: AbstractRange): Seq[AbstractRange] = {

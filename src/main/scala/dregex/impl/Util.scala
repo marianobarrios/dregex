@@ -1,12 +1,11 @@
 package dregex.impl
 
-import com.typesafe.scalalogging.StrictLogging
 import java.time.Duration
 
 import scala.collection.immutable.SortedMap
 import scala.collection.JavaConverters._
 
-object Util extends StrictLogging {
+object Util {
 
   def mergeWithUnion[B, C](left: Map[B, Set[C]], right: Map[B, Set[C]]) = merge(left, right)(_ union _)
 

@@ -31,7 +31,7 @@ scalacOptions := Seq(
   "-Xfatal-warnings")
 	
 libraryDependencies ++= 
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2" ::
+  "org.slf4j" % "slf4j-api" % "1.7.25" ::
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6" ::
   "org.scalatest" %% "scalatest" % "3.0.4" % Test ::
   "ch.qos.logback" % "logback-classic" % "1.2.3" % Test ::
@@ -49,7 +49,7 @@ fork in Test := true
 
 publishMavenStyle := true
 
-pomExtra := (
+pomExtra :=
   <scm>
     <url>git@github.com:marianobarrios/dregex.git</url>
     <connection>scm:git:git@github.com:marianobarrios/dregex.git</connection>
@@ -60,4 +60,4 @@ pomExtra := (
       <name>Mariano Barrios</name>
       <url>https://github.com/marianobarrios/</url>
     </developer>
-  </developers>)
+  </developers>

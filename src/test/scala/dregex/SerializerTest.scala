@@ -2,13 +2,15 @@ package dregex
 
 import org.scalatest.FunSuite
 import dregex.impl.RegexParser
-import com.typesafe.scalalogging.StrictLogging
 import dregex.impl.Util
+import org.slf4j.LoggerFactory
 
 /**
  * Test the full cycle of serialization and parsing.
  */
-class SerializerTest extends FunSuite with StrictLogging {
+class SerializerTest extends FunSuite {
+
+  private[this] val logger = LoggerFactory.getLogger(classOf[SerializerTest])
 
   test("serialize") {
     val generator = new TreeGenerator
