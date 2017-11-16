@@ -5,8 +5,8 @@ description := "Deterministic Regular Expression Engine"
 homepage := Some(url("https://github.com/marianobarrios/dregex"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
 
-scalaVersion := "2.12.3"
-crossScalaVersions := Seq("2.11.11", "2.12.3")
+scalaVersion := "2.12.4"
+crossScalaVersions := Seq("2.11.12", "2.12.4")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
@@ -33,7 +33,7 @@ scalacOptions := Seq(
 libraryDependencies ++= 
   "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2" ::
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6" ::
-  "org.scalatest" %% "scalatest" % "3.0.2" % Test ::
+  "org.scalatest" %% "scalatest" % "3.0.4" % Test ::
   "ch.qos.logback" % "logback-classic" % "1.2.3" % Test ::
   Nil
 
