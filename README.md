@@ -4,8 +4,8 @@ Dregex is a Scala/JVM library that implements a regular expression engine using 
 
 [![Build Status](https://travis-ci.org/marianobarrios/dregex.svg?branch=master)](https://travis-ci.org/marianobarrios/dregex)
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.11)
-[![Scaladoc](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.11.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.11)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.12)
+[![Scaladoc](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.12.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.12)
 
 ## Rationale
 
