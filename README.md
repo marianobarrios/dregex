@@ -65,7 +65,7 @@ Unless specified, the regular expression flavor supported attempts to be compati
 * Anchors (`ˆ` and `$`), because they are redundant, as the expressions only operate over the complete text.
 * Reluctant quantifiers (`+?`, `*?`, `??`, `{...}?`), because they are meaningless, as they, by definition, only affect capturing groups, not whether the expressions match or not.
 
-## Internals
+## Algorithms
 
 ### DFA construction
 
@@ -107,6 +107,20 @@ Lookaround expressions are supported anywhere in the regex, including inside rep
 This expression matches, in this engine, `a`, `aa`, `aaa` and so on, being effectively equivalent to `a+`, because the negative condition (`aa`) can never happen inside `a`. The fact that the expression is repeated does not change its inner logic. However, in Perl-like engines, the aforementioned regex does not match any `a` longer than one character, because those engines treat lookarounds specially, effectively running a sub-regex at the point of occurrence, irrespective of the context.
 
 The different behavior of this engine is, of course, a direct consequence of the way lookarounds are implemented. Nevertheless, it can be argued that this definition is conceptually simpler and, more importantly, easier to reason about in the context of complex expression. Regarding practical uses, looped lookarounds like the one in the example are quite rare anyway.
+
+## Internals
+
+### Requirements
+
+Dregex requires Java 8.
+
+### Logging
+
+The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the JVM. As a policy, all logging event emitted are at TRACE level, which is below the default threshold in most logging implementations and thus completely silent by default.
+
+### Dependencies
+
+Dregex is written in Scala (but fully usable from Java), so it depends on the Scala runtime library (5 MB). There are two more small dependencies: [SLF4J](https://www.slf4j.org/) and [scala-parser-combinators](https://github.com/scala/scala-parser-combinators). The main jar file is about 200 KB.
 
 ## Similar efforts
 
