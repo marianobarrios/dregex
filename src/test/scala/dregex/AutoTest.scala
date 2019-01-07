@@ -35,7 +35,7 @@ class AutoTest extends FunSuite {
       }
     }
     logger.debug("Trees iteration took: {}; trees generated: {}; strings tested: {}",
-      elapsed, new java.lang.Integer(totalTrees), new java.lang.Integer(totalStrings))
+      elapsed, Integer.valueOf(totalTrees), Integer.valueOf(totalStrings))
   }
 
 }
