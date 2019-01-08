@@ -566,6 +566,7 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matchesAnything)
       assertResult(true)(r.matches(""))
       assertResult(false)(r.matches("a"))
+      assertResult(false)(r.matches("b"))
     }
 
     using(Regex.compile("a(?!b).")) { r =>
@@ -850,6 +851,54 @@ class MatchTest extends FunSuite {
       assertResult(true)(r.matches("b"))
       // true because lookahead cannot "escape" the expression it's in 
       assertResult(true)(r.matches("bb"))
+    }
+
+  }
+
+  test("lookbehind") {
+
+    using(Regex.compile("(?<!b)")) { r =>
+      assertResult(true)(r.matchesAnything())
+      assertResult(true)(r.matches(""))
+      assertResult(false)(r.matches("a"))
+      assertResult(false)(r.matches("b"))
+    }
+
+    using(Regex.compile(".(?<!a)b")) { r =>
+      assertResult(true)(r.matchesAnything())
+      assertResult(false)(r.matches("b"))
+      assertResult(true)(r.matches("bb"))
+      assertResult(true)(r.matches("cb"))
+      assertResult(false)(r.matches("ab"))
+    }
+
+    using(Regex.compile("other|.(?<!a)b")) { r =>
+      assertResult(true)(r.matchesAnything())
+      assertResult(false)(r.matches("b"))
+      assertResult(true)(r.matches("bb"))
+      assertResult(true)(r.matches("cb"))
+      assertResult(false)(r.matches("ab"))
+      assertResult(true)(r.matches("other"))
+    }
+
+    using(Regex.compile("a(?<!a)")) { r =>
+      assertResult(false)(r.matchesAnything())
+    }
+
+    using(Regex.compile("a(?<!a)|a")) { r =>
+      assertResult(true)(r.matches("a"))
+    }
+
+    using(Regex.compile("ong(?<!long)")) { r =>
+      assertResult(true)(r.matches("ong"))
+    }
+
+    using(Regex.compile("(a|b)(?<!a|b)")) { r =>
+      assertResult(false)(r.matchesAnything())
+    }
+
+    using(Regex.compile("[a-c](?<!a|b)")) { r =>
+      assertResult(true)(r.matches("c"))
     }
 
   }

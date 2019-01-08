@@ -50,12 +50,8 @@ Unless specified, the regular expression flavor supported attempts to be compati
 	* [General categories](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ucc), e.g., `\p{Lu}`, `\p{IsLu}`, `\p{general_category=Lu}`, `\p{gc=Lu}`
 	* [Binary properties](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ubpc), e.g., `\p{IsAlphabetic}`
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
-* Lookahead (positive and negative) (see note below)
+* Lookaround (lookahead and lookbehind; both positive and negative) (see note below)
 * Set operations (union, intersection, difference) between regular expressions.
-
-### Not (yet) supported
-
-* Lookbehind
 
 ### Not supported
 
@@ -91,12 +87,19 @@ Intersections, unions and differences between regex are done using the "product 
 
 This is a relatively straightforward algorithm that is implemented using the already generated DFA.
 
-### Lookahead
+### Lookaround
 
 Lookaround constructions are transformed into an equivalent DFA operation, and the result of it trivially transformed into a NFA again for insertion into the outer expression:
 
+Lookahead:
+
 * `(?=B)C` → `C ∩ B.*`
 * `(?!B)C` → `C - B.*`
+
+Lookbehind:
+
+* `A(?<=B)` → `A ∩ .*B`
+* `A(?<!B)` → `A - .*B`
 
 In the case of more than one lookaround, the transformation is applied recursively.
 

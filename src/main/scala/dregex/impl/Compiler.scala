@@ -1,6 +1,5 @@
 package dregex.impl
 
-import dregex.UnsupportedException
 import scala.collection.mutable.Buffer
 import scala.collection.immutable.Seq
 
@@ -71,9 +70,12 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
    *
    * (?=B)C is transformed into C ∩ B.*
    * (?!B)C is transformed into C - B.*
+   * A(?<=B) is transformed into A ∩ .*B
+   * A(?<!B) is transformed into A - .*B
    *
    * In the case of more than one lookaround, the transformation is applied recursively.
    *
+    * *
    * NOTE: Only lookahead is currently implemented
    */
   private def processJuxt(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
@@ -81,11 +83,11 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     import Condition._
     findLookaround(juxt.values) match {
       case Some(i) =>
+        val prefix = juxt.values.slice(0, i)
+        val suffix = juxt.values.slice(i + 1, juxt.values.size)
+        val wildcard = Rep(min = 0, max = None, value = Wildcard)
         juxt.values(i).asInstanceOf[Lookaround] match {
           case Lookaround(Ahead, cond, value) =>
-            val prefix = juxt.values.slice(0, i)
-            val suffix = juxt.values.slice(i + 1, juxt.values.size)
-            val wildcard = Rep(min = 0, max = None, value = Wildcard)
             val rightSide: Node = cond match {
               case Positive => Intersection(Juxt(suffix), Juxt(Seq(value, wildcard)))
               case Negative => Difference(Juxt(suffix), Juxt(Seq(value, wildcard)))
@@ -95,7 +97,14 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
             else
               fromTreeImpl(Juxt(prefix :+ rightSide), from, to)
           case Lookaround(Behind, cond, value) =>
-            throw new UnsupportedException("lookbehind")
+            val leftSide: Node = cond match {
+              case Positive => Intersection(Juxt(prefix), Juxt(Seq(value, wildcard)))
+              case Negative => Difference(Juxt(prefix), Juxt(Seq(value, wildcard)))
+            }
+            if (suffix.isEmpty)
+              fromTreeImpl(leftSide, from, to)
+            else
+              fromTreeImpl(Juxt(leftSide +: suffix), from, to)
         }
       case None =>
         processJuxtNoLookaround(juxt, from, to)
