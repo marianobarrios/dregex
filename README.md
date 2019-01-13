@@ -1,6 +1,6 @@
 # Dregex - Deterministic Regular Expression Engine
 
-Dregex is a Scala/JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, difference).
+Dregex is a JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, and difference).
 
 [![Build Status](https://travis-ci.org/marianobarrios/dregex.svg?branch=master)](https://travis-ci.org/marianobarrios/dregex)
 
@@ -9,24 +9,26 @@ Dregex is a Scala/JVM library that implements a regular expression engine using 
 
 ## Rationale
 
-Most mainstream engines work with flavors of regular expressions based on the one that appeared in Perl 5 in 1994. Those flavors include a wide range of features, which make state-machine based implementation impossible. As they rely on recursive backtracking, these engines can also have exponential matching time.
+### History
 
-On the other hand, there is a mathematical definition of regular expressions, as they were invented by Stephen Kleene in 1956. In the most minimalistic version these expressions consist of just literal characters, alternation ("|") and repetition ("*"). They can be matched again arbitrary text of length n in O(n), using a Definite Finite Automaton (DFA). 
+"Regular expressions" are a mathematically-defined concept, invented by Stephen Kleene in 1956. In the most minimalistic (and original) version these expressions define languages using just literal characters, alternation ("|") and repetition ("*"). They have well-understood properties; centrally, they can be matched against text using another well-understood abstract device, a Definite Finite Automaton (DFA). DFA have the important property of running on arbitrary text of length n in O(n) time and using O(1) space. Presented with a regular expression and a candidate text, a DFA decides whether the text matches the expression.
 
-There are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). There are also some other features that, albeit not infeasible, complicate a DFA solution quite significantly, like search and capturing groups. On the other hand, on top of the performance benefits, using a DFA also allows to do set operations; i.e., union, intersection and difference. 
+Some years later, regular expressions entered actual usage in the UNIX world, when Ken Thompson included them as a feature in the editor [QED](https://en.wikipedia.org/wiki/QED_(text_editor). After that, they became a standard language in the world of UNIX, appearing in a variety of programs, notably the still-used [grep](https://en.wikipedia.org/wiki/Grep) tool.
 
-It can seem that no solution is ideal. But it should be observed that regular expression uses can almost always be classified in either of these two cases:
+Circa 1994, Henry Spencer wrote a [grep implementation](https://github.com/garyhouston/regexp.old) that used a Non-Deterministic Finite Automaton (NFA). Using NFA simplifies the compilation of expressions (that is, building the automata) at the cost of complicating the execution. More relevant, NFA-based (more precisely, recursive backtracking) makes it easy to add new features (many of which are impossible to do with a state-machine (DFA) based implementation). And that's precisely what started to happen when the library was used to implement regular expressions in Perl 5 in 1994.
 
-- Search
-- Matching
+After the release of Perl 5, the extended feature-set was quickly embraced by users, and Perl-style regular expression implementations became part of the standard libraries of essentially all popular programming languages (with the notable exception of Go) and also standard infrastructure components, like the Apache and Nginx web servers.
 
-<b>Search</b> is about finding some pattern in a (usually large) text. Beyond the search functionality itself, capture groups are also very important. Mainstream Perl-like implementations do this well.
+As mentioned, Perl-style expressions don't give any execution time guarantee. On the other hand, there are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). There are also some other features that, albeit not infeasible, complicate a DFA solution  significantly, like search and capturing groups.
 
-<b>Matching</b> is about fully matching (usually small) texts against a regular expression, sometimes against several expressions in a sequence. Here matching speed tends to be important, and capturing submatches less so, as the interest is whether the expressions match the whole text or not.
+### Proposal
 
-Using DFA-based matching can be useful in the second case. For example, non-intersecting DFA can be tested in any order (even if stopping at the first match), allowing for otherwise impossible optimizations.
+Regular expressions were born as a very specific tool and, almost as an a accident, grew to one of the most versatile (and abused) tools in the world of software. There is, however, a fundamental trade-off between the two prototypical implementations, which is usually ignored. Unbounded execution time is undesirable for many (if not all) interactive uses, as problems can happen whether either the regular expression or the text are supplied by the user. As example see:
 
-Dregex is an attempt to implement a useful subset of the functionality offered by Perl-like engines, using a DFA, for the Java Virtual Machine.
+- [Coding horror: regex performance](https://blog.codinghorror.com/regex-performance/)
+- [Stack Exchange regex outage postmortem](http://stackstatus.net/post/147710624694/outage-postmortem-july-20-2016)
+
+For cases when advanced Perl-style features are not needed, and predictable performance is desired, using DFA-based matching is usually a compelling alternative, unfortunately made difficult by the scarcity of proper implementations in most languages. Dregex offers an alternative for the Java ecosystem.
 
 ## Supported regex flavor
 
@@ -51,43 +53,39 @@ Unless specified, the regular expression flavor supported attempts to be compati
 	* [Binary properties](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ubpc), e.g., `\p{IsAlphabetic}`
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
 * Lookaround (lookahead and lookbehind; both positive and negative) (see note below)
-* Set operations (union, intersection, difference) between regular expressions.
 
 ### Not supported
 
 * Searching (the engine matches only against the full input string)
 * Capturing groups
 * Backreferences
-* Anchors (`ˆ` and `$`), because they are redundant, as the expressions only operate over the complete text.
-* Reluctant quantifiers (`+?`, `*?`, `??`, `{...}?`), because they are meaningless, as they, by definition, only affect capturing groups, not whether the expressions match or not.
+* Anchors (`ˆ` and `$`), as they are redundant, as the expressions only operate over the complete text.
+* Reluctant quantifiers (`+?`, `*?`, `??`, `{...}?`), as they are meaningless, as they, by definition, only affect capturing groups, not whether the expressions match or not.
 
-## Algorithms
+## Set operations
 
-### DFA construction
+On top of regular matching, Dregex fully supports set operations of regular expressions. Set operations work on regular expressions themselves, that is, they don't involve strings.
 
-The library parses the regular expressions and builds a NFA (Nondeterministic Finite Automaton) using a variation of the [Thompson algorithm](http://en.wikipedia.org/w/index.php?title=Thompson%27s_construction_algorithm&oldid=649249684). Then uses the "powerset construction" to build a DFA (Deterministic Finite Automaton). One the DFA is built, the matching algorithm is straightforward.
+It possible to do union, intersection and difference:
 
-### Wildcards and character classes
+```scala
+val Seq((_, lower), (_, upper), (_, both)) = Regex.compile(Seq("[a-z]+", "[A-Z]+", "[a-z]+|[A-Z]+"))
+println(lower.doIntersect(upper)) // false
+println(both.equiv(lower.union(upper))) // true
 
-Character classes are expanded as disjunctions before NFA creation. However, because of the number of possible Unicode code points, internaly, non-overlapping code point intervals are used to avoid disjunctions with too many alternatives.
+```
 
-#### Example:
+```scala
+val Seq((_, all), (_, upper)) = Regex.compile(Seq("[a-z]+|[A-Z]+", "[A-Z]+"))
+val lower = all.diff(upper)
+println(lower.matches("aaa")) // true
+println(lower.matches("Aaa")) // false
 
-* `[abc]` → `[a-c]`
-* `[^efg]` → `[0-d]|[h-MAX]`
-* `mno[^efg]` → `mno(0-d|h-l|m|n|o|p-MAX)`
-* `.` → `[0-MAX]`
+```
 
-### Set operations
+The motivating use case was detecting non-intersecting expressions. Once it can be established that a set of expressions don't intersect (that they are disjoint) it becomes possible to short-circuit evaluations. Moreover, they can be tested in any order, so it becomes possible to reorder based on matching stats. This can be especially important in cases when there is a matching of several expressions in a performance-critical path—load balances being a prototypical example.
 
-Intersections, unions and differences between regex are done using the "product construction". The following pages include graphical explanations of this technique:
-
-* [http://stackoverflow.com/q/7780521/4505326](http://stackoverflow.com/q/7780521/4505326)
-* [http://cs.stackexchange.com/a/7108](http://cs.stackexchange.com/a/7108)
-
-This is a relatively straightforward algorithm that is implemented using the already generated DFA.
-
-### Lookaround
+## Note on lookaround
 
 Lookaround constructions are transformed into an equivalent DFA operation, and the result of it trivially transformed into a NFA again for insertion into the outer expression:
 
@@ -113,7 +111,31 @@ The different behavior of this engine is, of course, a direct consequence of the
 
 ## Internals
 
-### Requirements
+### DFA construction
+
+The library parses the regular expressions and builds a NFA (Nondeterministic Finite Automaton) using a variation of the [Thompson algorithm](http://en.wikipedia.org/w/index.php?title=Thompson%27s_construction_algorithm&oldid=649249684). Then uses the "powerset construction" to build a DFA (Deterministic Finite Automaton). One the DFA is built, the matching algorithm is straightforward.
+
+### Wildcards and character classes
+
+Character classes are expanded as disjunctions before NFA creation. However, because of the number of possible Unicode code points, internaly, non-overlapping code point intervals are used to avoid disjunctions with too many alternatives.
+
+#### Example:
+
+* `[abc]` → `[a-c]`
+* `[^efg]` → `[0-d]|[h-MAX]`
+* `mno[^efg]` → `mno(0-d|h-l|m|n|o|p-MAX)`
+* `.` → `[0-MAX]`
+
+### Set operations
+
+Intersections, unions and differences between regex are done using the "product construction". The following pages include graphical explanations of this technique:
+
+* [http://stackoverflow.com/q/7780521/4505326](http://stackoverflow.com/q/7780521/4505326)
+* [http://cs.stackexchange.com/a/7108](http://cs.stackexchange.com/a/7108)
+
+This is a relatively straightforward algorithm that is implemented using the already generated DFA.
+
+## Requirements
 
 Dregex requires Java 8.
 
