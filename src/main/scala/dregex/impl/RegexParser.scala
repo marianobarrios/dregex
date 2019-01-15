@@ -24,7 +24,7 @@ class RegexParser extends JavaTokenParsers {
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
 
-  def specialEscape = backslash ~ "[^dwsDWSuxcp01234567]".r ^^ {
+  def specialEscape = backslash ~ "[^dwsDWSuxcpR01234567]".r ^^ {
     case _ ~ char =>
       char match {
         case "n" => Lit('\n'.u)
@@ -175,6 +175,20 @@ class RegexParser extends JavaTokenParsers {
     case _ => throw new AssertionError
   }
 
+  def unicodeLineBreak = backslash ~ "R" ^^ {
+    case _ =>
+      Disj(Seq(
+        Juxt(Seq(Lit('\u000D'.u), Lit('\u000A'.u))),
+        Lit('\u000A'.u),
+        Lit('\u000B'.u),
+        Lit('\u000C'.u),
+        Lit('\u000D'.u),
+        Lit('\u0085'.u),
+        Lit('\u2028'.u),
+        Lit('\u2029'.u)
+      ))
+  }
+
   def group = "(" ~ ("?" ~ "<".? ~ "[:=!]".r).? ~ regex ~ ")" ^^ {
     case _ ~ modifiers ~ value ~ _ =>
       import Direction._
@@ -198,7 +212,7 @@ class RegexParser extends JavaTokenParsers {
   def charWildcard = "." ^^^ Wildcard
 
   def regexAtom =
-    charLit | charWildcard | charClass | dashClass | shorthandCharSet | specialCharSet | group | namedGroup
+    charLit | charWildcard | charClass | unicodeLineBreak | dashClass | shorthandCharSet | specialCharSet | group | namedGroup
 
   // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
 

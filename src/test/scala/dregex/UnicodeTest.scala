@@ -164,4 +164,16 @@ class UnicodeTest extends FunSuite {
     
   }
 
+  test("linebreak") {
+
+    using(Regex.compile("""\R""")) { r =>
+      assertResult(true)(r.matches("\n"))
+      assertResult(true)(r.matches("\u000A"))
+      assertResult(true)(r.matches("\u2029"))
+      assertResult(false)(r.matches("\u000A\u000D"))
+      assertResult(true)(r.matches("\u000D\u000A"))
+    }
+
+  }
+
 }
