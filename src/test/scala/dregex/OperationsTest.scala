@@ -6,27 +6,27 @@ import scala.collection.immutable.Seq
 class OperationsTest extends FunSuite {
 
   private def doIntersect(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right)).unzip._2
+    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right))
     leftCompiled doIntersect rightCompiled
   }
 
   private def isSubset(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right)).unzip._2
+    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right))
     leftCompiled isSubsetOf rightCompiled
   }
 
   private def isProperSubset(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right)).unzip._2
+    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right))
     leftCompiled isProperSubsetOf rightCompiled
   }
   
   private def testIntersection(left: String, right: String)(result: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result)).unzip._2
+    val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result))
     (leftCompiled intersect rightCompiled) equiv resultCompiled
   } 
   
   private def testUnion(left: String, right: String)(result: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result)).unzip._2
+    val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result))
     (leftCompiled union rightCompiled) equiv resultCompiled
   }
   

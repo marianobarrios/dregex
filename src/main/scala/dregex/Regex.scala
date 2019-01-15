@@ -160,14 +160,14 @@ object Regex {
     compiled
   }
 
-  def compile(regexs: Seq[String]): Seq[(String, CompiledRegex)] = {
+  def compile(regexs: Seq[String]): Seq[CompiledRegex] = {
     val trees = regexs.map(r => (r, parse(r)))
     val universe = new Universe(trees.unzip._2)
     for ((regex, tree) <- trees) yield {
       val (res, time) = Util.time {
-        regex -> new CompiledRegex(regex, tree, universe)
+        new CompiledRegex(regex, tree, universe)
       }
-      logger.trace("{} compiled in {}", res._2, time: Any)
+      logger.trace("{} compiled in {}", regex, time: Any)
       res
     }
   }

@@ -225,7 +225,7 @@ class MatchTest extends FunSuite {
 
     {
       val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\S""", """[\S]""", """[^\s]""", """\s""", """[\s]""", """[^\S]""", ".")).unzip._2
+        Regex.compile(Seq("""\S""", """[\S]""", """[^\s]""", """\s""", """[\s]""", """[^\S]""", "."))
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
       assertResult(true)(a3 equiv a1)
@@ -238,7 +238,7 @@ class MatchTest extends FunSuite {
 
     {
       val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\D""", """[\D]""", """[^\d]""", """\d""", """[\d]""", """[^\D]""", ".")).unzip._2
+        Regex.compile(Seq("""\D""", """[\D]""", """[^\d]""", """\d""", """[\d]""", """[^\D]""", "."))
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
       assertResult(true)(a3 equiv a1)
@@ -251,7 +251,7 @@ class MatchTest extends FunSuite {
 
     {
       val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\W""", """[\W]""", """[^\w]""", """\w""", """[\w]""", """[^\W]""", ".")).unzip._2
+        Regex.compile(Seq("""\W""", """[\W]""", """[^\w]""", """\w""", """[\w]""", """[^\W]""", "."))
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
       assertResult(true)(a3 equiv a1)
@@ -263,7 +263,7 @@ class MatchTest extends FunSuite {
     }
 
     {
-      val Seq(a, b) = Regex.compile(Seq("""\d""", """[^\D\W]""")).unzip._2
+      val Seq(a, b) = Regex.compile(Seq("""\d""", """[^\D\W]"""))
       assertResult(true)(a equiv b)
     }
 

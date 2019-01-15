@@ -17,7 +17,7 @@ class PerformanceTest extends FunSuite {
         "/aaaaaa/(?!xxc)a(?!xxd)b(?!xxx)c(?!xxf)[a-zA-Z0-9]{7}.*", // disables lookahead combinations
         "/aaaaaa/(?!xxc|xxd|xxe|xxf|xxg|xxh)[a-zA-Z0-9]{7}.*",
         "/aaaaaa/(?!xxc.*)(?!xxd.*)(?!xxe.*)(?!xxf.*)(?!xxg.*)[a-zA-Z0-9]{7}.*"
-        )).unzip._2
+        ))
     }
     info(s"compilation time: $elapsed1")
     val elapsed2 = Util.time {

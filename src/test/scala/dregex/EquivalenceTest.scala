@@ -6,7 +6,7 @@ import scala.collection.immutable.Seq
 class EquivalenceTest extends FunSuite {
 
   private def equiv(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right)).unzip._2
+    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right))
     leftCompiled equiv rightCompiled
   }
 
@@ -103,7 +103,7 @@ class EquivalenceTest extends FunSuite {
   }
   
   test("disjunctions") {
-    val Seq(a, b, c) = Regex.compile(Seq("a|b", "a", "b")).unzip._2
+    val Seq(a, b, c) = Regex.compile(Seq("a|b", "a", "b"))
     assertResult(true)(a equiv (b union c))
   }
   
