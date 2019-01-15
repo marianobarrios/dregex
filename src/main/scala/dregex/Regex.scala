@@ -31,7 +31,7 @@ trait Regex {
    * As the match is done using a DFA, its complexity is O(n), where n is the length of the string. It is constant
    * with respect to the length of the expression.
    */
-  def matches(string: String): Boolean = {
+  def matches(string: CharSequence): Boolean = {
     val (result, _) = matchAndReport(string)
     result
   }
@@ -40,7 +40,7 @@ trait Regex {
    * Similar to method [[matches]], except that also return how many characters were successfully matched in case of
    * failure.
    */
-  def matchAndReport(string: String): (Boolean, Int) = {
+  def matchAndReport(string: CharSequence): (Boolean, Int) = {
     DfaAlgorithms.matchString(dfa, string)
   }
 

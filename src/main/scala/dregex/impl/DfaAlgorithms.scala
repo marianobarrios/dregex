@@ -275,7 +275,7 @@ object DfaAlgorithms {
     fromNfa(reverse(dfa))
   }
 
-  def matchString[A <: State](dfa: Dfa[A], string: String): (Boolean, Int) = {
+  def matchString[A <: State](dfa: Dfa[A], string: CharSequence): (Boolean, Int) = {
     var current = dfa.initial
     var i = 0
     for (codePoint <- string.codePoints.iterator.asScala) {
