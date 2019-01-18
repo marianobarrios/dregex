@@ -10,7 +10,7 @@ import dregex.impl.SimpleState
 class CompiledRegex private[dregex] (originalString: String, val parsedRegex: ParsedRegex, val universe: Universe)
     extends Regex {
 
-  val dfa: Dfa[SimpleState] = {
+  private[dregex] val dfa: Dfa[SimpleState] = {
     new Compiler(universe.alphabet).fromTree(parsedRegex.tree)
   }
 

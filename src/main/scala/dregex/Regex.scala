@@ -8,6 +8,7 @@ import dregex.impl.Dfa
 import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.Seq
+import scala.collection.JavaConverters._
 
 /**
  * A regular expression, ready to be tested against strings, or to take part in an operation against another.
@@ -17,7 +18,7 @@ trait Regex {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[Regex])
 
-  def dfa: Dfa[SimpleState]
+  private[dregex] def dfa: Dfa[SimpleState]
   def universe: Universe
 
   private def checkUniverse(other: Regex): Unit = {
@@ -160,6 +161,16 @@ object Regex {
     compiled
   }
 
+  /**
+    * Compiles a set of regular expressions. Java version.
+    */
+  def compile(regexs: java.util.List[String]): java.util.List[CompiledRegex] = {
+    compile(regexs.asScala.to[Seq]).asJava
+  }
+
+  /**
+    * Compiles a set of regular expressions. Scala version.
+    */
   def compile(regexs: Seq[String]): Seq[CompiledRegex] = {
     val trees = regexs.map(r => (r, parse(r)))
     val universe = new Universe(trees.unzip._2)

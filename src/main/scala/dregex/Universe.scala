@@ -35,7 +35,7 @@ class Universe(parsedRegex: Seq[ParsedRegex]) {
    *
    * This method collects the interval, so they can then be made disjoint.
    */
-  def collect(ast: Node): Seq[AbstractRange] = ast match {
+  private[dregex] def collect(ast: Node): Seq[AbstractRange] = ast match {
     // Lookaround is also a ComplexPart, order important
     case Lookaround(dir, cond, value) => collect(value) :+ Wildcard
     case complex: ComplexPart => complex.values.map(collect).fold(Seq())(_ union _)

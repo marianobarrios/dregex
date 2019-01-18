@@ -69,18 +69,22 @@ On top of regular matching, Dregex fully supports set operations of regular expr
 
 It possible to do union, intersection and difference:
 
-```scala
-val Seq((_, lower), (_, upper), (_, both)) = Regex.compile(Seq("[a-z]+", "[A-Z]+", "[a-z]+|[A-Z]+"))
-println(lower.doIntersect(upper)) // false
-println(both.equiv(lower.union(upper))) // true
-
+```java
+List<CompiledRegex> regexes = Regex.compile(Arrays.asList("[a-z]+", "[A-Z]+", "[a-z]+|[A-Z]+"));
+Regex lower = regexes.get(0);
+Regex upper = regexes.get(1);
+Regex both = regexes.get(2);
+System.out.println(lower.doIntersect(upper)); // false
+System.out.println(both.equiv(lower.union(upper))); // true
 ```
 
-```scala
-val Seq((_, all), (_, upper)) = Regex.compile(Seq("[a-z]+|[A-Z]+", "[A-Z]+"))
-val lower = all.diff(upper)
-println(lower.matches("aaa")) // true
-println(lower.matches("Aaa")) // false
+```java
+List<CompiledRegex> regexes = Regex.compile(Arrays.asList("[a-z]+|[A-Z]+", "[A-Z]+"));
+Regex all = regexes.get(0);
+Regex upper = regexes.get(1);
+Regex lower = all.diff(upper);
+System.out.println(lower.matches("aaa")); // true
+System.out.println(lower.matches("Aaa")); // false
 
 ```
 
