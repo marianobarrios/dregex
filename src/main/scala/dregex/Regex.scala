@@ -140,7 +140,7 @@ trait Regex {
   /**
    * Return whether this regular expression matches anything. Note that the empty string is a valid match.
    */
-  def matchesAnything(): Boolean = DfaAlgorithms.matchesAnything(dfa)
+  def matchesAtLeastOne(): Boolean = DfaAlgorithms.matchesAtLeastOne(dfa)
 
 }
 

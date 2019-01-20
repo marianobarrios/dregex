@@ -119,7 +119,7 @@ object DfaAlgorithms {
     * Return whether a DFA matches anything. A DFA matches at least some language if there is a path from the initial
     * state to any of the accepting states
     */
-  def matchesAnything[A <: State](dfa: Dfa[A]): Boolean = {
+  def matchesAtLeastOne[A <: State](dfa: Dfa[A]): Boolean = {
     val visited = mutable.Set[A]()
     def hasPathToAccepting(current: A): Boolean = {
       if (dfa.accepting.contains(current)) {
@@ -302,19 +302,19 @@ object DfaAlgorithms {
   }
 
   def equivalent[A <: State](left: Dfa[A], right: Dfa[A]): Boolean = {
-    !matchesAnything(doDifference(left, right)) && !matchesAnything(doDifference(right, left))
+    !matchesAtLeastOne(doDifference(left, right)) && !matchesAtLeastOne(doDifference(right, left))
   }
 
   def isProperSubset[A <: State](left: Dfa[A], right: Dfa[A]) = {
-    !matchesAnything(doDifference(left, right)) && matchesAnything(doDifference(right, left))
+    !matchesAtLeastOne(doDifference(left, right)) && matchesAtLeastOne(doDifference(right, left))
   }
 
   def isSubsetOf[A <: State](left: Dfa[A], right: Dfa[A]) = {
-    !matchesAnything(doDifference(left, right))
+    !matchesAtLeastOne(doDifference(left, right))
   }
 
   def isIntersectionNotEmpty[A <: State](left: Dfa[A], right: Dfa[A]) = {
-    matchesAnything(doIntersection(left, right))
+    matchesAtLeastOne(doIntersection(left, right))
   }
 
   /**
