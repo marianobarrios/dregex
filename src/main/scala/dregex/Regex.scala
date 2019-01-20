@@ -19,6 +19,10 @@ trait Regex {
   private[this] val logger = LoggerFactory.getLogger(classOf[Regex])
 
   private[dregex] def dfa: Dfa[SimpleState]
+
+  /**
+    * Return this regex's [[Universe]]. Only regexes of the same universe can be operated together.
+    */
   def universe: Universe
 
   private def checkUniverse(other: Regex): Unit = {
@@ -47,7 +51,7 @@ trait Regex {
 
   /**
    * Intersect this regular expression with another. The resulting expression will match the strings that are
-   * matched by the operands, and only those. Intersections take O(n*m) time, where n and m are the number of states of
+   * matched by the operands, and only those. Intersections take O(n⋅m) time, where n and m are the number of states of
    * the DFA of the operands.
    */
   def intersect(other: Regex): Regex = {
@@ -64,7 +68,7 @@ trait Regex {
 
   /**
    * Subtract other regular expression from this one. The resulting expression will match the strings that are
-   * matched this expression and are not matched by the other, and only those. Differences take O(n*m) time, where n
+   * matched this expression and are not matched by the other, and only those. Differences take O(n⋅m) time, where n
    * and m are the number of states of the DFA of the operands.
    */
   def diff(other: Regex): Regex = {
@@ -81,7 +85,7 @@ trait Regex {
 
   /**
    * Unite this regular expression with another. The resulting expression will match the strings that are matched by
-   * either of the operands, and only those. Unions take O(n*m) time, where n and m are the number of states of the DFA
+   * either of the operands, and only those. Unions take O(n⋅m) time, where n and m are the number of states of the DFA
    * of the operands.
    */
   def union(other: Regex): Regex = {
@@ -97,7 +101,7 @@ trait Regex {
   }
 
   /**
-   * Return whether this expression matches at least one string in common with another. Intersections take O(n*m) time,
+   * Return whether this expression matches at least one string in common with another. Intersections take O(n⋅m) time,
    * where n and m are the number of states of the DFA of the operands.
    */
   def doIntersect(other: Regex): Boolean = {
@@ -105,11 +109,19 @@ trait Regex {
     DfaAlgorithms.isIntersectionNotEmpty(this.dfa, other.dfa)
   }
 
+  /**
+    * Return whether this expressions matches every expression that is matched by another. An [[diff]] between the
+    * two operands is done internally.
+    */
   def isSubsetOf(other: Regex): Boolean = {
     checkUniverse(other)
     DfaAlgorithms.isSubsetOf(this.dfa, other.dfa)
   }
 
+  /**
+    * Return whether this expressions matches every expression that is matched by another, but the expressions are not
+    * equal. Two [[diff]] between the two operands are done internally.
+    */
   def isProperSubsetOf(other: Regex): Boolean = {
     checkUniverse(other)
     DfaAlgorithms.isProperSubset(this.dfa, other.dfa)
@@ -117,7 +129,7 @@ trait Regex {
 
   /**
    * Return whether this regular expression is equivalent to other. Two regular expressions are equivalent if they
-   * match exactly the same set of strings. This operation takes O(n*m) time, where n and m are the number of states of
+   * match exactly the same set of strings. This operation takes O(n⋅m) time, where n and m are the number of states of
    * the DFA of the operands.
    */
   def equiv(other: Regex): Boolean = {
@@ -128,7 +140,7 @@ trait Regex {
   /**
    * Return whether this regular expression matches anything. Note that the empty string is a valid match.
    */
-  def matchesAnything() = DfaAlgorithms.matchesAnything(dfa)
+  def matchesAnything(): Boolean = DfaAlgorithms.matchesAnything(dfa)
 
 }
 
@@ -136,6 +148,9 @@ object Regex {
 
   private[this] val logger = LoggerFactory.getLogger(Regex.getClass)
 
+  /**
+    * Parse (not compile) a regex from a string, returning the parsed tree.
+    */
   def parse(regex: String): ParsedRegex = {
     val (parsedRegex, time) = Util.time {
       new ParsedRegex(RegexParser.parse(regex))
@@ -144,6 +159,9 @@ object Regex {
     parsedRegex
   }
 
+  /**
+    * Compile a regex from a string, using it's own [[Universe]].
+    */
   def compile(regex: String): CompiledRegex = {
     val tree = parse(regex)
     val (compiled, time) = Util.time {
@@ -153,9 +171,16 @@ object Regex {
     compiled
   }
 
-  def compileParsed(originalString: String, tree: ParsedRegex, universe: Universe): CompiledRegex = {
+  /**
+    * Compile an already parsed regex.
+    *
+    * @param originalString the original string
+    * @param parsedRegex the parsed regex
+    * @param universe the universe to compile the regex with
+    */
+  def compileParsed(originalString: String, parsedRegex: ParsedRegex, universe: Universe): CompiledRegex = {
     val (compiled, time) = Util.time {
-      new CompiledRegex(originalString, tree, universe)
+      new CompiledRegex(originalString, parsedRegex, universe)
     }
     logger.trace("{} compiled in {}", compiled, time: Any)
     compiled
@@ -188,6 +213,6 @@ object Regex {
    * string. Despite the theoretical equivalence of automata and regular expressions, in practice there is no regular
    * expression that does not match anything.
    */
-  def nullRegex(u: Universe) = new SynteticRegex(Dfa.NothingDfa, u)
+  def nullRegex(u: Universe): Regex = new SynteticRegex(Dfa.NothingDfa, u)
 
 }

@@ -41,7 +41,10 @@ libraryDependencies ++=
 unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
 unmanagedSourceDirectories in Test := (scalaSource in Test).value :: Nil
 
-scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt") 
+scalacOptions in (Compile, doc) ++= Seq(
+  "-doc-root-content", baseDirectory.value + "/root-doc.txt",
+  "-skip-packages", "dregex.impl:dregex.extra",
+) 
 
 testOptions in Test += Tests.Argument("-oF")
 parallelExecution in Test := false 

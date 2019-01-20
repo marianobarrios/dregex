@@ -8,12 +8,12 @@ import scala.collection.immutable.Seq
  * Represent the set of characters that is the union of the sets of characters of a group of regular expressions.
  * Regex must belong to the same Universe to be able to make operations between them.
  */
-class Universe(parsedRegex: Seq[ParsedRegex]) {
+class Universe private[dregex] (parsedRegex: Seq[ParsedRegex]) {
 
   import RegexTree._
 
-  val alphabet: Map[AbstractRange, Seq[CharInterval]] = {
-    CharInterval.calculateNonOverlapping(parsedRegex.map(r => collect(r.tree)).flatten)
+  private [dregex] val alphabet: Map[AbstractRange, Seq[CharInterval]] = {
+    CharInterval.calculateNonOverlapping(parsedRegex.flatMap(r => collect(r.tree)))
   }
 
   /**
