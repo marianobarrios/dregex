@@ -23,9 +23,8 @@ class AutoTest extends FunSuite {
     val elapsed = Util.time {
       for (tree <- generator.generate(maxDepth = 3)) {
         totalTrees += 1
-        val parsedRegex = new ParsedRegex(tree)
         val regexString = tree.toRegex
-        val regex = new CompiledRegex(regexString, parsedRegex, new Universe(Seq(parsedRegex)))
+        val regex = new CompiledRegex(regexString, tree, new Universe(Seq(tree)))
         val strings = StringGenerator.generate(tree, maxAlternatives = 3, maxRepeat = 3)
         totalStrings += strings.size
         logger.debug("Testing: {}, generated: {}", regexString, strings.size)

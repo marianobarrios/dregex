@@ -2,6 +2,7 @@ package dregex
 
 import dregex.impl.Compiler
 import dregex.impl.Dfa
+import dregex.impl.RegexTree
 import dregex.impl.SimpleState
 
 /**
@@ -13,7 +14,8 @@ import dregex.impl.SimpleState
  */
 class CompiledRegex private[dregex] (
   _originalString: String,
-  _parsedRegex: ParsedRegex, val universe: Universe
+  parsedTree: RegexTree.Node,
+  val universe: Universe
 ) extends Regex {
 
   /**
@@ -21,13 +23,8 @@ class CompiledRegex private[dregex] (
     */
   val originalString: String = _originalString
 
-  /**
-    * Object representing the parsed tree
-    */
-  val parsedRegex: ParsedRegex = _parsedRegex
-
   private[dregex] val dfa: Dfa[SimpleState] = {
-    new Compiler(universe.alphabet).fromTree(parsedRegex.tree)
+    new Compiler(universe.alphabet).fromTree(parsedTree)
   }
 
   override def toString = s"⟪$originalString⟫ (DFA states: ${dfa.stateCount})"

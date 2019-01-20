@@ -260,7 +260,7 @@ class RegexParser extends JavaTokenParsers {
 
 object RegexParser {
 
-  def parse(regex: String) = {
+  def parse(regex: String): RegexTree.Node = {
     val parser = new RegexParser()
     parser.parseAll(parser.regex, regex) match {
       case parser.Success(ast, next) => ast

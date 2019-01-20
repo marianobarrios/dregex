@@ -149,21 +149,10 @@ object Regex {
   private[this] val logger = LoggerFactory.getLogger(Regex.getClass)
 
   /**
-    * Parse (not compile) a regex from a string, returning the parsed tree.
-    */
-  def parse(regex: String): ParsedRegex = {
-    val (parsedRegex, time) = Util.time {
-      new ParsedRegex(RegexParser.parse(regex))
-    }
-    logger.trace("⟪{}⟫ parsed in {}: {}", regex, time, parsedRegex.tree)
-    parsedRegex
-  }
-
-  /**
     * Compile a regex from a string, using it's own [[Universe]].
     */
   def compile(regex: String): CompiledRegex = {
-    val tree = parse(regex)
+    val tree = RegexParser.parse(regex)
     val (compiled, time) = Util.time {
       new CompiledRegex(regex, tree, new Universe(Seq(tree)))
     }
@@ -172,34 +161,19 @@ object Regex {
   }
 
   /**
-    * Compile an already parsed regex.
-    *
-    * @param originalString the original string
-    * @param parsedRegex the parsed regex
-    * @param universe the universe to compile the regex with
-    */
-  def compileParsed(originalString: String, parsedRegex: ParsedRegex, universe: Universe): CompiledRegex = {
-    val (compiled, time) = Util.time {
-      new CompiledRegex(originalString, parsedRegex, universe)
-    }
-    logger.trace("{} compiled in {}", compiled, time: Any)
-    compiled
-  }
-
-  /**
-    * Compiles a set of regular expressions. Java version.
+    * Compiles a set of regular expressions in the same [[Universe]]. Java version.
     */
   def compile(regexs: java.util.List[String]): java.util.List[CompiledRegex] = {
     compile(regexs.asScala.to[Seq]).asJava
   }
 
   /**
-    * Compiles a set of regular expressions. Scala version.
+    * Compiles a set of regular expressions in the same [[Universe]]. Scala version.
     */
   def compile(regexs: Seq[String]): Seq[CompiledRegex] = {
-    val trees = regexs.map(r => (r, parse(r)))
-    val universe = new Universe(trees.unzip._2)
-    for ((regex, tree) <- trees) yield {
+    val trees = regexs.map(r => RegexParser.parse(r))
+    val universe = new Universe(trees)
+    for ((regex, tree) <- regexs zip trees) yield {
       val (res, time) = Util.time {
         new CompiledRegex(regex, tree, universe)
       }
