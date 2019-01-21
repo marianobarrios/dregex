@@ -51,6 +51,7 @@ Unless specified, the regular expression flavor supported attempts to be compati
 	* [Scripts](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#usc), e.g., `\p{IsLatin}`, `\p{script=Latin}`, `\p{sc=Latin}`
 	* [General categories](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ucc), e.g., `\p{Lu}`, `\p{IsLu}`, `\p{general_category=Lu}`, `\p{gc=Lu}`
 	* [Binary properties](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ubpc), e.g., `\p{IsAlphabetic}`
+* Java-defined character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)), e.g., `\p{javaLowerCase}`, `\p{javaWhitespace}` 
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
 * Unicode line breaks: `\R`
 * Lookaround (lookahead and lookbehind; both positive and negative) (see note below)

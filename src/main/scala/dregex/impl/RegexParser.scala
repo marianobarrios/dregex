@@ -86,7 +86,14 @@ class RegexParser extends JavaTokenParsers {
   /**
    * Order between Unicode escapes is important
    */
-  def anyEscape = specialEscape | doubleUnicodeEscape | unicodeEscape | hexEscape | longHexEscape | octalEscape | controlEscape
+  def anyEscape =
+    specialEscape |
+    doubleUnicodeEscape |
+    unicodeEscape |
+    hexEscape |
+    longHexEscape |
+    octalEscape |
+    controlEscape
 
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(UnicodeChar.fromSingletonString(x))))
 
@@ -135,6 +142,15 @@ class RegexParser extends JavaTokenParsers {
         throw new InvalidRegexException("Invalid Unicode block: " + blockName))
   }
 
+  def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
+    case _ ~ _ ~ _ ~ _ ~ charClass ~ _ =>
+      PredefinedCharSets.javaClasses.getOrElse(charClass,
+        throw new InvalidRegexException(
+          s"invalid Java character class: $charClass " +
+          s"(note: for such a class to be valid, a method java.lang.Character.is$charClass() must exist) " +
+          s"(valid options: ${PredefinedCharSets.javaClasses.keys.toSeq.sorted.mkString(",")})"))
+  }
+
   def specialCharSetImplicit = backslash ~ "p" ~ "{" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
     case _ ~ _ ~ _ ~ name ~ _ =>
       PredefinedCharSets.posixClasses.get(name).orElse(
@@ -143,9 +159,18 @@ class RegexParser extends JavaTokenParsers {
         }
   }
 
-  def specialCharSet = specialCharSetByName | specialCharSetWithIs | specialCharSetWithIn | specialCharSetImplicit
+  def specialCharSet =
+    specialCharSetByName |
+    specialCharSetWithIs |
+    specialCharSetWithIn |
+    specialCharSetWithJava |
+    specialCharSetImplicit
 
-  def charClassAtom = charClassRange | singleCharacterClassLit | shorthandCharSet | specialCharSet
+  def charClassAtom =
+    charClassRange |
+    singleCharacterClassLit |
+    shorthandCharSet |
+    specialCharSet
 
   def charClass = "[" ~ "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? ~ "]" ^^ {
     case _ ~ negated ~ leftDash ~ charClass ~ rightDash ~ _ =>

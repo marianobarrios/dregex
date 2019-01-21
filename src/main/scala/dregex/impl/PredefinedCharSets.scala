@@ -134,5 +134,20 @@ object PredefinedCharSets {
     "XDigit" -> CharSet(digit.ranges ++ Seq(CharRange(from = 'a'.u, to = 'f'.u), CharRange(from = 'A'.u, to = 'F'.u))),
     "Space" -> space)
 
+  val javaClasses: Map[String, CharSet] = {
+    val (ret, elapsed) = Util.time {
+      val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
+      for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+        val lit = Lit(codePoint.u)
+        for ((prop, fn) <- JavaCharacterProperties.properties if fn(codePoint)) {
+          builder.getOrElseUpdate(prop, ArrayBuffer()) += lit
+        }
+      }
+      builder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
+    }
+    logger.debug(s"Initialized Java property catalog in $elapsed")
+    ret
+  }
+
 }
 

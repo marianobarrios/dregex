@@ -176,4 +176,13 @@ class UnicodeTest extends FunSuite {
 
   }
 
+  test("java categories") {
+
+    using(Regex.compile("""\p{javaLowerCase}""")) { r =>
+      assertResult(true)(r.matches("a"))
+      assertResult(false)(r.matches("A"))
+    }
+
+  }
+
 }
