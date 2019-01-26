@@ -239,34 +239,47 @@ class RegexParser extends JavaTokenParsers {
   def regexAtom =
     charLit | charWildcard | charClass | unicodeLineBreak | dashClass | shorthandCharSet | specialCharSet | group | namedGroup
 
-  // Lazy quantifiers (by definition) don't change whether the text matches or not, so can be ignored for our purposes
+  case class Quantification(min: Int, max: Option[Int])
 
-  def quantifiedBranch = regexAtom ~ ("+" | "*" | "?") ~ "?".? ^^ {
-    case atom ~ "+" ~ _ => Rep(min = 1, max = None, value = atom)
-    case atom ~ "*" ~ _ => Rep(min = 0, max = None, value = atom)
-    case atom ~ "?" ~ _ => Rep(min = 0, max = Some(1), value = atom)
+  def quantifier = predefQuantifier | generalQuantifier
+
+  def predefQuantifier = ("+" | "*" | "?") ^^ {
+    case "+" => Quantification(min = 1, max = None)
+    case "*" => Quantification(min = 0, max = None)
+    case "?" => Quantification(min = 0, max = Some(1))
   }
 
-  def generalQuantifier = "{" ~ number ~ ("," ~ number.?).? ~ "}" ~ "?".? ^^ {
-    case _ ~ minVal ~ Some(comma ~ Some(maxVal)) ~ _ ~ _ =>
+  def generalQuantifier = "{" ~ number ~ ("," ~ number.?).? ~ "}" ^^ {
+    case _ ~ minVal ~ Some(comma ~ Some(maxVal)) ~ _ =>
       // Quantifiers of the for {min,max}
       if (minVal <= maxVal)
-        (minVal, Some(maxVal))
+        Quantification(minVal, Some(maxVal))
       else
         throw new InvalidRegexException("invalid range in quantifier")
-    case _ ~ minVal ~ Some(comma ~ None) ~ _ ~ _ =>
+    case _ ~ minVal ~ Some(comma ~ None) ~ _ =>
       // Quantifiers of the form {min,}
-      (minVal, None)
-    case _ ~ minVal ~ None ~ _ ~ _ =>
+      Quantification(minVal, None)
+    case _ ~ minVal ~ None ~ _ =>
       // Quantifiers of the form "{n}", the value is captured as "min", despite being also the max
-      (minVal, Some(minVal))
+      Quantification(minVal, Some(minVal))
+  }
+  
+  def lazyQuantifiedBranch = regexAtom ~ quantifier ~ "?" ^^ {
+    case _ ~ _ ~ _ =>
+      throw new InvalidRegexException("reluctant quantifiers are not supported")
   }
 
-  def generallyQuantifiedBranch = regexAtom ~ generalQuantifier ^^ {
-    case atom ~ ((min, max)) => Rep(min, max, atom)
+  def possesivelyQuantifiedBranch = regexAtom ~ quantifier ~ "+" ^^ {
+    case _ ~ _ ~ _ =>
+      throw new InvalidRegexException("possessive quantifiers are not supported")
   }
 
-  def branch = (quantifiedBranch | generallyQuantifiedBranch | regexAtom).+ ^^ {
+  def quantifiedBranch = regexAtom ~ quantifier ^^ {
+    case atom ~ (q: Quantification) => Rep(min = q.min, max = q.max, value = atom)
+    case _ ~ _ => throw new AssertionError()
+  }
+
+  def branch = (lazyQuantifiedBranch | possesivelyQuantifiedBranch | quantifiedBranch | regexAtom).+ ^^ {
     case Seq() => throw new AssertionError
     case Seq(first) => first
     case parts => Juxt(parts)
