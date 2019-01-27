@@ -16,7 +16,9 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(equiv("ab(c)", "(a(b)c)"))
     assertResult(true)(equiv("abc", "(abc)"))
     assertResult(true)(equiv("abc", "(?:abc)"))
-    assertResult(true)(equiv("abc", "(?<name>abc)"))
+    assertThrows[InvalidRegexException] {
+      assertResult(true)(equiv("abc", "(?<name>abc)"))
+    }
   }
 
   test("quantifiers") {

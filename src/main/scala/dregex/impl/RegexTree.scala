@@ -251,7 +251,7 @@ object RegexTree {
     def canonical = Difference(left.canonical, right.canonical)
   }
 
-  trait CaptureGroup extends ComplexPart {
+  sealed trait CaptureGroup extends ComplexPart {
     def value: Node
     override def values = Seq(value)
     override def canonical = this

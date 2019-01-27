@@ -24,7 +24,7 @@ class RegexParser extends JavaTokenParsers {
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
 
-  def specialEscape = backslash ~ "[^dwsDWSuxcpR01234567]".r ^^ {
+  def specialEscape = backslash ~ "[^dwsDWSuxcpR0123456789]".r ^^ {
     case _ ~ char =>
       char match {
         case "n" => Lit('\n'.u)
@@ -79,7 +79,12 @@ class RegexParser extends JavaTokenParsers {
       Lit(UnicodeChar(Integer.parseInt(digits.mkString, 8)))
   }
 
-  def controlEscape = (backslash ~ "c" ~ ".".r) ~> failure("Unsupported feature: control escape")
+  def controlEscape = (backslash ~ "c" ~ ".".r) ~>
+    failure("Unsupported feature: control escape")
+
+  def backReference= (backslash ~ "[1-9][0-9]*".r) ~>
+    failure("unsupported feature: backreferences")
+
 
   def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
 
@@ -93,7 +98,8 @@ class RegexParser extends JavaTokenParsers {
     hexEscape |
     longHexEscape |
     octalEscape |
-    controlEscape
+    controlEscape |
+    backReference
 
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(UnicodeChar.fromSingletonString(x))))
 
@@ -263,16 +269,12 @@ class RegexParser extends JavaTokenParsers {
       // Quantifiers of the form "{n}", the value is captured as "min", despite being also the max
       Quantification(minVal, Some(minVal))
   }
-  
-  def lazyQuantifiedBranch = regexAtom ~ quantifier ~ "?" ^^ {
-    case _ ~ _ ~ _ =>
-      throw new InvalidRegexException("reluctant quantifiers are not supported")
-  }
 
-  def possesivelyQuantifiedBranch = regexAtom ~ quantifier ~ "+" ^^ {
-    case _ ~ _ ~ _ =>
-      throw new InvalidRegexException("possessive quantifiers are not supported")
-  }
+  def lazyQuantifiedBranch = (regexAtom ~ quantifier ~ "?") ~>
+    failure("reluctant quantifiers are not supported")
+
+  def possesivelyQuantifiedBranch = (regexAtom ~ quantifier ~ "+") ~>
+    failure("possessive quantifiers are not supported")
 
   def quantifiedBranch = regexAtom ~ quantifier ^^ {
     case atom ~ (q: Quantification) => Rep(min = q.min, max = q.max, value = atom)

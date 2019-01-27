@@ -1,5 +1,7 @@
 package dregex.impl
 
+import dregex.InvalidRegexException
+
 import scala.collection.mutable.Buffer
 import scala.collection.immutable.Seq
 
@@ -59,8 +61,11 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
       case Difference(left, right) =>
         processOp(DfaAlgorithms.diff, left, right, from, to)
 
-      case cg: CaptureGroup =>
+      case cg: PositionalCaptureGroup =>
         processCaptureGroup(cg.value, from, to)
+
+      case _: NamedCaptureGroup =>
+        throw new InvalidRegexException("named capture groups are not supported")
     }
   }
 

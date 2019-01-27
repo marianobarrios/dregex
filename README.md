@@ -62,7 +62,9 @@ Unless specified, the regular expression flavor supported attempts to be compati
 * Capturing groups
 * Backreferences
 * Anchors (`ˆ` and `$`), as they are redundant, as the expressions only operate over the complete text.
-* Reluctant quantifiers (`+?`, `*?`, `??`, `{...}?`), as they are meaningless, as they, by definition, only affect capturing groups, not whether the expressions match or not.
+* Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine, as they, by definition, only affect capturing groups, not whether the expressions match or not.
+
+Note: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (with the exception of unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 
 ## Set operations
 
