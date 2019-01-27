@@ -11,18 +11,47 @@ class RegexParser extends JavaTokenParsers {
 
   import RegexTree._
 
-  val backslash = """\"""
+  // Atoms (strings and regexes)
 
-  def number = """\d""".r.+ ^^ { s =>
+  def backslash = """\"""
+  def hexDigit = """\p{XDigit}""".r
+  def octalDigit = "[0-7]".r
+  def decimalDigit = """\d""".r
+
+  // Parsers that return a primitive (string, number)
+
+  def hexNumber(digitCount: Int) = repN(digitCount, hexDigit) ^^ { digits =>
+    Integer.parseInt(digits.mkString, 16)
+  }
+
+  def hexNumber = hexDigit.+ ^^ { digits =>
+    Integer.parseInt(digits.mkString, 16)
+  }
+
+  def octalNumber(digitCount: Int) = repN(digitCount, octalDigit) ^^ { digits =>
+    Integer.parseInt(digits.mkString, 8)
+  }
+
+  def number = decimalDigit.+ ^^ { digits =>
     try {
-      s.mkString.toInt
+      Integer.parseInt(digits.mkString)
     } catch {
-      case e: NumberFormatException => throw new InvalidRegexException("Cannot parse number: " + s)
+      case _: NumberFormatException => throw new InvalidRegexException("Cannot parse number: " + digits.mkString)
     }
   }
 
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
+
+  def controlEscape = backslash ~ "c" ~ ".".r ~>
+    failure("Unsupported feature: control escape")
+
+  def backReference= backslash ~ "[1-9][0-9]*".r ~>
+    failure("unsupported feature: backreferences")
+
+  def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
+
+  // Parsers that return a literal Node
 
   def specialEscape = backslash ~> "[^dwsDWSuxcpR0123456789]".r ^^ {
     case "n" => Lit('\n'.u)
@@ -37,49 +66,27 @@ class RegexParser extends JavaTokenParsers {
     case c => Lit(UnicodeChar.fromSingletonString(c)) // remaining escaped characters stand for themselves
   }
 
-  def hexDigit = """\p{XDigit}""".r
-  def octalDigit = "[0-7]".r
-
-  def doubleUnicodeEscape = backslash ~ "u" ~ repN(4, hexDigit) ~ backslash ~ "u" ~ repN(4, hexDigit) ^? {
-    case _ ~ _ ~ highDigits ~ _ ~ _ ~ lowDigits if isHighSurrogate(highDigits) && isLowSurrogate(lowDigits) =>
-      val high = Integer.parseInt(highDigits.mkString, 16).toChar
-      val low = Integer.parseInt(lowDigits.mkString, 16).toChar
-      val codePoint = Character.toCodePoint(high, low)
+  def doubleUnicodeEscape = backslash ~ "u" ~ hexNumber(4) ~ backslash ~ "u" ~ hexNumber(4) ^? {
+    case _ ~ _ ~ highNumber ~ _ ~ _ ~ lowNumber if Character.isHighSurrogate(highNumber.toChar) && Character.isLowSurrogate(lowNumber.toChar) =>
+      val codePoint = Character.toCodePoint(highNumber.toChar, lowNumber.toChar)
       Lit(UnicodeChar(codePoint))
   }
 
-  private def isHighSurrogate(digits: List[String]) = {
-    Character.isHighSurrogate(Integer.parseInt(digits.mkString, 16).toChar)
+  def unicodeEscape = backslash ~ "u" ~> hexNumber(4) ^^ { codePoint =>
+    Lit(UnicodeChar(codePoint))
   }
 
-  private def isLowSurrogate(digits: List[String]) = {
-    Character.isLowSurrogate(Integer.parseInt(digits.mkString, 16).toChar)
+  def hexEscape = backslash ~ "x" ~> hexNumber(2) ^^ { codePoint =>
+    Lit(UnicodeChar(codePoint))
   }
 
-  def unicodeEscape = backslash ~ "u" ~> repN(4, hexDigit) ^^ { digits =>
-    Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
+  def longHexEscape = backslash ~ "x" ~ "{" ~> hexNumber <~ "}" ^^ { codePoint =>
+    Lit(UnicodeChar(codePoint))
   }
 
-  def hexEscape = backslash ~ "x" ~> repN(2, hexDigit) ^^ { digits =>
-    Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
+  def octalEscape = backslash ~ "0" ~> (octalNumber(1) ||| octalNumber(2) ||| octalNumber(3)) ^^ { codePoint =>
+    Lit(UnicodeChar(codePoint))
   }
-
-  def longHexEscape = backslash ~ "x" ~ "{" ~> hexDigit.+ <~ "}" ^^ { digits =>
-    Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
-  }
-
-  def octalEscape = backslash ~ "0" ~ (repN(1, octalDigit) ||| repN(2, octalDigit) ||| repN(3, octalDigit)) ^^ {
-    case _ ~ _ ~ digits =>
-      Lit(UnicodeChar(Integer.parseInt(digits.mkString, 8)))
-  }
-
-  def controlEscape = backslash ~ "c" ~ ".".r ~>
-    failure("Unsupported feature: control escape")
-
-  def backReference= backslash ~ "[1-9][0-9]*".r ~>
-    failure("unsupported feature: backreferences")
-
-  def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
 
   /**
    * Order between Unicode escapes is important
@@ -96,13 +103,11 @@ class RegexParser extends JavaTokenParsers {
 
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(UnicodeChar.fromSingletonString(x))))
 
-  def quotedLiteral = backslash ~ "Q" ~> anythingExcept(backslash ~ "E").* <~ backslash ~ "E" ^^ {
-    literal => Juxt(literal)
-  }
-
   def charLit = anchor | anythingExcept(charSpecial) | anyEscape
 
   def characterClassLit = anythingExcept(charSpecialInsideClasses) | anyEscape
+
+  // Parsers that return a character class Node
 
   def singleCharacterClassLit = characterClassLit ^^ (lit => CharSet(Seq(lit)))
 
@@ -171,16 +176,6 @@ class RegexParser extends JavaTokenParsers {
     shorthandCharSet |
     specialCharSet
 
-  def charClass = "[" ~> "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? <~ "]" ^^ {
-    case negated ~ leftDash ~ charClass ~ rightDash =>
-      val chars = if (leftDash.isDefined || rightDash.isDefined)
-        charClass :+ CharSet.fromRange(Lit('-'.u))
-      else
-        charClass
-      val set = CharSet.fromCharSets(chars: _*)
-      negated.fold[Node](set)(_ => set.complement)
-  }
-
   // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
   def dashClass = "[" ~> "^".? <~ "-" ~ "]" ^^ { negated =>
@@ -196,6 +191,22 @@ class RegexParser extends JavaTokenParsers {
     case "w" => PredefinedCharSets.wordChar
     case "W" => PredefinedCharSets.wordChar.complement
     case _ => throw new AssertionError
+  }
+
+  def charClass = "[" ~> "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? <~ "]" ^^ {
+    case negated ~ leftDash ~ charClass ~ rightDash =>
+      val chars = if (leftDash.isDefined || rightDash.isDefined)
+        charClass :+ CharSet.fromRange(Lit('-'.u))
+      else
+        charClass
+      val set = CharSet.fromCharSets(chars: _*)
+      negated.fold[CharSet](set)(_ => set.complement)
+  }
+
+  // Parsers that return a complex Node
+
+  def quotedLiteral = backslash ~ "Q" ~> anythingExcept(backslash ~ "E").* <~ backslash ~ "E" ^^ {
+    literal => Juxt(literal)
   }
 
   def unicodeLineBreak = backslash ~ "R" ^^^ {
