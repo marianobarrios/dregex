@@ -108,5 +108,16 @@ class EquivalenceTest extends FunSuite {
     val Seq(a, b, c) = Regex.compile(Seq("a|b", "a", "b"))
     assertResult(true)(a equiv (b union c))
   }
-  
+
+  test("block quotes") {
+    assertResult(true)(equiv("""\Q\E""", ""))
+    assertResult(true)(equiv("""\Qabc\E""", "abc"))
+    assertResult(true)(equiv("""\Qa*\E""", """a\*"""))
+    assertResult(true)(equiv("""(\Qa*\E)*""", """(a\*)*"""))
+    assertResult(true)(equiv("""\Q(\E""", """\("""))
+    assertResult(true)(equiv("""\Q)\E""", """\)"""))
+    assertResult(true)(equiv("""(\Q)a\E)""", """\)a"""))
+    assertResult(true)(equiv("""\Q|\E""", """\|"""))
+  }
+
 }

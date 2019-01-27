@@ -85,7 +85,6 @@ class RegexParser extends JavaTokenParsers {
   def backReference= (backslash ~ "[1-9][0-9]*".r) ~>
     failure("unsupported feature: backreferences")
 
-
   def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
 
   /**
@@ -102,6 +101,10 @@ class RegexParser extends JavaTokenParsers {
     backReference
 
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(UnicodeChar.fromSingletonString(x))))
+
+  def quotedLiteral = backslash ~ "Q" ~ anythingExcept(backslash ~ "E").* ~ backslash ~ "E" ^^ {
+    case _ ~ _ ~ literal ~ _ ~ _ => Juxt(literal)
+  }
 
   def charLit = anchor | anythingExcept(charSpecial) | anyEscape
 
@@ -193,7 +196,7 @@ class RegexParser extends JavaTokenParsers {
   def dashClass = "[" ~ "^".? ~ "-" ~ "]" ^^ {
     case _ ~ negated ~ _ ~ _ =>
       val set = CharSet.fromRange(Lit('-'.u))
-      negated.fold[Node](set)(_ => set.complement)
+      negated.fold[CharSet](set)(_ => set.complement)
   }
 
   def shorthandCharSet = backslash ~ "[DWSdws]".r ^^ {
@@ -243,7 +246,7 @@ class RegexParser extends JavaTokenParsers {
   def charWildcard = "." ^^^ Wildcard
 
   def regexAtom =
-    charLit | charWildcard | charClass | unicodeLineBreak | dashClass | shorthandCharSet | specialCharSet | group | namedGroup
+    quotedLiteral | charLit | charWildcard | charClass | unicodeLineBreak | dashClass | shorthandCharSet | specialCharSet | group | namedGroup
 
   case class Quantification(min: Int, max: Option[Int])
 

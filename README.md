@@ -54,6 +54,7 @@ Unless specified, the regular expression flavor supported attempts to be compati
 * Java-defined character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)), e.g., `\p{javaLowerCase}`, `\p{javaWhitespace}` 
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
 * Unicode line breaks: `\R`
+* Block quotes: `\Q`...`\E`
 * Lookaround (lookahead and lookbehind; both positive and negative) (see note below)
 
 ### Not supported
