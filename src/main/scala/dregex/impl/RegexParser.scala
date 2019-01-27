@@ -24,20 +24,17 @@ class RegexParser extends JavaTokenParsers {
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
 
-  def specialEscape = backslash ~ "[^dwsDWSuxcpR0123456789]".r ^^ {
-    case _ ~ char =>
-      char match {
-        case "n" => Lit('\n'.u)
-        case "r" => Lit('\r'.u)
-        case "t" => Lit('\t'.u)
-        case "f" => Lit('\f'.u)
-        case "b" => Lit('\b'.u)
-        case "v" => Lit('\u000B'.u) // vertical tab
-        case "a" => Lit('\u0007'.u) // bell
-        case "e" => Lit('\u001B'.u) // escape
-        case "B" => Lit('\\'.u)
-        case c => Lit(UnicodeChar.fromSingletonString(c)) // remaining escaped characters stand for themselves
-      }
+  def specialEscape = backslash ~> "[^dwsDWSuxcpR0123456789]".r ^^ {
+    case "n" => Lit('\n'.u)
+    case "r" => Lit('\r'.u)
+    case "t" => Lit('\t'.u)
+    case "f" => Lit('\f'.u)
+    case "b" => Lit('\b'.u)
+    case "v" => Lit('\u000B'.u) // vertical tab
+    case "a" => Lit('\u0007'.u) // bell
+    case "e" => Lit('\u001B'.u) // escape
+    case "B" => Lit('\\'.u)
+    case c => Lit(UnicodeChar.fromSingletonString(c)) // remaining escaped characters stand for themselves
   }
 
   def hexDigit = """\p{XDigit}""".r
@@ -59,19 +56,16 @@ class RegexParser extends JavaTokenParsers {
     Character.isLowSurrogate(Integer.parseInt(digits.mkString, 16).toChar)
   }
 
-  def unicodeEscape = backslash ~ "u" ~ repN(4, hexDigit) ^^ {
-    case _ ~ _ ~ digits =>
-      Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
+  def unicodeEscape = backslash ~ "u" ~> repN(4, hexDigit) ^^ { digits =>
+    Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
   }
 
-  def hexEscape = backslash ~ "x" ~ repN(2, hexDigit) ^^ {
-    case _ ~ _ ~ digits =>
-      Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
+  def hexEscape = backslash ~ "x" ~> repN(2, hexDigit) ^^ { digits =>
+    Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
   }
 
-  def longHexEscape = backslash ~ "x" ~ "{" ~ hexDigit.+ ~ "}" ^^ {
-    case _ ~ _ ~ digits ~ _ =>
-      Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
+  def longHexEscape = backslash ~ "x" ~ "{" ~> hexDigit.+ <~ "}" ^^ { digits =>
+    Lit(UnicodeChar(Integer.parseInt(digits.mkString, 16)))
   }
 
   def octalEscape = backslash ~ "0" ~ (repN(1, octalDigit) ||| repN(2, octalDigit) ||| repN(3, octalDigit)) ^^ {
@@ -79,10 +73,10 @@ class RegexParser extends JavaTokenParsers {
       Lit(UnicodeChar(Integer.parseInt(digits.mkString, 8)))
   }
 
-  def controlEscape = (backslash ~ "c" ~ ".".r) ~>
+  def controlEscape = backslash ~ "c" ~ ".".r ~>
     failure("Unsupported feature: control escape")
 
-  def backReference= (backslash ~ "[1-9][0-9]*".r) ~>
+  def backReference= backslash ~ "[1-9][0-9]*".r ~>
     failure("unsupported feature: backreferences")
 
   def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
@@ -102,8 +96,8 @@ class RegexParser extends JavaTokenParsers {
 
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(UnicodeChar.fromSingletonString(x))))
 
-  def quotedLiteral = backslash ~ "Q" ~ anythingExcept(backslash ~ "E").* ~ backslash ~ "E" ^^ {
-    case _ ~ _ ~ literal ~ _ ~ _ => Juxt(literal)
+  def quotedLiteral = backslash ~ "Q" ~> anythingExcept(backslash ~ "E").* <~ backslash ~ "E" ^^ {
+    literal => Juxt(literal)
   }
 
   def charLit = anchor | anythingExcept(charSpecial) | anyEscape
@@ -116,8 +110,8 @@ class RegexParser extends JavaTokenParsers {
     case start ~ _ ~ end => CharSet.fromRange(CharRange(start.char, end.char))
   }
 
-  def specialCharSetByName = backslash ~ "p" ~ "{" ~ "[a-z_]+".r ~ "=" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
-    case _ ~ _ ~ propName ~ _ ~ propValue ~ _ =>
+  def specialCharSetByName = backslash ~ "p" ~ "{" ~> "[a-z_]+".r ~ "=" ~ "[a-zA-Z ]+".r <~ "}" ^^ {
+    case propName ~ _ ~ propValue =>
       if (propName == "block" || propName == "blk") {
         PredefinedCharSets.unicodeBlocks.getOrElse(propValue.toUpperCase(),
           throw new InvalidRegexException("Invalid Unicode block: " + propValue))
@@ -132,40 +126,36 @@ class RegexParser extends JavaTokenParsers {
       }
   }
 
-  def specialCharSetWithIs = backslash ~ "p" ~ "{" ~ "Is" ~ "[a-zA-Z_ ]+".r ~ "}" ^^ {
-    case _ ~ _ ~ _ ~ _ ~ name ~ _ =>
-      /*
-       * If the property starts with "Is" it could be either a script, 
-       * general category or a binary property. Look for all.
-       */
-      PredefinedCharSets.unicodeScripts.get(name.toUpperCase()).orElse(
-        PredefinedCharSets.unicodeGeneralCategories.get(name)).orElse(
-          PredefinedCharSets.unicodeBinaryProperties.get(name.toUpperCase())).getOrElse {
-            throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + name)
-          }
-  }
-
-  def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
-    case _ ~ _ ~ _ ~ _ ~ blockName ~ _ =>
-      PredefinedCharSets.unicodeBlocks.getOrElse(blockName.toUpperCase(),
-        throw new InvalidRegexException("Invalid Unicode block: " + blockName))
-  }
-
-  def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
-    case _ ~ _ ~ _ ~ _ ~ charClass ~ _ =>
-      PredefinedCharSets.javaClasses.getOrElse(charClass,
-        throw new InvalidRegexException(
-          s"invalid Java character class: $charClass " +
-          s"(note: for such a class to be valid, a method java.lang.Character.is$charClass() must exist) " +
-          s"(valid options: ${PredefinedCharSets.javaClasses.keys.toSeq.sorted.mkString(",")})"))
-  }
-
-  def specialCharSetImplicit = backslash ~ "p" ~ "{" ~ "[a-zA-Z ]+".r ~ "}" ^^ {
-    case _ ~ _ ~ _ ~ name ~ _ =>
-      PredefinedCharSets.posixClasses.get(name).orElse(
-        PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
-          throw new InvalidRegexException("Invalid POSIX character class: " + name)
+  def specialCharSetWithIs = backslash ~ "p" ~ "{" ~ "Is" ~> "[a-zA-Z_ ]+".r <~ "}" ^^ { name =>
+    /*
+     * If the property starts with "Is" it could be either a script,
+     * general category or a binary property. Look for all.
+     */
+    PredefinedCharSets.unicodeScripts.get(name.toUpperCase()).orElse(
+      PredefinedCharSets.unicodeGeneralCategories.get(name)).orElse(
+        PredefinedCharSets.unicodeBinaryProperties.get(name.toUpperCase())).getOrElse {
+          throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + name)
         }
+  }
+
+  def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~> "[a-zA-Z ]+".r <~ "}" ^^ { blockName =>
+    PredefinedCharSets.unicodeBlocks.getOrElse(blockName.toUpperCase(),
+      throw new InvalidRegexException("Invalid Unicode block: " + blockName))
+  }
+
+  def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~> "[a-zA-Z ]+".r <~ "}" ^^ { charClass =>
+    PredefinedCharSets.javaClasses.getOrElse(charClass,
+      throw new InvalidRegexException(
+        s"invalid Java character class: $charClass " +
+        s"(note: for such a class to be valid, a method java.lang.Character.is$charClass() must exist) " +
+        s"(valid options: ${PredefinedCharSets.javaClasses.keys.toSeq.sorted.mkString(",")})"))
+  }
+
+  def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> "[a-zA-Z ]+".r <~ "}" ^^ { name  =>
+    PredefinedCharSets.posixClasses.get(name).orElse(
+      PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
+        throw new InvalidRegexException("Invalid POSIX character class: " + name)
+      }
   }
 
   def specialCharSet =
@@ -181,8 +171,8 @@ class RegexParser extends JavaTokenParsers {
     shorthandCharSet |
     specialCharSet
 
-  def charClass = "[" ~ "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? ~ "]" ^^ {
-    case _ ~ negated ~ leftDash ~ charClass ~ rightDash ~ _ =>
+  def charClass = "[" ~> "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? <~ "]" ^^ {
+    case negated ~ leftDash ~ charClass ~ rightDash =>
       val chars = if (leftDash.isDefined || rightDash.isDefined)
         charClass :+ CharSet.fromRange(Lit('-'.u))
       else
@@ -193,38 +183,36 @@ class RegexParser extends JavaTokenParsers {
 
   // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
-  def dashClass = "[" ~ "^".? ~ "-" ~ "]" ^^ {
-    case _ ~ negated ~ _ ~ _ =>
-      val set = CharSet.fromRange(Lit('-'.u))
-      negated.fold[CharSet](set)(_ => set.complement)
+  def dashClass = "[" ~> "^".? <~ "-" ~ "]" ^^ { negated =>
+    val set = CharSet.fromRange(Lit('-'.u))
+    negated.fold[CharSet](set)(_ => set.complement)
   }
 
-  def shorthandCharSet = backslash ~ "[DWSdws]".r ^^ {
-    case _ ~ "d" => PredefinedCharSets.digit
-    case _ ~ "D" => PredefinedCharSets.digit.complement
-    case _ ~ "s" => PredefinedCharSets.space
-    case _ ~ "S" => PredefinedCharSets.space.complement
-    case _ ~ "w" => PredefinedCharSets.wordChar
-    case _ ~ "W" => PredefinedCharSets.wordChar.complement
+  def shorthandCharSet = backslash ~> "[DWSdws]".r ^^ {
+    case "d" => PredefinedCharSets.digit
+    case "D" => PredefinedCharSets.digit.complement
+    case "s" => PredefinedCharSets.space
+    case "S" => PredefinedCharSets.space.complement
+    case "w" => PredefinedCharSets.wordChar
+    case "W" => PredefinedCharSets.wordChar.complement
     case _ => throw new AssertionError
   }
 
-  def unicodeLineBreak = backslash ~ "R" ^^ {
-    case _ =>
-      Disj(Seq(
-        Juxt(Seq(Lit('\u000D'.u), Lit('\u000A'.u))),
-        Lit('\u000A'.u),
-        Lit('\u000B'.u),
-        Lit('\u000C'.u),
-        Lit('\u000D'.u),
-        Lit('\u0085'.u),
-        Lit('\u2028'.u),
-        Lit('\u2029'.u)
-      ))
+  def unicodeLineBreak = backslash ~ "R" ^^^ {
+    Disj(Seq(
+      Juxt(Seq(Lit('\u000D'.u), Lit('\u000A'.u))),
+      Lit('\u000A'.u),
+      Lit('\u000B'.u),
+      Lit('\u000C'.u),
+      Lit('\u000D'.u),
+      Lit('\u0085'.u),
+      Lit('\u2028'.u),
+      Lit('\u2029'.u)
+    ))
   }
 
-  def group = "(" ~ ("?" ~ "<".? ~ "[:=!]".r).? ~ regex ~ ")" ^^ {
-    case _ ~ modifiers ~ value ~ _ =>
+  def group = "(" ~> ("?" ~ "<".? ~ "[:=!]".r).? ~ regex <~ ")" ^^ {
+    case modifiers ~ value =>
       import Direction._
       import Condition._
       modifiers match {
@@ -239,8 +227,8 @@ class RegexParser extends JavaTokenParsers {
       }
   }
 
-  def namedGroup = "(" ~ "?" ~ "<" ~ "[a-zA-Z][a-zA-Z0-9]*".r ~ ">" ~ regex ~ ")" ^^ {
-    case _ ~ _ ~_ ~ name ~ _ ~ value ~ _ => NamedCaptureGroup(name, value)
+  def namedGroup = "(" ~ "?" ~ "<" ~> "[a-zA-Z][a-zA-Z0-9]*".r ~ ">" ~ regex <~ ")" ^^ {
+    case name ~ _ ~ value => NamedCaptureGroup(name, value)
   }
 
   def charWildcard = "." ^^^ Wildcard
@@ -258,17 +246,17 @@ class RegexParser extends JavaTokenParsers {
     case "?" => Quantification(min = 0, max = Some(1))
   }
 
-  def generalQuantifier = "{" ~ number ~ ("," ~ number.?).? ~ "}" ^^ {
-    case _ ~ minVal ~ Some(comma ~ Some(maxVal)) ~ _ =>
+  def generalQuantifier = "{" ~> number ~ ("," ~ number.?).? <~ "}" ^^ {
+    case minVal ~ Some(comma ~ Some(maxVal)) =>
       // Quantifiers of the for {min,max}
       if (minVal <= maxVal)
         Quantification(minVal, Some(maxVal))
       else
         throw new InvalidRegexException("invalid range in quantifier")
-    case _ ~ minVal ~ Some(comma ~ None) ~ _ =>
+    case minVal ~ Some(comma ~ None) =>
       // Quantifiers of the form {min,}
       Quantification(minVal, None)
-    case _ ~ minVal ~ None ~ _ =>
+    case minVal ~ None =>
       // Quantifiers of the form "{n}", the value is captured as "min", despite being also the max
       Quantification(minVal, Some(minVal))
   }
@@ -281,7 +269,6 @@ class RegexParser extends JavaTokenParsers {
 
   def quantifiedBranch = regexAtom ~ quantifier ^^ {
     case atom ~ (q: Quantification) => Rep(min = q.min, max = q.max, value = atom)
-    case _ ~ _ => throw new AssertionError()
   }
 
   def branch = (lazyQuantifiedBranch | possesivelyQuantifiedBranch | quantifiedBranch | regexAtom).+ ^^ {
@@ -292,8 +279,8 @@ class RegexParser extends JavaTokenParsers {
 
   def emptyRegex = "" ^^^ Juxt(Seq())
 
-  def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~ regex).? ^^ {
-    case left ~ Some(_ ~ right) => Disj(Seq(left, right))
+  def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~> regex).? ^^ {
+    case left ~ Some(right) => Disj(Seq(left, right))
     case left ~ None => left
   }
 
