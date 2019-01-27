@@ -180,7 +180,11 @@ class RegexParser extends JavaTokenParsers {
   // not easily parsed by the general constructs.
   def dashClass = "[" ~> "^".? <~ "-" ~ "]" ^^ { negated =>
     val set = CharSet.fromRange(Lit('-'.u))
-    negated.fold[CharSet](set)(_ => set.complement)
+    if (negated.isDefined) {
+      set.complement
+    } else {
+      set
+    }
   }
 
   def shorthandCharSet = backslash ~> "[DWSdws]".r ^^ {
@@ -200,7 +204,11 @@ class RegexParser extends JavaTokenParsers {
       else
         charClass
       val set = CharSet.fromCharSets(chars: _*)
-      negated.fold[CharSet](set)(_ => set.complement)
+      if (negated.isDefined) {
+        set.complement
+      } else {
+        set
+      }
   }
 
   // Parsers that return a complex Node
