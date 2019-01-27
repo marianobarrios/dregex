@@ -13,7 +13,7 @@ object Util {
     val merged = for ((k, lv) <- left) yield {
       val mergedValue = right.get(k) match {
         case Some(rv) => fn(lv, rv)
-        case None => lv
+        case None     => lv
       }
       k -> mergedValue
     }
@@ -28,7 +28,7 @@ object Util {
     val time = Duration.ofNanos(System.nanoTime() - start)
     (res, time)
   }
-  
+
   def time(thunk: => Unit): Duration = {
     val start = System.nanoTime()
     thunk
@@ -41,15 +41,15 @@ object Util {
       SortedMap(a: _*)
     }
   }
-  
+
   implicit class StrictMap[K, A](map: Map[K, A]) {
     def mapValuesNow[B](f: A => B): Map[K, B] = map.map { case (a, b) => (a, f(b)) }
-  }  
-  
+  }
+
   def floorEntry[A, B](sortedMap: SortedMap[A, B], key: A): Option[(A, B)] = {
     sortedMap.to(key).lastOption
   }
-  
+
   def getPrivateStaticField[A](clazz: Class[_], name: String): A = {
     val field = clazz.getDeclaredField(name)
     field.setAccessible(true)
@@ -63,5 +63,5 @@ object Util {
     }
     new String(subScriptString.toArray)
   }
-  
+
 }

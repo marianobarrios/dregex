@@ -49,7 +49,7 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(equiv("(?!b).|b", "."))
     assertResult(true)(equiv("a(?!b).|ab", "a."))
     assertResult(true)(equiv("a((?!b).|b)", "a."))
-    assertResult(true)(equiv("a((?!b).|b)+", "a.+"))    
+    assertResult(true)(equiv("a((?!b).|b)+", "a.+"))
     assertResult(true)(equiv("(a((?!b).|b))+", "(a.)+"))
     assertResult(true)(equiv("(?!a)(?!b).|c", "(?!a)(?!b)."))
     assertResult(true)(equiv("(?=.).*", ".+"))
@@ -66,7 +66,7 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(equiv("(?=a?).+", ".+"))
     assertResult(true)(equiv("(?=a{0,34}).+", ".+"))
   }
-  
+
   test("characted classes") {
     assertResult(true)(equiv("[a]", "a"))
     assertResult(true)(equiv("a|b|c", "[abc]"))
@@ -74,19 +74,19 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(equiv("[a-cdef]", "[a-f]"))
     assertResult(true)(equiv("[a-cd-f]", "[a-f]"))
   }
-  
+
   test("combined") {
     assertResult(true)(equiv("(?!a|b).+", "[^ab].*"))
     assertResult(true)(equiv("(?=a|b).*", "[ab].*"))
   }
-    
+
   test("shortcut character classes") {
     assertResult(true)(equiv("""\d""", "[0-9]"))
     assertResult(true)(equiv("""\w""", "[a-zA-Z0-9_]"))
     assertResult(true)(equiv("""\s""", """[ \t\n\r\f\x{B}]"""))
     assertResult(true)(equiv("""\d""", """[\d]"""))
   }
-  
+
   test("posix character classes") {
     assertResult(true)(equiv("""\p{Lower}""", "[a-z]"))
     assertResult(true)(equiv("""\p{Upper}""", "[A-Z]"))
@@ -103,7 +103,7 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(equiv("""\p{Space}""", """[ \t\n\x0B\f\r]"""))
     assertResult(true)(equiv("""\p{Lower}""", """[\p{Lower}]"""))
   }
-  
+
   test("disjunctions") {
     val Seq(a, b, c) = Regex.compile(Seq("a|b", "a", "b"))
     assertResult(true)(a equiv (b union c))

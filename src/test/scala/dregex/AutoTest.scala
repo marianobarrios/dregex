@@ -7,11 +7,11 @@ import org.slf4j.LoggerFactory
 import scala.collection.immutable.Seq
 
 /**
- * This test generates possible regex trees, and then generates strings
- * that should match those tree. This way we can automatically test as 
- * many regex and strings as wanted. Note that this test is designed to
- * catch false negatives, but no false positives.
- */
+  * This test generates possible regex trees, and then generates strings
+  * that should match those tree. This way we can automatically test as
+  * many regex and strings as wanted. Note that this test is designed to
+  * catch false negatives, but no false positives.
+  */
 class AutoTest extends FunSuite {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[AutoTest])
@@ -33,8 +33,11 @@ class AutoTest extends FunSuite {
         }
       }
     }
-    logger.debug("Trees iteration took: {}; trees generated: {}; strings tested: {}",
-      elapsed, Integer.valueOf(totalTrees), Integer.valueOf(totalStrings))
+    logger.debug(
+      "Trees iteration took: {}; trees generated: {}; strings tested: {}",
+      elapsed,
+      Integer.valueOf(totalTrees),
+      Integer.valueOf(totalStrings))
   }
 
 }

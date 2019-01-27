@@ -5,8 +5,8 @@ import scala.collection.mutable.ArrayBuffer
 import dregex.impl.UnicodeChar
 
 /**
- * Generates, given a regex tree, sample strings that match the regex.
- */
+  * Generates, given a regex tree, sample strings that match the regex.
+  */
 object StringGenerator {
 
   import RegexTree._
@@ -29,7 +29,7 @@ object StringGenerator {
         } yield {
           UnicodeChar(range.from.codePoint + i).toJavaString
         }
-        
+
       case Disj(values) =>
         values.flatMap(v => generate(v, maxAlternatives, maxRepeat))
 
@@ -53,7 +53,7 @@ object StringGenerator {
 
       case Juxt(Seq(value)) =>
         generate(value, maxAlternatives, maxRepeat)
-        
+
       case Juxt(first +: rest) =>
         for {
           left <- generate(first, maxAlternatives, maxRepeat)
@@ -70,7 +70,7 @@ object StringGenerator {
   def fixedRepeat(value: Node, maxAlternatives: Int, maxRepeat: Int, qtty: Int): Seq[String] = {
     /*
      * To avoid a too fast explosion of combinations, we limit the number of
-     * alternatives and repetitions to 1 inside repetitions to all but one 
+     * alternatives and repetitions to 1 inside repetitions to all but one
      * instance.
      */
     qtty match {

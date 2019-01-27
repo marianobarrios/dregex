@@ -6,8 +6,8 @@ import dregex.impl.Util
 import org.slf4j.LoggerFactory
 
 /**
- * Test the full cycle of serialization and parsing.
- */
+  * Test the full cycle of serialization and parsing.
+  */
 class SerializerTest extends FunSuite {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[SerializerTest])

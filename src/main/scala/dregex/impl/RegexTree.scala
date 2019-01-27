@@ -28,8 +28,8 @@ object RegexTree {
   }
 
   /**
-   * A single char, non empty, i.e, excluding epsilon values
-   */
+    * A single char, non empty, i.e, excluding epsilon values
+    */
   sealed trait AbstractRange extends Node with Product2[UnicodeChar, UnicodeChar] {
 
     def from: UnicodeChar
@@ -40,16 +40,16 @@ object RegexTree {
 
     override def equals(anyThat: Any) = anyThat match {
       case that: AbstractRange => this.from == that.from && this.to == that.to
-      case _ => false
+      case _                   => false
     }
 
     override def hashCode() = ScalaRunTime._hashCode(this)
 
     def canonical = {
       (from, to) match {
-        case (a, b) if a == b => Lit(a)
+        case (a, b) if a == b                   => Lit(a)
         case (UnicodeChar.min, UnicodeChar.max) => Wildcard
-        case (a, b) => CharRange(a, b)
+        case (a, b)                             => CharRange(a, b)
       }
     }
 
@@ -89,7 +89,7 @@ object RegexTree {
     def precedence = 1
     override def toString = "✶"
   }
-  
+
   case class CharSet(ranges: Seq[AbstractRange]) extends Node {
     lazy val complement = CharSet(RangeOps.diff(Wildcard, ranges))
     def toRegex = s"[${ranges.map(_.toCharClassLit).mkString}]"
@@ -114,7 +114,7 @@ object RegexTree {
         values.flatMap { value =>
           value match {
             case Disj(innerValues) => flattenValues(innerValues)
-            case other => Seq(other)
+            case other             => Seq(other)
           }
         }
       }
@@ -131,7 +131,7 @@ object RegexTree {
 
     def toRegex = {
       val dirStr = dir match {
-        case Direction.Ahead => ""
+        case Direction.Ahead  => ""
         case Direction.Behind => "<"
       }
       var condStr = cond match {
@@ -162,30 +162,31 @@ object RegexTree {
 
     def toRegex = {
       val suffix = (min, max) match {
-        case (0, None) => "*"
-        case (1, None) => "+"
-        case (n, None) => s"{$n,}"
-        case (0, Some(1)) => "?"
-        case (1, Some(1)) => ""
+        case (0, None)              => "*"
+        case (1, None)              => "+"
+        case (n, None)              => s"{$n,}"
+        case (0, Some(1))           => "?"
+        case (1, Some(1))           => ""
         case (n, Some(m)) if n == m => s"{$n}"
         case (n, Some(m)) if n != m => s"{$n,$m}"
       }
-      /* 
+      /*
        * On top of precedence, check special case of nested repetitions,
-       * that are actually a grammar singularity. E.g., "a++" (invalid) 
+       * that are actually a grammar singularity. E.g., "a++" (invalid)
        * vs. "(a+)+" (valid)
        */
-      val effValue = if (value.precedence > this.precedence || value.isInstanceOf[Rep])
-        s"(?:${value.toRegex})"
-      else
-        value.toRegex
+      val effValue =
+        if (value.precedence > this.precedence || value.isInstanceOf[Rep])
+          s"(?:${value.toRegex})"
+        else
+          value.toRegex
       s"$effValue$suffix"
     }
 
     override def canonical = {
       (min, max) match {
         case (1, Some(1)) => value.canonical
-        case other => Rep(min, max, value.canonical)
+        case other        => Rep(min, max, value.canonical)
       }
     }
 
@@ -193,9 +194,9 @@ object RegexTree {
 
     override def toString = {
       val range = (min, max) match {
-        case (mn, None) => s"$mn–∞"
+        case (mn, None)                 => s"$mn–∞"
         case (mn, Some(mx)) if mn == mx => mn
-        case (mn, Some(mx)) => s"$mn–$mx"
+        case (mn, Some(mx))             => s"$mn–$mx"
       }
       s"${getClass.getSimpleName}($range,$value)"
     }
@@ -210,7 +211,7 @@ object RegexTree {
         values.flatMap { value =>
           value match {
             case Juxt(innerValues) => flattenValues(innerValues)
-            case other => Seq(other)
+            case other             => Seq(other)
           }
         }
       }

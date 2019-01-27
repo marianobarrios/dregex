@@ -6,16 +6,16 @@ import dregex.impl.RegexTree
 import dregex.impl.SimpleState
 
 /**
- * A fully-compiled regular expression that was generated from a string literal.
- */
+  * A fully-compiled regular expression that was generated from a string literal.
+  */
 /*
  * Private parameters used to work around Scaladoc limitation for val's in private
  * constructors.
  */
 class CompiledRegex private[dregex] (
-  _originalString: String,
-  parsedTree: RegexTree.Node,
-  val universe: Universe
+    _originalString: String,
+    parsedTree: RegexTree.Node,
+    val universe: Universe
 ) extends Regex {
 
   /**

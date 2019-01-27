@@ -26,10 +26,11 @@ object PredefinedCharSets {
     val javaBlocks = Util.getPrivateStaticField[Array[UnicodeBlock]](classOf[UnicodeBlock], "blocks").toSeq
     val blockToSetMap: Map[UnicodeBlock, CharSet] = blockStarts.indices.flatMap { i =>
       val from = blockStarts(i)
-      val to = if (i == blockStarts.length - 1)
-        UnicodeChar.max.codePoint
-      else
-        blockStarts(i + 1)
+      val to =
+        if (i == blockStarts.length - 1)
+          UnicodeChar.max.codePoint
+        else
+          blockStarts(i + 1)
       // skip unassigned blocks
       javaBlocks.lift(i).map { block =>
         block -> CharSet.fromRange(CharRange(from.u, to.u))
@@ -53,10 +54,11 @@ object PredefinedCharSets {
       val builder = collection.mutable.Map[UnicodeScript, CharSet]()
       for (i <- 0 until scriptStarts.length) {
         val from = scriptStarts(i)
-        val to = if (i == scriptStarts.length - 1)
-          UnicodeChar.max.codePoint
-        else
-          scriptStarts(i + 1)
+        val to =
+          if (i == scriptStarts.length - 1)
+            UnicodeChar.max.codePoint
+          else
+            scriptStarts(i + 1)
         // skip unassigned scripts
         javaScripts.lift(i).foreach { script =>
           val CharSet(existing) = builder.getOrElse(script, CharSet(Seq()))
@@ -75,9 +77,9 @@ object PredefinedCharSets {
   }
 
   /*
-   * Use a lazy val because collecting the categories and the properties 
+   * Use a lazy val because collecting the categories and the properties
    * takes some time: only do it if used. This is because
-   * we don't use a static definition, but iterate over all code points 
+   * we don't use a static definition, but iterate over all code points
    * and evaluate every property and the category.
    */
   lazy val (unicodeGeneralCategories, unicodeBinaryProperties): (Map[String, CharSet], Map[String, CharSet]) = {
@@ -85,7 +87,7 @@ object PredefinedCharSets {
       val categoryBuilder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
       val propertyBuilder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
       for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
-        
+
         val char = Lit(codePoint.u)
 
         // category
@@ -94,12 +96,12 @@ object PredefinedCharSets {
         categoryBuilder.getOrElseUpdate(category, ArrayBuffer()) += char
         val parentCategory = category.substring(0, 1) // first letter
         categoryBuilder.getOrElseUpdate(parentCategory, ArrayBuffer()) += char
-        
+
         // properties
         for ((prop, fn) <- GeneralCategory.binaryProperties if fn(codePoint)) {
           propertyBuilder.getOrElseUpdate(prop, ArrayBuffer()) += char
         }
-        
+
       }
       val categorySets = categoryBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
       val propertySets = propertyBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
@@ -108,7 +110,7 @@ object PredefinedCharSets {
     logger.debug(s"Initialized Unicode general category and binary property catalog in $elapsed")
     ret
   }
-  
+
   val lower = CharSet.fromRange(CharRange(from = 'a'.u, to = 'z'.u))
   val upper = CharSet.fromRange(CharRange(from = 'A'.u, to = 'Z'.u))
   val alpha = CharSet.fromCharSets(lower, upper)
@@ -132,7 +134,8 @@ object PredefinedCharSets {
     "Blank" -> CharSet(Seq(Lit(0x20.u), Lit('\t'.u))),
     "Cntrl" -> CharSet(Seq(CharRange(from = 0.u, to = 0x1F.u), Lit(0x7F.u))),
     "XDigit" -> CharSet(digit.ranges ++ Seq(CharRange(from = 'a'.u, to = 'f'.u), CharRange(from = 'A'.u, to = 'F'.u))),
-    "Space" -> space)
+    "Space" -> space
+  )
 
   val javaClasses: Map[String, CharSet] = {
     val (ret, elapsed) = Util.time {
@@ -150,4 +153,3 @@ object PredefinedCharSets {
   }
 
 }
-

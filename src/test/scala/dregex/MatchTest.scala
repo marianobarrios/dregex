@@ -849,7 +849,7 @@ class MatchTest extends FunSuite {
 
     using(Regex.compile("((?!bb)b)+")) { r =>
       assertResult(true)(r.matches("b"))
-      // true because lookahead cannot "escape" the expression it's in 
+      // true because lookahead cannot "escape" the expression it's in
       assertResult(true)(r.matches("bb"))
     }
 

@@ -14,18 +14,15 @@ object DfaAlgorithms {
   type BinaryOp[A <: State] = (Dfa[A], Dfa[A]) => Dfa[BiState[A]]
 
   def union[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
-    removeUnreachableStates(
-      doUnion(left, right))
+    removeUnreachableStates(doUnion(left, right))
   }
 
   def intersect[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
-    removeUnreachableStates(
-      doIntersection(left, right))
+    removeUnreachableStates(doIntersection(left, right))
   }
 
   def diff[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
-    removeUnreachableStates(
-      doDifference(left, right))
+    removeUnreachableStates(doDifference(left, right))
   }
 
   /*
@@ -153,13 +150,11 @@ object DfaAlgorithms {
     }
     val filteredTransitions = dfa.defTransitions
       .filterKeys(visited) // using set as function
-      .view.force // fix filterKeys laziness
+      .view
+      .force // fix filterKeys laziness
     val filteredAccepting = dfa.accepting
       .filter(visited) // using set as function
-    Dfa(
-      initial = dfa.initial,
-      defTransitions = filteredTransitions,
-      accepting = filteredAccepting)
+    Dfa(initial = dfa.initial, defTransitions = filteredTransitions, accepting = filteredAccepting)
   }
 
   /**
@@ -327,7 +322,8 @@ object DfaAlgorithms {
     Dfa[B](
       initial = mapping(dfa.initial),
       defTransitions = for ((s, fn) <- dfa.defTransitions) yield mapping(s) -> fn.mapValuesNow(mapping),
-      accepting = dfa.accepting.map(mapping))
+      accepting = dfa.accepting.map(mapping)
+    )
   }
 
 }

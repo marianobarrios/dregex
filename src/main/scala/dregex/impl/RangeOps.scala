@@ -23,9 +23,7 @@ object RangeOps {
     } else if (left.to < right.from) {
       Seq(left)
     } else if (left.from < right.from && left.to > right.to) {
-      Seq(
-        CharRange(from = left.from, to = right.from - 1),
-        CharRange(from = right.to + 1, to = left.to))
+      Seq(CharRange(from = left.from, to = right.from - 1), CharRange(from = right.to + 1, to = left.to))
     } else if (left.from < right.from && left.to <= right.to) {
       Seq(CharRange(from = left.from, to = right.from - 1))
     } else if (left.from >= right.from && left.to > right.to) {
@@ -43,7 +41,7 @@ object RangeOps {
     ranges.foldLeft(IndexedSeq[AbstractRange]()) { (acc, range) =>
       acc match {
         case init :+ last => init ++ union(last, range)
-        case Seq() => IndexedSeq(range)
+        case Seq()        => IndexedSeq(range)
       }
     }
   }

@@ -6,8 +6,8 @@ import scala.collection.JavaConverters.setAsJavaSetConverter
 import scala.collection.immutable.Seq
 
 /**
- * A single or null char, i.e., including epsilon values
- */
+  * A single or null char, i.e., including epsilon values
+  */
 sealed trait AtomPart
 
 case class CharInterval(from: UnicodeChar, to: UnicodeChar) extends AtomPart with Ordered[CharInterval] {
@@ -32,7 +32,7 @@ case object Epsilon extends AtomPart {
 }
 
 object CharInterval {
-  
+
   def calculateNonOverlapping(ranges: Seq[AbstractRange]): Map[AbstractRange, Seq[CharInterval]] = {
     val startSet = collection.mutable.Set[UnicodeChar]()
     val endSet = collection.mutable.Set[UnicodeChar]()

@@ -6,24 +6,23 @@ import scala.collection.mutable.Buffer
 import scala.collection.immutable.Seq
 
 /**
- * Take a regex AST and produce a NFA.
- * Except when noted the Thompson-McNaughton-Yamada algorithm is used.
- * Reference: http://stackoverflow.com/questions/11819185/steps-to-creating-an-nfa-from-a-regular-expression
- */
+  * Take a regex AST and produce a NFA.
+  * Except when noted the Thompson-McNaughton-Yamada algorithm is used.
+  * Reference: http://stackoverflow.com/questions/11819185/steps-to-creating-an-nfa-from-a-regular-expression
+  */
 class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]]) {
 
   import RegexTree._
 
   /**
-   * Transform a regular expression abstract syntax tree into a corresponding NFA
-   */
+    * Transform a regular expression abstract syntax tree into a corresponding NFA
+    */
   def fromTree(ast: Node): Dfa[SimpleState] = {
     val initial = new SimpleState
     val accepting = new SimpleState
     val transitions = fromTreeImpl(ast, initial, accepting)
     val nfa = Nfa(initial, transitions, Set(accepting))
-    DfaAlgorithms.rewriteWithSimpleStates(
-      DfaAlgorithms.fromNfa(nfa))
+    DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.fromNfa(nfa))
   }
 
   private def fromTreeImpl(node: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
@@ -70,19 +69,19 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
   }
 
   /**
-   * Lookaround constructions are transformed in equivalent DFA operations, and the result of those trivially transformed
-   * into a NFA again for insertion into the outer expression.
-   *
-   * (?=B)C is transformed into C ∩ B.*
-   * (?!B)C is transformed into C - B.*
-   * A(?<=B) is transformed into A ∩ .*B
-   * A(?<!B) is transformed into A - .*B
-   *
-   * In the case of more than one lookaround, the transformation is applied recursively.
-   *
+    * Lookaround constructions are transformed in equivalent DFA operations, and the result of those trivially transformed
+    * into a NFA again for insertion into the outer expression.
+    *
+    * (?=B)C is transformed into C ∩ B.*
+    * (?!B)C is transformed into C - B.*
+    * A(?<=B) is transformed into A ∩ .*B
+    * A(?<!B) is transformed into A - .*B
+    *
+    * In the case of more than one lookaround, the transformation is applied recursively.
+    *
     * *
-   * NOTE: Only lookahead is currently implemented
-   */
+    * NOTE: Only lookahead is currently implemented
+    */
   private def processJuxt(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     import Direction._
     import Condition._
@@ -122,10 +121,10 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
   }
 
   /**
-   * Optimization: combination of consecutive negative lookahead constructions
-   * (?!a)(?!b)(?!c) gets combined to (?!a|b|c), which is faster to process.
-   * This optimization should be applied before the look-around's are expanded to intersections and differences.
-   */
+    * Optimization: combination of consecutive negative lookahead constructions
+    * (?!a)(?!b)(?!c) gets combined to (?!a|b|c), which is faster to process.
+    * This optimization should be applied before the look-around's are expanded to intersections and differences.
+    */
   def combineNegLookaheads(juxt: Juxt): Juxt = {
     import Direction._
     import Condition._
@@ -245,12 +244,16 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     }
   }
 
-  private def processOp(operation: DfaAlgorithms.BinaryOp[SimpleState], left: Node, right: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+  private def processOp(
+      operation: DfaAlgorithms.BinaryOp[SimpleState],
+      left: Node,
+      right: Node,
+      from: SimpleState,
+      to: SimpleState): Seq[NfaTransition] = {
     val leftDfa = fromTree(left)
     val rightDfa = fromTree(right)
     val result =
-      DfaAlgorithms.toNfa(
-        operation(leftDfa, rightDfa))
+      DfaAlgorithms.toNfa(operation(leftDfa, rightDfa))
     result.transitions ++
       result.accepting.to[Seq].map(acc => NfaTransition(acc, to, Epsilon)) :+
       NfaTransition(from, result.initial, Epsilon)

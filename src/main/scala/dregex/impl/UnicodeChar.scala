@@ -9,8 +9,8 @@ case class UnicodeChar(codePoint: Int) extends Ordered[UnicodeChar] {
   def compare(that: UnicodeChar): Int = this.codePoint compare that.codePoint
 
   /**
-   * Only for debugging
-   */
+    * Only for debugging
+    */
   override def toString() = {
     if (Character.isLetterOrDigit(codePoint))
       s"‘${new String(Character.toChars(codePoint))}’"
@@ -29,7 +29,7 @@ case class UnicodeChar(codePoint: Int) extends Ordered[UnicodeChar] {
   }
 
   def toJavaString = new String(Character.toChars(codePoint))
-  
+
 }
 
 object UnicodeChar {

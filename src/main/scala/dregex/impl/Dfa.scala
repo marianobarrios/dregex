@@ -7,7 +7,7 @@ case class Dfa[A <: State](
     defTransitions: Map[A, SortedMap[CharInterval, A]],
     accepting: Set[A],
     minimal: Boolean = false
-  ) {
+) {
 
   override def toString() = s"initial: $initial; transitions: $defTransitions; accepting: $accepting"
 

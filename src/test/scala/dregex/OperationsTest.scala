@@ -19,17 +19,17 @@ class OperationsTest extends FunSuite {
     val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right))
     leftCompiled isProperSubsetOf rightCompiled
   }
-  
+
   private def testIntersection(left: String, right: String)(result: String): Boolean = {
     val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result))
     (leftCompiled intersect rightCompiled) equiv resultCompiled
-  } 
-  
+  }
+
   private def testUnion(left: String, right: String)(result: String): Boolean = {
     val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result))
     (leftCompiled union rightCompiled) equiv resultCompiled
   }
-  
+
   test("intersections - boolean") {
     assertResult(true)(doIntersect("a", "."))
     assertResult(false)(doIntersect("a", "b"))
@@ -42,7 +42,7 @@ class OperationsTest extends FunSuite {
   }
 
   test("subset - boolean") {
-    assertResult(true) (isSubset("a", "."))
+    assertResult(true)(isSubset("a", "."))
     assertResult(true)(isSubset("", ".*"))
     assertResult(true)(isSubset("a", "a"))
     assertResult(true)(isSubset("(a|b){2}", "[ab][ab]"))

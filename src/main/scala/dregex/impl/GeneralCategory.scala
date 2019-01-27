@@ -5,9 +5,9 @@ import scala.collection.breakOut
 object GeneralCategory {
 
   /**
-   * Unicode categories are named in Java using an integer. The mapping 
-   * is not explicit, so we need to add it here.
-   */
+    * Unicode categories are named in Java using an integer. The mapping
+    * is not explicit, so we need to add it here.
+    */
   val categories: Map[Byte, String] = {
     import Character._
     Map(
@@ -40,7 +40,8 @@ object GeneralCategory {
       MODIFIER_SYMBOL -> "Sk",
       OTHER_SYMBOL -> "So",
       INITIAL_QUOTE_PUNCTUATION -> "Pi",
-      FINAL_QUOTE_PUNCTUATION -> "Pf")
+      FINAL_QUOTE_PUNCTUATION -> "Pf"
+    )
   }
 
   val binaryProperties: Map[String, Int => Boolean] = {

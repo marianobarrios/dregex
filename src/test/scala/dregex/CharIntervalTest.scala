@@ -29,12 +29,23 @@ class CharIntervalTest extends FunSuite with Matchers {
     val expected = Map[CharRange, Seq[CharInterval]](
       CharRange(10, 20) -> Seq((10, 10), (11, 11), (12, 12), (13, 16), (17, 20)),
       CharRange(21, 30) -> Seq((21, 25), (26, 30)),
-      CharRange(0, 100) -> Seq((0, 8), (9, 9), (10, 10), (11, 11), (12, 12), (13, 16), (17, 20), (21, 25), (26, 30), (31, 100)),
+      CharRange(0, 100) -> Seq(
+        (0, 8),
+        (9, 9),
+        (10, 10),
+        (11, 11),
+        (12, 12),
+        (13, 16),
+        (17, 20),
+        (21, 25),
+        (26, 30),
+        (31, 100)),
       CharRange(9, 9) -> Seq((9, 9)),
       CharRange(10, 11) -> Seq((10, 10), (11, 11)),
       CharRange(9, 10) -> Seq((9, 9), (10, 10)),
       CharRange(10, 12) -> Seq((10, 10), (11, 11), (12, 12)),
-      CharRange(17, 25) -> Seq((17, 20), (21, 25)))
+      CharRange(17, 25) -> Seq((17, 20), (21, 25))
+    )
     assertResult(expected)(nonOverlapping)
   }
 

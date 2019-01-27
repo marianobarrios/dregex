@@ -6,8 +6,8 @@ import dregex.impl.PredefinedCharSets
 import scala.collection.immutable.Seq
 
 /**
- * Generate some sample regex trees, useful for testing.
- */
+  * Generate some sample regex trees, useful for testing.
+  */
 class TreeGenerator {
 
   import RegexTree._
@@ -29,22 +29,19 @@ class TreeGenerator {
           Rep(2, Some(3), node),
           Rep(0, Some(1), node))
         val double = generateFixedDepth(levels - 1).flatMap { secondNode =>
-          Iterator(
-            Disj(Seq(node, secondNode)),
-            Juxt(Seq(node, secondNode)))
-            //Juxt(Seq(Lit('x'.u), Lookaround(Direction.Ahead, Condition.Negative, node), secondNode)),
-            //Juxt(Seq(Lit('x'.u), Lookaround(Direction.Ahead, Condition.Positive, node), secondNode)))
+          Iterator(Disj(Seq(node, secondNode)), Juxt(Seq(node, secondNode)))
+        //Juxt(Seq(Lit('x'.u), Lookaround(Direction.Ahead, Condition.Negative, node), secondNode)),
+        //Juxt(Seq(Lit('x'.u), Lookaround(Direction.Ahead, Condition.Positive, node), secondNode)))
         }
         simple ++ double
       }
     }
   }
-  
+
   def generate(maxDepth: Int): Iterator[Node] = {
     Iterator.range(1, maxDepth + 1).flatMap { i =>
       generateFixedDepth(levels = i)
     }
   }
-  
-}
 
+}

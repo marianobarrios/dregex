@@ -43,11 +43,13 @@ class RegexParser extends JavaTokenParsers {
   def charSpecialInsideClasses = backslash | "]" | "^" | "-"
   def charSpecial = backslash | "." | "|" | "(" | ")" | "[" | "]" | "+" | "*" | "?" | "^" | "$"
 
-  def controlEscape = backslash ~ "c" ~ ".".r ~>
-    failure("Unsupported feature: control escape")
+  def controlEscape =
+    backslash ~ "c" ~ ".".r ~>
+      failure("Unsupported feature: control escape")
 
-  def backReference= backslash ~ "[1-9][0-9]*".r ~>
-    failure("unsupported feature: backreferences")
+  def backReference =
+    backslash ~ "[1-9][0-9]*".r ~>
+      failure("unsupported feature: backreferences")
 
   def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
 
@@ -63,11 +65,12 @@ class RegexParser extends JavaTokenParsers {
     case "a" => Lit('\u0007'.u) // bell
     case "e" => Lit('\u001B'.u) // escape
     case "B" => Lit('\\'.u)
-    case c => Lit(UnicodeChar.fromSingletonString(c)) // remaining escaped characters stand for themselves
+    case c   => Lit(UnicodeChar.fromSingletonString(c)) // remaining escaped characters stand for themselves
   }
 
   def doubleUnicodeEscape = backslash ~ "u" ~ hexNumber(4) ~ backslash ~ "u" ~ hexNumber(4) ^? {
-    case _ ~ _ ~ highNumber ~ _ ~ _ ~ lowNumber if Character.isHighSurrogate(highNumber.toChar) && Character.isLowSurrogate(lowNumber.toChar) =>
+    case _ ~ _ ~ highNumber ~ _ ~ _ ~ lowNumber
+        if Character.isHighSurrogate(highNumber.toChar) && Character.isLowSurrogate(lowNumber.toChar) =>
       val codePoint = Character.toCodePoint(highNumber.toChar, lowNumber.toChar)
       Lit(UnicodeChar(codePoint))
   }
@@ -89,17 +92,17 @@ class RegexParser extends JavaTokenParsers {
   }
 
   /**
-   * Order between Unicode escapes is important
-   */
+    * Order between Unicode escapes is important
+    */
   def anyEscape =
     specialEscape |
-    doubleUnicodeEscape |
-    unicodeEscape |
-    hexEscape |
-    longHexEscape |
-    octalEscape |
-    controlEscape |
-    backReference
+      doubleUnicodeEscape |
+      unicodeEscape |
+      hexEscape |
+      longHexEscape |
+      octalEscape |
+      controlEscape |
+      backReference
 
   def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(UnicodeChar.fromSingletonString(x))))
 
@@ -118,14 +121,14 @@ class RegexParser extends JavaTokenParsers {
   def specialCharSetByName = backslash ~ "p" ~ "{" ~> "[a-z_]+".r ~ "=" ~ "[a-zA-Z ]+".r <~ "}" ^^ {
     case propName ~ _ ~ propValue =>
       if (propName == "block" || propName == "blk") {
-        PredefinedCharSets.unicodeBlocks.getOrElse(propValue.toUpperCase(),
-          throw new InvalidRegexException("Invalid Unicode block: " + propValue))
+        PredefinedCharSets.unicodeBlocks
+          .getOrElse(propValue.toUpperCase(), throw new InvalidRegexException("Invalid Unicode block: " + propValue))
       } else if (propName == "script" || propName == "sc") {
-        PredefinedCharSets.unicodeScripts.getOrElse(propValue.toUpperCase(),
-          throw new InvalidRegexException("Invalid Unicode script: " + propValue))
+        PredefinedCharSets.unicodeScripts
+          .getOrElse(propValue.toUpperCase(), throw new InvalidRegexException("Invalid Unicode script: " + propValue))
       } else if (propName == "general_category" || propName == "gc") {
-        PredefinedCharSets.unicodeGeneralCategories.getOrElse(propValue,
-          throw new InvalidRegexException("Invalid Unicode general category: " + propValue))
+        PredefinedCharSets.unicodeGeneralCategories
+          .getOrElse(propValue, throw new InvalidRegexException("Invalid Unicode general category: " + propValue))
       } else {
         throw new InvalidRegexException("Invalid Unicode character property name: " + propName)
       }
@@ -136,45 +139,48 @@ class RegexParser extends JavaTokenParsers {
      * If the property starts with "Is" it could be either a script,
      * general category or a binary property. Look for all.
      */
-    PredefinedCharSets.unicodeScripts.get(name.toUpperCase()).orElse(
-      PredefinedCharSets.unicodeGeneralCategories.get(name)).orElse(
-        PredefinedCharSets.unicodeBinaryProperties.get(name.toUpperCase())).getOrElse {
-          throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + name)
-        }
+    PredefinedCharSets.unicodeScripts
+      .get(name.toUpperCase())
+      .orElse(PredefinedCharSets.unicodeGeneralCategories.get(name))
+      .orElse(PredefinedCharSets.unicodeBinaryProperties.get(name.toUpperCase()))
+      .getOrElse {
+        throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + name)
+      }
   }
 
   def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~> "[a-zA-Z ]+".r <~ "}" ^^ { blockName =>
-    PredefinedCharSets.unicodeBlocks.getOrElse(blockName.toUpperCase(),
-      throw new InvalidRegexException("Invalid Unicode block: " + blockName))
+    PredefinedCharSets.unicodeBlocks
+      .getOrElse(blockName.toUpperCase(), throw new InvalidRegexException("Invalid Unicode block: " + blockName))
   }
 
   def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~> "[a-zA-Z ]+".r <~ "}" ^^ { charClass =>
-    PredefinedCharSets.javaClasses.getOrElse(charClass,
+    PredefinedCharSets.javaClasses.getOrElse(
+      charClass,
       throw new InvalidRegexException(
         s"invalid Java character class: $charClass " +
-        s"(note: for such a class to be valid, a method java.lang.Character.is$charClass() must exist) " +
-        s"(valid options: ${PredefinedCharSets.javaClasses.keys.toSeq.sorted.mkString(",")})"))
+          s"(note: for such a class to be valid, a method java.lang.Character.is$charClass() must exist) " +
+          s"(valid options: ${PredefinedCharSets.javaClasses.keys.toSeq.sorted.mkString(",")})")
+    )
   }
 
-  def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> "[a-zA-Z ]+".r <~ "}" ^^ { name  =>
-    PredefinedCharSets.posixClasses.get(name).orElse(
-      PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
-        throw new InvalidRegexException("Invalid POSIX character class: " + name)
-      }
+  def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> "[a-zA-Z ]+".r <~ "}" ^^ { name =>
+    PredefinedCharSets.posixClasses.get(name).orElse(PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
+      throw new InvalidRegexException("Invalid POSIX character class: " + name)
+    }
   }
 
   def specialCharSet =
     specialCharSetByName |
-    specialCharSetWithIs |
-    specialCharSetWithIn |
-    specialCharSetWithJava |
-    specialCharSetImplicit
+      specialCharSetWithIs |
+      specialCharSetWithIn |
+      specialCharSetWithJava |
+      specialCharSetImplicit
 
   def charClassAtom =
     charClassRange |
-    singleCharacterClassLit |
-    shorthandCharSet |
-    specialCharSet
+      singleCharacterClassLit |
+      shorthandCharSet |
+      specialCharSet
 
   // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
@@ -194,15 +200,16 @@ class RegexParser extends JavaTokenParsers {
     case "S" => PredefinedCharSets.space.complement
     case "w" => PredefinedCharSets.wordChar
     case "W" => PredefinedCharSets.wordChar.complement
-    case _ => throw new AssertionError
+    case _   => throw new AssertionError
   }
 
   def charClass = "[" ~> "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? <~ "]" ^^ {
     case negated ~ leftDash ~ charClass ~ rightDash =>
-      val chars = if (leftDash.isDefined || rightDash.isDefined)
-        charClass :+ CharSet.fromRange(Lit('-'.u))
-      else
-        charClass
+      val chars =
+        if (leftDash.isDefined || rightDash.isDefined)
+          charClass :+ CharSet.fromRange(Lit('-'.u))
+        else
+          charClass
       val set = CharSet.fromCharSets(chars: _*)
       if (negated.isDefined) {
         set.complement
@@ -213,21 +220,22 @@ class RegexParser extends JavaTokenParsers {
 
   // Parsers that return a complex Node
 
-  def quotedLiteral = backslash ~ "Q" ~> anythingExcept(backslash ~ "E").* <~ backslash ~ "E" ^^ {
-    literal => Juxt(literal)
+  def quotedLiteral = backslash ~ "Q" ~> anythingExcept(backslash ~ "E").* <~ backslash ~ "E" ^^ { literal =>
+    Juxt(literal)
   }
 
   def unicodeLineBreak = backslash ~ "R" ^^^ {
-    Disj(Seq(
-      Juxt(Seq(Lit('\u000D'.u), Lit('\u000A'.u))),
-      Lit('\u000A'.u),
-      Lit('\u000B'.u),
-      Lit('\u000C'.u),
-      Lit('\u000D'.u),
-      Lit('\u0085'.u),
-      Lit('\u2028'.u),
-      Lit('\u2029'.u)
-    ))
+    Disj(
+      Seq(
+        Juxt(Seq(Lit('\u000D'.u), Lit('\u000A'.u))),
+        Lit('\u000A'.u),
+        Lit('\u000B'.u),
+        Lit('\u000C'.u),
+        Lit('\u000D'.u),
+        Lit('\u0085'.u),
+        Lit('\u2028'.u),
+        Lit('\u2029'.u)
+      ))
   }
 
   def group = "(" ~> ("?" ~ "<".? ~ "[:=!]".r).? ~ regex <~ ")" ^^ {
@@ -235,14 +243,14 @@ class RegexParser extends JavaTokenParsers {
       import Direction._
       import Condition._
       modifiers match {
-        case None => PositionalCaptureGroup(value) // Naked parenthesis
-        case Some(_ ~ None ~ ":") => value // Non-capturing group
-        case Some(_ ~ None ~ "=") => Lookaround(Ahead, Positive, value)
-        case Some(_ ~ None ~ "!") => Lookaround(Ahead, Negative, value)
+        case None                      => PositionalCaptureGroup(value) // Naked parenthesis
+        case Some(_ ~ None ~ ":")      => value // Non-capturing group
+        case Some(_ ~ None ~ "=")      => Lookaround(Ahead, Positive, value)
+        case Some(_ ~ None ~ "!")      => Lookaround(Ahead, Negative, value)
         case Some(_ ~ Some("<") ~ ":") => throw new InvalidRegexException("Invalid grouping: <: ")
         case Some(_ ~ Some("<") ~ "=") => Lookaround(Behind, Positive, value)
         case Some(_ ~ Some("<") ~ "!") => Lookaround(Behind, Negative, value)
-        case _ => throw new AssertionError
+        case _                         => throw new AssertionError
       }
   }
 
@@ -280,27 +288,29 @@ class RegexParser extends JavaTokenParsers {
       Quantification(minVal, Some(minVal))
   }
 
-  def lazyQuantifiedBranch = (regexAtom ~ quantifier ~ "?") ~>
-    failure("reluctant quantifiers are not supported")
+  def lazyQuantifiedBranch =
+    (regexAtom ~ quantifier ~ "?") ~>
+      failure("reluctant quantifiers are not supported")
 
-  def possesivelyQuantifiedBranch = (regexAtom ~ quantifier ~ "+") ~>
-    failure("possessive quantifiers are not supported")
+  def possesivelyQuantifiedBranch =
+    (regexAtom ~ quantifier ~ "+") ~>
+      failure("possessive quantifiers are not supported")
 
   def quantifiedBranch = regexAtom ~ quantifier ^^ {
     case atom ~ (q: Quantification) => Rep(min = q.min, max = q.max, value = atom)
   }
 
   def branch = (lazyQuantifiedBranch | possesivelyQuantifiedBranch | quantifiedBranch | regexAtom).+ ^^ {
-    case Seq() => throw new AssertionError
+    case Seq()      => throw new AssertionError
     case Seq(first) => first
-    case parts => Juxt(parts)
+    case parts      => Juxt(parts)
   }
 
   def emptyRegex = "" ^^^ Juxt(Seq())
 
   def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~> regex).? ^^ {
     case left ~ Some(right) => Disj(Seq(left, right))
-    case left ~ None => left
+    case left ~ None        => left
   }
 
   def regex = nonEmptyRegex | emptyRegex
@@ -312,7 +322,7 @@ object RegexParser {
   def parse(regex: String): RegexTree.Node = {
     val parser = new RegexParser()
     parser.parseAll(parser.regex, regex) match {
-      case parser.Success(ast, next) => ast
+      case parser.Success(ast, next)     => ast
       case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
     }
   }
