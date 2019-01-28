@@ -1,11 +1,14 @@
 package dregex.impl
 
+import java.util.regex.Pattern
+
 import scala.util.parsing.combinator.JavaTokenParsers
 import dregex.InvalidRegexException
 import dregex.impl.UnicodeChar.FromCharConversion
+
 import scala.collection.immutable.Seq
 
-class RegexParser extends JavaTokenParsers {
+class RegexParser(comments: Boolean) extends JavaTokenParsers {
 
   override def skipWhitespace = false
 
@@ -52,6 +55,17 @@ class RegexParser extends JavaTokenParsers {
       failure("unsupported feature: backreferences")
 
   def anchor = ("^" | "$") ~> failure("Unsupported feature: anchors")
+
+  /**
+    * Special ignorable space, only enabled by a special parameter.
+    */
+  def sp = {
+    if (comments) {
+      """\s*""".r ^^^ None // ASCII white space intentionally for Java compatibility
+    } else {
+      "" ^^^ None
+    }
+  }
 
   // Parsers that return a literal Node
 
@@ -238,8 +252,8 @@ class RegexParser extends JavaTokenParsers {
       ))
   }
 
-  def group = "(" ~> ("?" ~ "<".? ~ "[:=!]".r).? ~ regex <~ ")" ^^ {
-    case modifiers ~ value =>
+  def group = "(" ~> ("?" ~ "<".? ~ "[:=!]".r).? ~ sp ~ regex <~ sp ~ ")" ^^ {
+    case modifiers ~ _ ~ value =>
       import Direction._
       import Condition._
       modifiers match {
@@ -296,11 +310,11 @@ class RegexParser extends JavaTokenParsers {
     (regexAtom ~ quantifier ~ "+") ~>
       failure("possessive quantifiers are not supported")
 
-  def quantifiedBranch = regexAtom ~ quantifier ^^ {
-    case atom ~ (q: Quantification) => Rep(min = q.min, max = q.max, value = atom)
+  def quantifiedBranch = regexAtom ~ sp ~ quantifier ^^ {
+    case atom ~ _ ~ (q: Quantification) => Rep(min = q.min, max = q.max, value = atom)
   }
 
-  def branch = (lazyQuantifiedBranch | possesivelyQuantifiedBranch | quantifiedBranch | regexAtom).+ ^^ {
+  def branch = ((lazyQuantifiedBranch | possesivelyQuantifiedBranch | quantifiedBranch | regexAtom) <~ sp).+ ^^ {
     case Seq()      => throw new AssertionError
     case Seq(first) => first
     case parts      => Juxt(parts)
@@ -308,7 +322,7 @@ class RegexParser extends JavaTokenParsers {
 
   def emptyRegex = "" ^^^ Juxt(Seq())
 
-  def nonEmptyRegex: Parser[Node] = branch ~ ("|" ~> regex).? ^^ {
+  def nonEmptyRegex: Parser[Node] = sp ~> branch ~ (sp ~ "|" ~ sp ~> regex).? ^^ {
     case left ~ Some(right) => Disj(Seq(left, right))
     case left ~ None        => left
   }
@@ -319,11 +333,51 @@ class RegexParser extends JavaTokenParsers {
 
 object RegexParser {
 
-  def parse(regex: String): RegexTree.Node = {
-    val parser = new RegexParser()
-    parser.parseAll(parser.regex, regex) match {
-      case parser.Success(ast, next)     => ast
-      case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
+  private val commentPattern = Pattern.compile("""(?<!\\)#[^\n]*""")
+
+  private val embeddedFlagPattern = Pattern.compile("""\(\?([a-z]*)\)""")
+
+  def parse(regex: String, literal: Boolean = false, comments: Boolean = false): RegexTree.Node = {
+    if (literal) {
+      // quoted regexes don't need parsing
+      val literals = regex.map { char =>
+        RegexTree.Lit(UnicodeChar.fromChar(char))
+      }
+      RegexTree.Juxt(literals)
+    } else {
+      // proper regex: parse it
+
+      var effRegex = regex
+
+      // process embedded flags
+      var effComments = comments
+      val matcher = embeddedFlagPattern.matcher(regex)
+      while (matcher.find()) {
+        if (matcher.start > 0) {
+          throw new InvalidRegexException(s"embedded flag are only valid at the beginning of the pattern")
+        }
+        for (flag <- matcher.group(1)) {
+          flag match {
+            case 'x' =>
+              effComments = true
+              effRegex = effRegex.substring(matcher.end)
+            case c =>
+              throw new InvalidRegexException(s"invalid embedded flag: $c")
+          }
+        }
+      }
+
+      // replace comments
+      if (effComments) {
+        effRegex = commentPattern.matcher(effRegex).replaceAll(" ")
+      }
+
+      // parsing proper
+      val parser = new RegexParser(effComments)
+      parser.parseAll(parser.regex, effRegex) match {
+        case parser.Success(ast, next)     => ast
+        case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
+      }
     }
   }
 

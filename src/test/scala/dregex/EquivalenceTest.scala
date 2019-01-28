@@ -1,6 +1,9 @@
 package dregex
 
+import java.util.regex.Pattern
+
 import org.scalatest.FunSuite
+
 import scala.collection.immutable.Seq
 
 class EquivalenceTest extends FunSuite {
@@ -109,7 +112,7 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(a equiv (b union c))
   }
 
-  test("block quotes") {
+  test("block quotes and literal flag") {
     assertResult(true)(equiv("""\Q\E""", ""))
     assertResult(true)(equiv("""\Qabc\E""", "abc"))
     assertResult(true)(equiv("""\Qa*\E""", """a\*"""))
@@ -118,6 +121,10 @@ class EquivalenceTest extends FunSuite {
     assertResult(true)(equiv("""\Q)\E""", """\)"""))
     assertResult(true)(equiv("""(\Q)a\E)""", """\)a"""))
     assertResult(true)(equiv("""\Q|\E""", """\|"""))
+    assertResult(true) {
+      val r = Regex.compile("""a|bc""", flags = Pattern.LITERAL)
+      r.matches("a|bc")
+    }
   }
 
 }

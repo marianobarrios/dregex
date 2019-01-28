@@ -1,5 +1,7 @@
 package dregex
 
+import java.util.regex.Pattern
+
 import dregex.impl.RegexParser
 import dregex.impl.Util
 import dregex.impl.SimpleState
@@ -135,15 +137,21 @@ trait Regex {
 
 }
 
+/**
+  * @define flagsDesc match flags, a bit mask that may include `java.util.regex.Pattern.LITERAL`, and `java.util.regex.Pattern.COMMENTS`.
+  */
 object Regex {
 
   private[this] val logger = LoggerFactory.getLogger(Regex.getClass)
 
   /**
-    * Compile a regex from a string, using it's own [[Universe]].
+    * Compile a regex from a string, using it's own [[Universe]], with the given flags.
+    *
+    * @param flags $flagsDesc
     */
-  def compile(regex: String): CompiledRegex = {
-    val tree = RegexParser.parse(regex)
+  def compile(regex: String, flags: Int): CompiledRegex = {
+    val literal = (flags & Pattern.LITERAL) != 0
+    val tree = RegexParser.parse(regex, literal)
     val (compiled, time) = Util.time {
       new CompiledRegex(regex, tree, new Universe(Seq(tree)))
     }
@@ -152,17 +160,32 @@ object Regex {
   }
 
   /**
-    * Compiles a set of regular expressions in the same [[Universe]]. Java version.
+    * Compiles a set of regular expressions in the same [[Universe]].
     */
-  def compile(regexs: java.util.List[String]): java.util.List[CompiledRegex] = {
+  def compile(regex: String): CompiledRegex = compile(regex, 0)
+
+  /**
+    * Compiles a set of regular expressions in the same [[Universe]], with the given flags. Java version.
+    *
+    * @param flags $flagsDesc
+    */
+  def compile(regexs: java.util.List[String], flags: Int): java.util.List[CompiledRegex] = {
     compile(regexs.asScala.to[Seq]).asJava
   }
 
   /**
-    * Compiles a set of regular expressions in the same [[Universe]]. Scala version.
+    * Compiles a set of regular expressions in the same [[Universe]]. Java version.
     */
-  def compile(regexs: Seq[String]): Seq[CompiledRegex] = {
-    val trees = regexs.map(r => RegexParser.parse(r))
+  def compile(regexs: java.util.List[String]): java.util.List[CompiledRegex] = compile(regexs, 0)
+
+  /**
+    * Compiles a set of regular expressions in the same [[Universe]], with the given flags. Scala version.
+    *
+    * @param flags $flagsDesc
+    */
+  def compile(regexs: Seq[String], flags: Int = 0): Seq[CompiledRegex] = {
+    val literal = (flags & Pattern.LITERAL) != 0
+    val trees = regexs.map(r => RegexParser.parse(r, literal))
     val universe = new Universe(trees)
     for ((regex, tree) <- regexs zip trees) yield {
       val (res, time) = Util.time {
