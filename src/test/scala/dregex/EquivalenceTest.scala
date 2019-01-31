@@ -9,7 +9,7 @@ import scala.collection.immutable.Seq
 class EquivalenceTest extends FunSuite {
 
   private def equiv(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right))
+    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right), Pattern.DOTALL)
     leftCompiled equiv rightCompiled
   }
 

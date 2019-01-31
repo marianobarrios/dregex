@@ -4,11 +4,12 @@ import java.util.regex.Pattern
 
 import scala.util.parsing.combinator.JavaTokenParsers
 import dregex.InvalidRegexException
+import dregex.impl.RegexParser.DotMatch
 import dregex.impl.UnicodeChar.FromCharConversion
 
 import scala.collection.immutable.Seq
 
-class RegexParser(comments: Boolean) extends JavaTokenParsers {
+class RegexParser(comments: Boolean, dotMatch: DotMatch) extends JavaTokenParsers {
 
   override def skipWhitespace = false
 
@@ -272,7 +273,23 @@ class RegexParser(comments: Boolean) extends JavaTokenParsers {
     case name ~ _ ~ value => NamedCaptureGroup(name, value)
   }
 
-  def charWildcard = "." ^^^ Wildcard
+  def charWildcard = "." ^^^ {
+    dotMatch match {
+      case DotMatch.All =>
+        Wildcard
+      case DotMatch.JavaLines =>
+        CharSet(
+          Seq(
+            Lit('\n'.u),
+            Lit('\r'.u),
+            Lit('\u0085'.u),
+            Lit('\u2028'.u),
+            Lit('\u2829'.u)
+          )).complement
+      case DotMatch.UnixLines =>
+        CharSet.fromRange(Lit('\n'.u)).complement
+    }
+  }
 
   def regexAtom =
     quotedLiteral | charLit | charWildcard | charClass | unicodeLineBreak | dashClass | shorthandCharSet | specialCharSet | group | namedGroup
@@ -337,7 +354,18 @@ object RegexParser {
 
   private val embeddedFlagPattern = Pattern.compile("""\(\?([a-z]*)\)""")
 
-  def parse(regex: String, literal: Boolean = false, comments: Boolean = false): RegexTree.Node = {
+  sealed trait DotMatch
+  object DotMatch {
+    case object All extends DotMatch
+    case object JavaLines extends DotMatch
+    case object UnixLines extends DotMatch
+  }
+
+  def parse(
+      regex: String,
+      dotMatch: DotMatch = DotMatch.All,
+      literal: Boolean = false,
+      comments: Boolean = false): RegexTree.Node = {
     if (literal) {
       // quoted regexes don't need parsing
       val literals = regex.map { char =>
@@ -373,7 +401,7 @@ object RegexParser {
       }
 
       // parsing proper
-      val parser = new RegexParser(effComments)
+      val parser = new RegexParser(effComments, dotMatch)
       parser.parseAll(parser.regex, effRegex) match {
         case parser.Success(ast, next)     => ast
         case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)

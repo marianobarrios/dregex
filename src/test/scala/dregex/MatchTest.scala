@@ -1,7 +1,10 @@
 package dregex
 
+import java.util.regex.Pattern
+
 import org.scalatest.FunSuite
 import TestUtil.using
+
 import scala.collection.immutable.Seq
 
 class MatchTest extends FunSuite {
@@ -225,7 +228,7 @@ class MatchTest extends FunSuite {
 
     {
       val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\S""", """[\S]""", """[^\s]""", """\s""", """[\s]""", """[^\S]""", "."))
+        Regex.compile(Seq("""\S""", """[\S]""", """[^\s]""", """\s""", """[\s]""", """[^\S]""", "."), Pattern.DOTALL)
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
       assertResult(true)(a3 equiv a1)
@@ -238,7 +241,7 @@ class MatchTest extends FunSuite {
 
     {
       val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\D""", """[\D]""", """[^\d]""", """\d""", """[\d]""", """[^\D]""", "."))
+        Regex.compile(Seq("""\D""", """[\D]""", """[^\d]""", """\d""", """[\d]""", """[^\D]""", "."), Pattern.DOTALL)
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
       assertResult(true)(a3 equiv a1)
@@ -251,7 +254,7 @@ class MatchTest extends FunSuite {
 
     {
       val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\W""", """[\W]""", """[^\w]""", """\w""", """[\w]""", """[^\W]""", "."))
+        Regex.compile(Seq("""\W""", """[\W]""", """[^\w]""", """\w""", """[\w]""", """[^\W]""", "."), Pattern.DOTALL)
       assertResult(true)(a2 equiv a2)
       assertResult(true)(a2 equiv a3)
       assertResult(true)(a3 equiv a1)

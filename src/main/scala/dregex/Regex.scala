@@ -7,6 +7,7 @@ import dregex.impl.Util
 import dregex.impl.SimpleState
 import dregex.impl.DfaAlgorithms
 import dregex.impl.Dfa
+import dregex.impl.RegexParser.DotMatch
 import org.slf4j.LoggerFactory
 
 import scala.collection.immutable.Seq
@@ -152,6 +153,7 @@ object Regex {
   def compile(regex: String, flags: Int): CompiledRegex = {
     val tree = RegexParser.parse(
       regex,
+      dotMatch = dotMatcherFromFlags(flags),
       literal = (flags & Pattern.LITERAL) != 0,
       comments = (flags & Pattern.COMMENTS) != 0
     )
@@ -160,6 +162,18 @@ object Regex {
     }
     logger.trace("{} compiled in {}", compiled, time: Any)
     compiled
+  }
+
+  private def dotMatcherFromFlags(flags: Int): DotMatch = {
+    if ((flags & Pattern.DOTALL) != 0) {
+      DotMatch.All
+    } else {
+      if ((flags & Pattern.UNIX_LINES) != 0) {
+        DotMatch.UnixLines
+      } else {
+        DotMatch.JavaLines
+      }
+    }
   }
 
   /**
@@ -188,7 +202,11 @@ object Regex {
     */
   def compile(regexs: Seq[String], flags: Int = 0): Seq[CompiledRegex] = {
     val trees = regexs.map { r =>
-      RegexParser.parse(r, literal = (flags & Pattern.LITERAL) != 0, comments = (flags & Pattern.COMMENTS) != 0)
+      RegexParser.parse(
+        r,
+        dotMatch = dotMatcherFromFlags(flags),
+        literal = (flags & Pattern.LITERAL) != 0,
+        comments = (flags & Pattern.COMMENTS) != 0)
     }
     val universe = new Universe(trees)
     for ((regex, tree) <- regexs zip trees) yield {
