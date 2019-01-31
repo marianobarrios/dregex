@@ -150,8 +150,11 @@ object Regex {
     * @param flags $flagsDesc
     */
   def compile(regex: String, flags: Int): CompiledRegex = {
-    val literal = (flags & Pattern.LITERAL) != 0
-    val tree = RegexParser.parse(regex, literal)
+    val tree = RegexParser.parse(
+      regex,
+      literal = (flags & Pattern.LITERAL) != 0,
+      comments = (flags & Pattern.COMMENTS) != 0
+    )
     val (compiled, time) = Util.time {
       new CompiledRegex(regex, tree, new Universe(Seq(tree)))
     }
@@ -184,8 +187,9 @@ object Regex {
     * @param flags $flagsDesc
     */
   def compile(regexs: Seq[String], flags: Int = 0): Seq[CompiledRegex] = {
-    val literal = (flags & Pattern.LITERAL) != 0
-    val trees = regexs.map(r => RegexParser.parse(r, literal))
+    val trees = regexs.map { r =>
+      RegexParser.parse(r, literal = (flags & Pattern.LITERAL) != 0, comments = (flags & Pattern.COMMENTS) != 0)
+    }
     val universe = new Universe(trees)
     for ((regex, tree) <- regexs zip trees) yield {
       val (res, time) = Util.time {
