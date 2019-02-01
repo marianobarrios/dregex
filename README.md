@@ -69,8 +69,8 @@ Unless specified, the regular expression flavor supported attempts to be compati
 
 * [LITERAL](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#LITERAL)
 * [COMMENTS](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#COMMENTS) (also in embedded form: `(?x)`). Note: The flag intentionally behaves ignoring exactly the same set of white space characters as the standard Java implementation, that is, only ASCII white space, not Unicode. 
-* [DOTALL](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#DOTALL)
-* [UNIX_LINES](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNIX_LINES)
+* [DOTALL](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#DOTALL) (also in embedded form: `(?s)`)
+* [UNIX_LINES](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNIX_LINES) (also in embedded form: `(?d)`)
 
 Note: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (with the exception of unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 

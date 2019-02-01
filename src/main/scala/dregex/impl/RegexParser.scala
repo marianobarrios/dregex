@@ -376,6 +376,7 @@ object RegexParser {
       // proper regex: parse it
 
       var effRegex = regex
+      var effDotMatch = dotMatch
 
       // process embedded flags
       var effComments = comments
@@ -386,12 +387,12 @@ object RegexParser {
         }
         for (flag <- matcher.group(1)) {
           flag match {
-            case 'x' =>
-              effComments = true
-              effRegex = effRegex.substring(matcher.end)
-            case c =>
-              throw new InvalidRegexException(s"invalid embedded flag: $c")
+            case 'x' => effComments = true
+            case 's' => effDotMatch = DotMatch.All
+            case 'd' => effDotMatch = DotMatch.UnixLines
+            case c   => throw new InvalidRegexException(s"invalid embedded flag: $c")
           }
+          effRegex = effRegex.substring(matcher.end)
         }
       }
 
@@ -401,7 +402,7 @@ object RegexParser {
       }
 
       // parsing proper
-      val parser = new RegexParser(effComments, dotMatch)
+      val parser = new RegexParser(effComments, effDotMatch)
       parser.parseAll(parser.regex, effRegex) match {
         case parser.Success(ast, next)     => ast
         case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
