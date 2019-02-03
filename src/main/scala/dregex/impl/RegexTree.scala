@@ -99,7 +99,7 @@ object RegexTree {
   }
 
   object CharSet {
-    def fromCharSets(charSets: CharSet*): CharSet = CharSet(charSets.to[Seq].map(_.ranges).flatten)
+    def fromCharSets(charSets: CharSet*): CharSet = CharSet(charSets.to[Seq].flatMap(_.ranges))
     def fromRange(interval: AbstractRange) = CharSet(Seq(interval))
   }
 

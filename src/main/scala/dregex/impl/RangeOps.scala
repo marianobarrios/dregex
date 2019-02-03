@@ -7,12 +7,16 @@ import scala.collection.immutable.IndexedSeq
 
 object RangeOps {
 
+  def diff(left: Seq[AbstractRange], right: Seq[AbstractRange]): Seq[AbstractRange] = {
+    left.flatMap(diff(_, right))
+  }
+
   def diff(left: AbstractRange, right: Seq[AbstractRange]): Seq[AbstractRange] = {
-    right.foldLeft(Seq(left))(diff _)
+    right.foldLeft(Seq(left))(diff)
   }
 
   def diff(left: Seq[AbstractRange], right: AbstractRange): Seq[AbstractRange] = {
-    left.map(diff(_, right)).flatten
+    left.flatMap(diff(_, right))
   }
 
   def diff(left: AbstractRange, right: AbstractRange): Seq[AbstractRange] = {

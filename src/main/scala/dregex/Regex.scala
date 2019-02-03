@@ -155,7 +155,8 @@ object Regex {
       regex,
       dotMatch = dotMatcherFromFlags(flags),
       literal = (flags & Pattern.LITERAL) != 0,
-      comments = (flags & Pattern.COMMENTS) != 0
+      comments = (flags & Pattern.COMMENTS) != 0,
+      unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0
     )
     val (compiled, time) = Util.time {
       new CompiledRegex(regex, tree, new Universe(Seq(tree)))
@@ -206,7 +207,9 @@ object Regex {
         r,
         dotMatch = dotMatcherFromFlags(flags),
         literal = (flags & Pattern.LITERAL) != 0,
-        comments = (flags & Pattern.COMMENTS) != 0)
+        comments = (flags & Pattern.COMMENTS) != 0,
+        unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0
+      )
     }
     val universe = new Universe(trees)
     for ((regex, tree) <- regexs zip trees) yield {

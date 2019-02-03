@@ -9,7 +9,7 @@ import dregex.impl.UnicodeChar.FromCharConversion
 
 import scala.collection.immutable.Seq
 
-class RegexParser(comments: Boolean, dotMatch: DotMatch) extends JavaTokenParsers {
+class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean) extends JavaTokenParsers {
 
   override def skipWhitespace = false
 
@@ -179,7 +179,14 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch) extends JavaTokenParser
   }
 
   def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> "[a-zA-Z ]+".r <~ "}" ^^ { name =>
-    PredefinedCharSets.posixClasses.get(name).orElse(PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
+    val effPosixClasses = {
+      if (unicodeClasses) {
+        PredefinedCharSets.unicodePosixClasses
+      } else {
+        PredefinedCharSets.posixClasses
+      }
+    }
+    effPosixClasses.get(name).orElse(PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
       throw new InvalidRegexException("Invalid POSIX character class: " + name)
     }
   }
@@ -208,14 +215,54 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch) extends JavaTokenParser
     }
   }
 
-  def shorthandCharSet = backslash ~> "[DWSdws]".r ^^ {
-    case "d" => PredefinedCharSets.digit
-    case "D" => PredefinedCharSets.digit.complement
-    case "s" => PredefinedCharSets.space
-    case "S" => PredefinedCharSets.space.complement
-    case "w" => PredefinedCharSets.wordChar
-    case "W" => PredefinedCharSets.wordChar.complement
-    case _   => throw new AssertionError
+  def shorthandCharSet =
+    shorthandCharSetDigit |
+      shorthandCharSetDigitCompl |
+      shorthandCharSetSpace |
+      shorthandCharSetSpaceCompl |
+      shorthandCharSetWord |
+      shorthandCharSetWordCompl
+
+  def shorthandCharSetDigit = backslash ~ "d" ^^^ {
+    if (unicodeClasses)
+      PredefinedCharSets.unicodeDigit
+    else
+      PredefinedCharSets.digit
+  }
+
+  def shorthandCharSetDigitCompl = backslash ~ "D" ^^^ {
+    if (unicodeClasses)
+      PredefinedCharSets.unicodeDigit.complement
+    else
+      PredefinedCharSets.digit.complement
+  }
+
+  def shorthandCharSetSpace = backslash ~ "s" ^^^ {
+    if (unicodeClasses)
+      PredefinedCharSets.unicodeSpace
+    else
+      PredefinedCharSets.space
+  }
+
+  def shorthandCharSetSpaceCompl = backslash ~ "S" ^^^ {
+    if (unicodeClasses)
+      PredefinedCharSets.unicodeSpace.complement
+    else
+      PredefinedCharSets.space.complement
+  }
+
+  def shorthandCharSetWord = backslash ~ "w" ^^^ {
+    if (unicodeClasses)
+      PredefinedCharSets.unicodeWordChar
+    else
+      PredefinedCharSets.wordChar
+  }
+
+  def shorthandCharSetWordCompl = backslash ~ "W" ^^^ {
+    if (unicodeClasses)
+      PredefinedCharSets.unicodeWordChar.complement
+    else
+      PredefinedCharSets.wordChar.complement
   }
 
   def charClass = "[" ~> "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? <~ "]" ^^ {
@@ -365,7 +412,8 @@ object RegexParser {
       regex: String,
       dotMatch: DotMatch = DotMatch.All,
       literal: Boolean = false,
-      comments: Boolean = false): RegexTree.Node = {
+      comments: Boolean = false,
+      unicodeClasses: Boolean = false): RegexTree.Node = {
     if (literal) {
       // quoted regexes don't need parsing
       val literals = regex.map { char =>
@@ -377,6 +425,7 @@ object RegexParser {
 
       var effRegex = regex
       var effDotMatch = dotMatch
+      var effUnicodeClasses = unicodeClasses
 
       // process embedded flags
       var effComments = comments
@@ -390,6 +439,7 @@ object RegexParser {
             case 'x' => effComments = true
             case 's' => effDotMatch = DotMatch.All
             case 'd' => effDotMatch = DotMatch.UnixLines
+            case 'U' => effUnicodeClasses = unicodeClasses
             case c   => throw new InvalidRegexException(s"invalid embedded flag: $c")
           }
           effRegex = effRegex.substring(matcher.end)
@@ -402,7 +452,7 @@ object RegexParser {
       }
 
       // parsing proper
-      val parser = new RegexParser(effComments, effDotMatch)
+      val parser = new RegexParser(effComments, effDotMatch, effUnicodeClasses)
       parser.parseAll(parser.regex, effRegex) match {
         case parser.Success(ast, next)     => ast
         case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)

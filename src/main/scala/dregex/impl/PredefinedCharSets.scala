@@ -137,6 +137,58 @@ object PredefinedCharSets {
     "Space" -> space
   )
 
+  // Unicode version of POSIX-defined character classes
+
+  val unicodeDigit = unicodeBinaryProperties("DIGIT")
+
+  val unicodeSpace = unicodeBinaryProperties("WHITE_SPACE")
+
+  val unicodeGraph = CharSet
+    .fromCharSets(
+      unicodeSpace,
+      unicodeGeneralCategories("Cc"),
+      unicodeGeneralCategories("Cs"),
+      unicodeGeneralCategories("Cn"),
+    )
+    .complement
+
+  val unicodeBlank = CharSet(
+    RangeOps.diff(
+      unicodeSpace.ranges,
+      unicodeGeneralCategories("Zl").ranges ++
+        unicodeGeneralCategories("Zp").ranges ++
+        Seq(CharRange(from = '\u000a'.u, to = '\u000d'.u)) ++ Seq(Lit('\u0085'.u))
+    ))
+
+  val unicodeWordChar = CharSet.fromCharSets(
+    unicodeBinaryProperties("ALPHABETIC"),
+    unicodeGeneralCategories("Mn"),
+    unicodeGeneralCategories("Me"),
+    unicodeGeneralCategories("Mc"),
+    unicodeGeneralCategories("Mn"),
+    unicodeDigit,
+    unicodeGeneralCategories("Pc"),
+    unicodeBinaryProperties("JOIN_CONTROL")
+  )
+
+  val unicodePosixClasses = Map(
+    "Lower" -> unicodeBinaryProperties("LOWERCASE"),
+    "Upper" -> unicodeBinaryProperties("UPPERCASE"),
+    "ASCII" -> posixClasses("ASCII"),
+    "Alpha" -> unicodeBinaryProperties("ALPHABETIC"),
+    "Digit" -> unicodeDigit,
+    "Alnum" -> CharSet.fromCharSets(unicodeBinaryProperties("ALPHABETIC"), unicodeDigit),
+    "Punct" -> unicodeBinaryProperties("PUNCTUATION"),
+    "Graph" -> unicodeGraph,
+    "Print" -> CharSet(
+      RangeOps
+        .diff(CharSet.fromCharSets(unicodeGraph, unicodeBlank).ranges, unicodeGeneralCategories("Cc").ranges)),
+    "Blank" -> unicodeBlank,
+    "Cntrl" -> unicodeGeneralCategories("Cc"),
+    "XDigit" -> CharSet.fromCharSets(unicodeGeneralCategories("Nd"), unicodeBinaryProperties("HEX_DIGIT")),
+    "Space" -> unicodeSpace
+  )
+
   val javaClasses: Map[String, CharSet] = {
     val (ret, elapsed) = Util.time {
       val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
