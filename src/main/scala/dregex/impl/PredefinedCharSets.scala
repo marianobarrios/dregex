@@ -148,7 +148,7 @@ object PredefinedCharSets {
       unicodeSpace,
       unicodeGeneralCategories("Cc"),
       unicodeGeneralCategories("Cs"),
-      unicodeGeneralCategories("Cn"),
+      unicodeGeneralCategories("Cn")
     )
     .complement
 
