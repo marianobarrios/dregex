@@ -57,15 +57,9 @@ Unless specified, the regular expression flavor supported attempts to be compati
 * Block quotes: `\Q`...`\E`
 * Lookaround (lookahead and lookbehind; both positive and negative) (see note below)
 
-### Not supported
+#### Compile flags
 
-* Searching (the engine matches only against the full input string)
-* Capturing groups
-* Backreferences
-* Anchors (`ˆ` and `$`), as they are redundant, as the expressions only operate over the complete text.
-* Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine, as they, by definition, only affect capturing groups, not whether the expressions match or not.
-
-### Compile flags supported
+All compile flags defined by `java.util.regex.Pattern` are supported, including in embedded form.
 
 * [LITERAL](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#LITERAL)
 * [COMMENTS](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#COMMENTS) (also in embedded form: `(?x)`). Note: The flag intentionally behaves ignoring exactly the same set of white space characters as the standard Java implementation, that is, only ASCII white space, not Unicode. 
@@ -74,6 +68,16 @@ Unless specified, the regular expression flavor supported attempts to be compati
 * [UNICODE_CHARACTER_CLASS](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNICODE_CHARACTER_CLASS) (also in embedded form: `(?U)`)
 * [CASE_INSENSITIVE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#CASE_INSENSITIVE) (also in embedded form: `(?i)`)
 * [UNICODE_CASE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNICODE_CASE) (also in embedded form: `(?u)`)
+* [CANON_EQ](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#CANON_EQ)
+
+### Not supported
+
+* Searching (the engine matches only against the full input string)
+* Capturing groups
+* Backreferences
+* Anchors (`ˆ` and `$`), as they are redundant, as the expressions only operate over the complete text.
+* Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine, as they, by definition, only affect capturing groups, not whether the expressions match or not.
+
 
 Note: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (with the exception of unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 

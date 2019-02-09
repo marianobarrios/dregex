@@ -158,7 +158,8 @@ object Regex {
       comments = (flags & Pattern.COMMENTS) != 0,
       unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0,
       caseInsensitive = (flags & Pattern.CASE_INSENSITIVE) != 0,
-      unicodeCase = (flags & Pattern.UNICODE_CASE) != 0
+      unicodeCase = (flags & Pattern.UNICODE_CASE) != 0,
+      canonicalEq = (flags & Pattern.CANON_EQ) != 0
     )
     val (compiled, time) = Util.time {
       new CompiledRegex(regex, tree, new Universe(Seq(tree), norm))
@@ -212,7 +213,8 @@ object Regex {
         comments = (flags & Pattern.COMMENTS) != 0,
         unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0,
         caseInsensitive = (flags & Pattern.CASE_INSENSITIVE) != 0,
-        unicodeCase = (flags & Pattern.UNICODE_CASE) != 0
+        unicodeCase = (flags & Pattern.UNICODE_CASE) != 0,
+        canonicalEq = (flags & Pattern.CANON_EQ) != 0
       )
     }
     val (trees, norms) = compilation.unzip

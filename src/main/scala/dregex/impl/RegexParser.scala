@@ -415,7 +415,8 @@ object RegexParser {
       comments: Boolean = false,
       unicodeClasses: Boolean = false,
       caseInsensitive: Boolean = false,
-      unicodeCase: Boolean = false
+      unicodeCase: Boolean = false,
+      canonicalEq: Boolean = false,
   ): (RegexTree.Node, Normalization) = {
     if (literal) {
       // quoted regexes don't need parsing
@@ -459,7 +460,7 @@ object RegexParser {
       }
 
       // normalize case
-      val normalizer = if (effCaseInsensitive) {
+      var normalizer: Normalization = if (effCaseInsensitive) {
         if (effUnicodeClasses | effUnicodeCase) {
           Normalization.UnicodeLowerCase
         } else {
@@ -467,6 +468,10 @@ object RegexParser {
         }
       } else {
         Normalization.NoNormalization
+      }
+
+      if (canonicalEq) {
+        normalizer = Normalization.combine(Normalization.CanonicalDecomposition, normalizer)
       }
 
       // parsing proper

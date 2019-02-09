@@ -1,9 +1,13 @@
 package dregex.impl
 
+import java.text.Normalizer
+
 import scala.collection.JavaConverters._
 
 sealed trait Normalization {
+
   def normalize(s: CharSequence): CharSequence
+
 }
 
 object Normalization {
@@ -29,6 +33,18 @@ object Normalization {
         builder.append(Character.toLowerCase(codePoint))
       }
       builder.toString
+    }
+  }
+
+  case object CanonicalDecomposition extends Normalization {
+    def normalize(s: CharSequence): String = {
+      Normalizer.normalize(s, Normalizer.Form.NFD)
+    }
+  }
+
+  def combine(first: Normalization, second: Normalization): Normalization = {
+    new Normalization {
+      override def normalize(s: CharSequence) = second.normalize(first.normalize(s))
     }
   }
 
