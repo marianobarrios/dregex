@@ -413,19 +413,24 @@ object RegexParser {
       dotMatch: DotMatch = DotMatch.All,
       literal: Boolean = false,
       comments: Boolean = false,
-      unicodeClasses: Boolean = false): RegexTree.Node = {
+      unicodeClasses: Boolean = false,
+      caseInsensitive: Boolean = false,
+      unicodeCase: Boolean = false
+  ): (RegexTree.Node, Normalization) = {
     if (literal) {
       // quoted regexes don't need parsing
       val literals = regex.map { char =>
         RegexTree.Lit(UnicodeChar.fromChar(char))
       }
-      RegexTree.Juxt(literals)
+      (RegexTree.Juxt(literals), Normalization.NoNormalization)
     } else {
       // proper regex: parse it
 
       var effRegex = regex
       var effDotMatch = dotMatch
       var effUnicodeClasses = unicodeClasses
+      var effCaseInsensitive = caseInsensitive
+      var effUnicodeCase = unicodeCase
 
       // process embedded flags
       var effComments = comments
@@ -439,7 +444,9 @@ object RegexParser {
             case 'x' => effComments = true
             case 's' => effDotMatch = DotMatch.All
             case 'd' => effDotMatch = DotMatch.UnixLines
-            case 'U' => effUnicodeClasses = unicodeClasses
+            case 'U' => effUnicodeClasses = true
+            case 'i' => effCaseInsensitive = true
+            case 'u' => effUnicodeCase = true
             case c   => throw new InvalidRegexException(s"invalid embedded flag: $c")
           }
           effRegex = effRegex.substring(matcher.end)
@@ -451,12 +458,26 @@ object RegexParser {
         effRegex = commentPattern.matcher(effRegex).replaceAll(" ")
       }
 
+      // normalize case
+      val normalizer = if (effCaseInsensitive) {
+        if (effUnicodeClasses | effUnicodeCase) {
+          Normalization.UnicodeLowerCase
+        } else {
+          Normalization.LowerCase
+        }
+      } else {
+        Normalization.NoNormalization
+      }
+
       // parsing proper
       val parser = new RegexParser(effComments, effDotMatch, effUnicodeClasses)
-      parser.parseAll(parser.regex, effRegex) match {
+
+      val tree = parser.parseAll(parser.regex, normalizer.normalize(effRegex)) match {
         case parser.Success(ast, next)     => ast
         case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
       }
+
+      (tree, normalizer)
     }
   }
 

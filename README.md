@@ -72,6 +72,8 @@ Unless specified, the regular expression flavor supported attempts to be compati
 * [DOTALL](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#DOTALL) (also in embedded form: `(?s)`)
 * [UNIX_LINES](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNIX_LINES) (also in embedded form: `(?d)`)
 * [UNICODE_CHARACTER_CLASS](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNICODE_CHARACTER_CLASS) (also in embedded form: `(?U)`)
+* [CASE_INSENSITIVE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#CASE_INSENSITIVE) (also in embedded form: `(?i)`)
+* [UNICODE_CASE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNICODE_CASE) (also in embedded form: `(?u)`)
 
 Note: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (with the exception of unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 

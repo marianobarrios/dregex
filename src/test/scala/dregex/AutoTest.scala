@@ -1,10 +1,11 @@
 package dregex
 
+import dregex.impl.Normalization
 import org.scalatest.FunSuite
 import dregex.impl.Util
 import org.slf4j.LoggerFactory
 
-import scala.collection.immutable.Seq
+import collection.immutable.Seq
 
 /**
   * This test generates possible regex trees, and then generates strings
@@ -24,7 +25,7 @@ class AutoTest extends FunSuite {
       for (tree <- generator.generate(maxDepth = 3)) {
         totalTrees += 1
         val regexString = tree.toRegex
-        val regex = new CompiledRegex(regexString, tree, new Universe(Seq(tree)))
+        val regex = new CompiledRegex(regexString, tree, new Universe(Seq(tree), Normalization.NoNormalization))
         val strings = StringGenerator.generate(tree, maxAlternatives = 3, maxRepeat = 3)
         totalStrings += strings.size
         logger.debug("Testing: {}, generated: {}", regexString, strings.size)

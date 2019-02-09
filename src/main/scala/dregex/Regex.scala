@@ -49,7 +49,7 @@ trait Regex {
     * failure.
     */
   def matchAndReport(string: CharSequence): (Boolean, Int) = {
-    DfaAlgorithms.matchString(dfa, string)
+    DfaAlgorithms.matchString(dfa, universe.normalization.normalize(string))
   }
 
   /**
@@ -151,15 +151,17 @@ object Regex {
     * @param flags $flagsDesc
     */
   def compile(regex: String, flags: Int): CompiledRegex = {
-    val tree = RegexParser.parse(
+    val (tree, norm) = RegexParser.parse(
       regex,
       dotMatch = dotMatcherFromFlags(flags),
       literal = (flags & Pattern.LITERAL) != 0,
       comments = (flags & Pattern.COMMENTS) != 0,
-      unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0
+      unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0,
+      caseInsensitive = (flags & Pattern.CASE_INSENSITIVE) != 0,
+      unicodeCase = (flags & Pattern.UNICODE_CASE) != 0
     )
     val (compiled, time) = Util.time {
-      new CompiledRegex(regex, tree, new Universe(Seq(tree)))
+      new CompiledRegex(regex, tree, new Universe(Seq(tree), norm))
     }
     logger.trace("{} compiled in {}", compiled, time: Any)
     compiled
@@ -202,16 +204,20 @@ object Regex {
     * @param flags $flagsDesc
     */
   def compile(regexs: Seq[String], flags: Int = 0): Seq[CompiledRegex] = {
-    val trees = regexs.map { r =>
+    val compilation = regexs.map { r =>
       RegexParser.parse(
         r,
         dotMatch = dotMatcherFromFlags(flags),
         literal = (flags & Pattern.LITERAL) != 0,
         comments = (flags & Pattern.COMMENTS) != 0,
-        unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0
+        unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0,
+        caseInsensitive = (flags & Pattern.CASE_INSENSITIVE) != 0,
+        unicodeCase = (flags & Pattern.UNICODE_CASE) != 0
       )
     }
-    val universe = new Universe(trees)
+    val (trees, norms) = compilation.unzip
+    // TODO: head?
+    val universe = new Universe(trees, norms.head)
     for ((regex, tree) <- regexs zip trees) yield {
       val (res, time) = Util.time {
         new CompiledRegex(regex, tree, universe)

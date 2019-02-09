@@ -5,13 +5,13 @@ import java.util.regex.Pattern
 import org.scalatest.FunSuite
 import TestUtil.using
 
-import scala.collection.immutable.Seq
+import collection.immutable.Seq
 
 class MatchTest extends FunSuite {
 
   test("character classes - simple") {
 
-    assertResult(false)(Regex.nullRegex(new Universe(Seq())).matchesAtLeastOne())
+    assertResult(false)(Regex.nullRegex(Universe.Empty).matchesAtLeastOne())
 
     using(Regex.compile("")) { r =>
       assertResult(true)(r.matchesAtLeastOne)

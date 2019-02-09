@@ -2,6 +2,7 @@ package dregex
 
 import dregex.impl.RegexTree
 import dregex.impl.CharInterval
+import dregex.impl.Normalization
 
 import scala.collection.immutable.Seq
 
@@ -9,7 +10,7 @@ import scala.collection.immutable.Seq
   * Represent the set of characters that is the union of the sets of characters of a group of regular expressions.
   * Regex must belong to the same Universe to be able to make operations between them.
   */
-class Universe private[dregex] (parsedTrees: Seq[RegexTree.Node]) {
+class Universe private[dregex] (parsedTrees: Seq[RegexTree.Node], val normalization: Normalization) {
 
   import RegexTree._
 
@@ -44,4 +45,8 @@ class Universe private[dregex] (parsedTrees: Seq[RegexTree.Node]) {
     case CharSet(ranges)              => ranges
   }
 
+}
+
+object Universe {
+  val Empty = new Universe(Seq(), Normalization.NoNormalization)
 }

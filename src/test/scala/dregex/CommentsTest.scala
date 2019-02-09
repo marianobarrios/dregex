@@ -10,9 +10,9 @@ class CommentsTest extends FunSuite with Matchers {
 
   test("comments with flag") {
     def equiv(withComments: String, withoutComments: String): Boolean = {
-      val normal = RegexParser.parse(withoutComments)
-      val comments = RegexParser.parse(withComments, comments = true)
-      val universe = new Universe(Seq(normal, comments))
+      val (normal, normNormal) = RegexParser.parse(withoutComments)
+      val (comments, _) = RegexParser.parse(withComments, comments = true)
+      val universe = new Universe(Seq(normal, comments), normNormal)
       val cNormal = new CompiledRegex(withoutComments, normal, universe)
       val cComments = new CompiledRegex(withComments, comments, universe)
       cNormal equiv cComments
