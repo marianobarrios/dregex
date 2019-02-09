@@ -59,7 +59,7 @@ Unless specified, the regular expression flavor supported attempts to be compati
 
 #### Compile flags
 
-All compile flags defined by `java.util.regex.Pattern` are supported, including in embedded form.
+With one exception, all compile flags defined by `java.util.regex.Pattern` are supported, including in embedded form:
 
 * [LITERAL](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#LITERAL)
 * [COMMENTS](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#COMMENTS) (also in embedded form: `(?x)`). Note: The flag intentionally behaves ignoring exactly the same set of white space characters as the standard Java implementation, that is, only ASCII white space, not Unicode. 
@@ -77,9 +77,9 @@ All compile flags defined by `java.util.regex.Pattern` are supported, including 
 * Backreferences
 * Anchors (`ˆ` and `$`), as they are redundant, as the expressions only operate over the complete text.
 * Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine, as they, by definition, only affect capturing groups, not whether the expressions match or not.
+* Compile flag [MULTILINE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#MULTILINE), because it is meaningless for a pure-matching engine, that works always in multi-line mode.
 
-
-Note: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (with the exception of unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
+**Note**: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (with the exception of unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 
 ## Set operations
 

@@ -415,7 +415,8 @@ object RegexParser {
       var unicodeClasses: Boolean = false,
       var caseInsensitive: Boolean = false,
       var unicodeCase: Boolean = false,
-      canonicalEq: Boolean = false
+      canonicalEq: Boolean = false,
+      var multiline: Boolean = false
   )
 
   def parse(regex: String, flags: Flags = Flags()): (RegexTree.Node, Normalization) = {
@@ -442,10 +443,15 @@ object RegexParser {
             case 'U' => flags.unicodeClasses = true
             case 'i' => flags.caseInsensitive = true
             case 'u' => flags.unicodeCase = true
+            case 'm' => flags.multiline = true
             case c   => throw new InvalidRegexException(s"invalid embedded flag: $c")
           }
           effRegex = effRegex.substring(matcher.end)
         }
+      }
+
+      if (flags.multiline) {
+        throw new InvalidRegexException("multiline flag is not supported; this class always works in multiline mode")
       }
 
       // replace comments
