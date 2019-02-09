@@ -408,17 +408,18 @@ object RegexParser {
     case object UnixLines extends DotMatch
   }
 
-  def parse(
-      regex: String,
-      dotMatch: DotMatch = DotMatch.All,
+  case class Flags(
+      var dotMatch: DotMatch = DotMatch.All,
       literal: Boolean = false,
-      comments: Boolean = false,
-      unicodeClasses: Boolean = false,
-      caseInsensitive: Boolean = false,
-      unicodeCase: Boolean = false,
-      canonicalEq: Boolean = false,
-  ): (RegexTree.Node, Normalization) = {
-    if (literal) {
+      var comments: Boolean = false,
+      var unicodeClasses: Boolean = false,
+      var caseInsensitive: Boolean = false,
+      var unicodeCase: Boolean = false,
+      canonicalEq: Boolean = false
+  )
+
+  def parse(regex: String, flags: Flags = Flags()): (RegexTree.Node, Normalization) = {
+    if (flags.literal) {
       // quoted regexes don't need parsing
       val literals = regex.map { char =>
         RegexTree.Lit(UnicodeChar.fromChar(char))
@@ -426,15 +427,8 @@ object RegexParser {
       (RegexTree.Juxt(literals), Normalization.NoNormalization)
     } else {
       // proper regex: parse it
-
       var effRegex = regex
-      var effDotMatch = dotMatch
-      var effUnicodeClasses = unicodeClasses
-      var effCaseInsensitive = caseInsensitive
-      var effUnicodeCase = unicodeCase
-
       // process embedded flags
-      var effComments = comments
       val matcher = embeddedFlagPattern.matcher(regex)
       while (matcher.find()) {
         if (matcher.start > 0) {
@@ -442,12 +436,12 @@ object RegexParser {
         }
         for (flag <- matcher.group(1)) {
           flag match {
-            case 'x' => effComments = true
-            case 's' => effDotMatch = DotMatch.All
-            case 'd' => effDotMatch = DotMatch.UnixLines
-            case 'U' => effUnicodeClasses = true
-            case 'i' => effCaseInsensitive = true
-            case 'u' => effUnicodeCase = true
+            case 'x' => flags.comments = true
+            case 's' => flags.dotMatch = DotMatch.All
+            case 'd' => flags.dotMatch = DotMatch.UnixLines
+            case 'U' => flags.unicodeClasses = true
+            case 'i' => flags.caseInsensitive = true
+            case 'u' => flags.unicodeCase = true
             case c   => throw new InvalidRegexException(s"invalid embedded flag: $c")
           }
           effRegex = effRegex.substring(matcher.end)
@@ -455,13 +449,13 @@ object RegexParser {
       }
 
       // replace comments
-      if (effComments) {
+      if (flags.comments) {
         effRegex = commentPattern.matcher(effRegex).replaceAll(" ")
       }
 
       // normalize case
-      var normalizer: Normalization = if (effCaseInsensitive) {
-        if (effUnicodeClasses | effUnicodeCase) {
+      var normalizer: Normalization = if (flags.caseInsensitive) {
+        if (flags.unicodeClasses | flags.unicodeCase) {
           Normalization.UnicodeLowerCase
         } else {
           Normalization.LowerCase
@@ -470,12 +464,12 @@ object RegexParser {
         Normalization.NoNormalization
       }
 
-      if (canonicalEq) {
+      if (flags.canonicalEq) {
         normalizer = Normalization.combine(Normalization.CanonicalDecomposition, normalizer)
       }
 
       // parsing proper
-      val parser = new RegexParser(effComments, effDotMatch, effUnicodeClasses)
+      val parser = new RegexParser(flags.comments, flags.dotMatch, flags.unicodeClasses)
 
       val tree = parser.parseAll(parser.regex, normalizer.normalize(effRegex)) match {
         case parser.Success(ast, next)     => ast

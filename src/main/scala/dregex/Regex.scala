@@ -145,22 +145,25 @@ object Regex {
 
   private[this] val logger = LoggerFactory.getLogger(Regex.getClass)
 
+  private[this] def flagsFromBits(bits: Int): RegexParser.Flags = {
+    RegexParser.Flags(
+      dotMatch = dotMatcherFromFlags(bits),
+      literal = (bits & Pattern.LITERAL) != 0,
+      comments = (bits & Pattern.COMMENTS) != 0,
+      unicodeClasses = (bits & Pattern.UNICODE_CHARACTER_CLASS) != 0,
+      caseInsensitive = (bits & Pattern.CASE_INSENSITIVE) != 0,
+      unicodeCase = (bits & Pattern.UNICODE_CASE) != 0,
+      canonicalEq = (bits & Pattern.CANON_EQ) != 0
+    )
+  }
+
   /**
     * Compile a regex from a string, using it's own [[Universe]], with the given flags.
     *
     * @param flags $flagsDesc
     */
   def compile(regex: String, flags: Int): CompiledRegex = {
-    val (tree, norm) = RegexParser.parse(
-      regex,
-      dotMatch = dotMatcherFromFlags(flags),
-      literal = (flags & Pattern.LITERAL) != 0,
-      comments = (flags & Pattern.COMMENTS) != 0,
-      unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0,
-      caseInsensitive = (flags & Pattern.CASE_INSENSITIVE) != 0,
-      unicodeCase = (flags & Pattern.UNICODE_CASE) != 0,
-      canonicalEq = (flags & Pattern.CANON_EQ) != 0
-    )
+    val (tree, norm) = RegexParser.parse(regex, flagsFromBits(flags))
     val (compiled, time) = Util.time {
       new CompiledRegex(regex, tree, new Universe(Seq(tree), norm))
     }
@@ -206,16 +209,7 @@ object Regex {
     */
   def compile(regexs: Seq[String], flags: Int = 0): Seq[CompiledRegex] = {
     val compilation = regexs.map { r =>
-      RegexParser.parse(
-        r,
-        dotMatch = dotMatcherFromFlags(flags),
-        literal = (flags & Pattern.LITERAL) != 0,
-        comments = (flags & Pattern.COMMENTS) != 0,
-        unicodeClasses = (flags & Pattern.UNICODE_CHARACTER_CLASS) != 0,
-        caseInsensitive = (flags & Pattern.CASE_INSENSITIVE) != 0,
-        unicodeCase = (flags & Pattern.UNICODE_CASE) != 0,
-        canonicalEq = (flags & Pattern.CANON_EQ) != 0
-      )
+      RegexParser.parse(r, flagsFromBits(flags))
     }
     val (trees, norms) = compilation.unzip
     // TODO: head?
