@@ -2,13 +2,13 @@ package dregex.impl
 
 object AsciiHelper {
 
-  def isUpper(ch: Int) = {
+  def isUpper(ch: Char): Boolean = {
     ch >= 'A' && ch <= 'Z'
   }
 
-  def toLower(ch: Int) = {
+  def toLower(ch: Char): Char = {
     if (isUpper(ch))
-      ch + 0x20
+      (ch + 0x20).toChar
     else
       ch
   }
