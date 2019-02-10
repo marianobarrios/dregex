@@ -2,14 +2,14 @@ package dregex.impl
 
 import java.util.regex.Pattern
 
-import scala.util.parsing.combinator.JavaTokenParsers
 import dregex.InvalidRegexException
 import dregex.impl.RegexParser.DotMatch
 import dregex.impl.UnicodeChar.FromCharConversion
 
 import scala.collection.immutable.Seq
+import scala.util.parsing.combinator.RegexParsers
 
-class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean) extends JavaTokenParsers {
+class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean) extends RegexParsers {
 
   override def skipWhitespace = false
 
