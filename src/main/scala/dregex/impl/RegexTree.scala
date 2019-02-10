@@ -134,7 +134,7 @@ object RegexTree {
         case Direction.Ahead  => ""
         case Direction.Behind => "<"
       }
-      var condStr = cond match {
+      val condStr = cond match {
         case Condition.Negative => "!"
         case Condition.Positive => "="
       }
