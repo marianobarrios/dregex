@@ -194,7 +194,7 @@ object Regex {
     * @param flags $flagsDesc
     */
   def compile(regexs: java.util.List[String], flags: Int): java.util.List[CompiledRegex] = {
-    compile(regexs.asScala.to[Seq]).asJava
+    compile(regexs.asScala.to[Seq], flags).asJava
   }
 
   /**
