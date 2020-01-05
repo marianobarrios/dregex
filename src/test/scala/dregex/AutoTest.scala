@@ -1,8 +1,8 @@
 package dregex
 
 import dregex.impl.Normalization
-import org.scalatest.FunSuite
 import dregex.impl.Util
+import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
 import collection.immutable.Seq
@@ -13,7 +13,7 @@ import collection.immutable.Seq
   * many regex and strings as wanted. Note that this test is designed to
   * catch false negatives, but no false positives.
   */
-class AutoTest extends FunSuite {
+class AutoTest extends AnyFunSuite {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[AutoTest])
 

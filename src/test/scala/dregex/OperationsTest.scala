@@ -3,10 +3,11 @@ package dregex
 import java.util.regex.Pattern
 
 import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import scala.collection.immutable.Seq
 
-class OperationsTest extends FunSuite {
+class OperationsTest extends AnyFunSuite {
 
   private def doIntersect(left: String, right: String): Boolean = {
     val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right), Pattern.DOTALL)

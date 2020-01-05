@@ -1,9 +1,9 @@
 package dregex
 
-import org.scalatest.FunSuite
 import TestUtil.using
+import org.scalatest.funsuite.AnyFunSuite
 
-class UnicodeTest extends FunSuite {
+class UnicodeTest extends AnyFunSuite {
 
   test("astral planes") {
     using(Regex.compile(".")) { r =>

@@ -1,8 +1,8 @@
 package dregex
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class CompileTest extends FunSuite {
+class CompileTest extends AnyFunSuite {
 
   test("compilation") {
     Regex.compile("a" * 2500) // long juxtaposition

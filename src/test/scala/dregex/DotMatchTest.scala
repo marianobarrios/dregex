@@ -2,10 +2,10 @@ package dregex
 
 import java.util.regex.Pattern
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class DotMatchTest extends FunSuite with Matchers {
+class DotMatchTest extends AnyFunSuite with Matchers {
 
   test("dot match modes") {
     assertResult(false)(Regex.compile(".+").matches("a\n"))

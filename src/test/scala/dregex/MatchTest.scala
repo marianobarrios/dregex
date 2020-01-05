@@ -2,12 +2,12 @@ package dregex
 
 import java.util.regex.Pattern
 
-import org.scalatest.FunSuite
 import TestUtil.using
+import org.scalatest.funsuite.AnyFunSuite
 
 import collection.immutable.Seq
 
-class MatchTest extends FunSuite {
+class MatchTest extends AnyFunSuite {
 
   test("character classes - simple") {
 

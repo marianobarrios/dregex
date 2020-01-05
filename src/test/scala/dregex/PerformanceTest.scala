@@ -1,10 +1,11 @@
 package dregex
 
-import org.scalatest.FunSuite
 import dregex.impl.Util
+import org.scalatest.funsuite.AnyFunSuite
+
 import scala.collection.immutable.Seq
 
-class PerformanceTest extends FunSuite {
+class PerformanceTest extends AnyFunSuite {
 
   test("slow regexs") {
     val (regexes, elapsed1) = Util.time {

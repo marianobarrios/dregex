@@ -3,10 +3,10 @@ package dregex
 import java.util.regex.Pattern
 
 import dregex.TestUtil.using
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class CanonicalEqTest extends FunSuite with Matchers {
+class CanonicalEqTest extends AnyFunSuite with Matchers {
 
   test("canonical equivalence") {
 

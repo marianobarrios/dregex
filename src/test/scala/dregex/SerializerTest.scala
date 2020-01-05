@@ -1,14 +1,14 @@
 package dregex
 
-import org.scalatest.FunSuite
 import dregex.impl.RegexParser
 import dregex.impl.Util
+import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
 /**
   * Test the full cycle of serialization and parsing.
   */
-class SerializerTest extends FunSuite {
+class SerializerTest extends AnyFunSuite {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[SerializerTest])
 

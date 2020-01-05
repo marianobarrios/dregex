@@ -1,13 +1,14 @@
 package dregex
 
-import org.scalatest.FunSuite
 import dregex.impl.UnicodeChar
-import org.scalatest.Matchers
 import dregex.impl.RegexTree.CharRange
 import dregex.impl.RangeOps
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
+
 import scala.collection.immutable.Seq
 
-class RangeOpsTest extends FunSuite with Matchers {
+class RangeOpsTest extends AnyFunSuite with Matchers {
 
   implicit def intToUnicodeCharConversion(int: Int) = UnicodeChar(int)
 

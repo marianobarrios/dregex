@@ -1,9 +1,9 @@
 package dregex
 
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class EmbeddedFlagTest extends FunSuite with Matchers {
+class EmbeddedFlagTest extends AnyFunSuite with Matchers {
 
   test("embedded flags") {
     // OK

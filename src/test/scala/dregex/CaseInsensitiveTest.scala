@@ -3,10 +3,10 @@ package dregex
 import java.util.regex.Pattern
 
 import dregex.TestUtil.using
-import org.scalatest.FunSuite
-import org.scalatest.Matchers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.must.Matchers
 
-class CaseInsensitiveTest extends FunSuite with Matchers {
+class CaseInsensitiveTest extends AnyFunSuite with Matchers {
 
   test("case insensitive") {
 
