@@ -150,8 +150,7 @@ object DfaAlgorithms {
     }
     val filteredTransitions = dfa.defTransitions
       .filterKeys(visited) // using set as function
-      .view
-      .force // fix filterKeys laziness
+      .toMap // fix filterKeys laziness
     val filteredAccepting = dfa.accepting
       .filter(visited) // using set as function
     Dfa(initial = dfa.initial, defTransitions = filteredTransitions, accepting = filteredAccepting)
