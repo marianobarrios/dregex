@@ -46,7 +46,7 @@ object StringGenerator {
               break()
           }
         }
-        res
+        res.toSeq
 
       case Juxt(Seq()) =>
         Seq()

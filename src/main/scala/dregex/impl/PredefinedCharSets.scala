@@ -45,7 +45,7 @@ object PredefinedCharSets {
        * that doesn't have any range assigned. Respect Java behavior and make it match nothing.
        */
       blockToSetMap.getOrElse(javaUnicodeBlock, CharSet(Seq()))
-    }
+    }.toMap
   }
 
   val unicodeScripts: Map[String, CharSet] = {
