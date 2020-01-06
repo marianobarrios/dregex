@@ -214,7 +214,13 @@ object DfaAlgorithms {
           newPending += targetState
         char -> targetState
       }
-      pending.enqueue(newPending.toSeq: _*)
+
+      // Use loop to have cross compatibility between Scala 2.12 and 2.13
+      // Replace with "enqueueAll" once minimum version is 2.13
+      for (p <-  newPending) {
+        pending.enqueue(p)
+      }
+
       if (dfaCurrentTrans.nonEmpty)
         dfaTransitions(current) = SortedMap(dfaCurrentTrans.toSeq: _*)
     }
