@@ -1,5 +1,7 @@
 package dregex.impl
 
+import java.util.regex.Pattern
+
 import scala.collection.breakOut
 
 object GeneralCategory {
@@ -45,6 +47,15 @@ object GeneralCategory {
   }
 
   val binaryProperties: Map[String, Int => Boolean] = {
+    try {
+      binaryPropertiesJava8()
+    } catch {
+      case _: ClassNotFoundException =>
+        binaryPropertiesJava11()
+    }
+  }
+
+  private def binaryPropertiesJava8(): Map[String, Int => Boolean] = {
     val unicodePropClass = Class.forName("java.util.regex.UnicodeProp")
     val isMethod = unicodePropClass.getMethod("is", classOf[Int])
     isMethod.setAccessible(true)
@@ -54,6 +65,24 @@ object GeneralCategory {
         isMethod.invoke(enumValue, codePoint.asInstanceOf[Object]).asInstanceOf[Boolean]
       }
       enumValue.name() -> evaluationFn _
+    }(breakOut)
+  }
+
+  private def binaryPropertiesJava11(): Map[String, Int => Boolean] = {
+    val charPredicatesClass = Class.forName("java.util.regex.CharPredicates")
+    val charPredicateClass = classOf[Pattern].getDeclaredClasses.find(c => c.getSimpleName == "CharPredicate").get
+    val isMethod = charPredicateClass.getDeclaredMethod("is", classOf[Int])
+    isMethod.setAccessible(true)
+    val predicates = charPredicatesClass.getDeclaredMethods().filter { m =>
+      m.getReturnType == charPredicateClass && m.getName == m.getName.toUpperCase
+    }
+    predicates.map { m =>
+      m.setAccessible(true)
+      val charPredicate = m.invoke(null)
+      def evaluationFn(codePoint: Int) = {
+        isMethod.invoke(charPredicate, codePoint.asInstanceOf[Object]).asInstanceOf[Boolean]
+      }
+      m.getName -> evaluationFn _
     }(breakOut)
   }
 
