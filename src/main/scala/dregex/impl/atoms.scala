@@ -5,6 +5,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters.setAsJavaSetConverter
 import scala.collection.immutable.Seq
 
+import scala.collection.compat._
+
 /**
   * A single or null char, i.e., including epsilon values
   */
@@ -58,7 +60,7 @@ object CharInterval {
         val end = endSubSet.pollFirst()
         res += CharInterval(from = start, to = end)
       } while (!startSubSet.isEmpty())
-      range -> res.to[Seq]
+      range -> res.to(Seq)
     }
     pairs.toMap
   }

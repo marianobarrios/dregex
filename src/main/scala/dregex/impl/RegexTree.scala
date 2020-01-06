@@ -3,6 +3,8 @@ package dregex.impl
 import scala.runtime.ScalaRunTime
 import scala.collection.immutable.Seq
 
+import scala.collection.compat._
+
 sealed trait Direction
 object Direction {
   case object Behind extends Direction
@@ -99,7 +101,7 @@ object RegexTree {
   }
 
   object CharSet {
-    def fromCharSets(charSets: CharSet*): CharSet = CharSet(charSets.to[Seq].flatMap(_.ranges))
+    def fromCharSets(charSets: CharSet*): CharSet = CharSet(charSets.to(Seq).flatMap(_.ranges))
     def fromRange(interval: AbstractRange) = CharSet(Seq(interval))
   }
 

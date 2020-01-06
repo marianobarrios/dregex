@@ -5,6 +5,8 @@ import dregex.InvalidRegexException
 import scala.collection.mutable.Buffer
 import scala.collection.immutable.Seq
 
+import scala.collection.compat._
+
 /**
   * Take a regex AST and produce a NFA.
   * Except when noted the Thompson-McNaughton-Yamada algorithm is used.
@@ -157,7 +159,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
           prev = int
         }
         transitions ++= fromTreeImpl(last, prev, to)
-        transitions.to[Seq]
+        transitions.to(Seq)
     }
   }
 
@@ -225,7 +227,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         }
         transitions ++= fromTreeImpl(value, prev, to)
         transitions += NfaTransition(prev, to, Epsilon)
-        transitions.to[Seq]
+        transitions.to(Seq)
 
       case Rep(0, Some(m), value) if m > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
@@ -239,7 +241,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         }
         transitions ++= fromTreeImpl(value, prev, to)
         transitions += NfaTransition(prev, to, Epsilon)
-        transitions.to[Seq]
+        transitions.to(Seq)
 
     }
   }
@@ -255,7 +257,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     val result =
       DfaAlgorithms.toNfa(operation(leftDfa, rightDfa))
     result.transitions ++
-      result.accepting.to[Seq].map(acc => NfaTransition(acc, to, Epsilon)) :+
+      result.accepting.to(Seq).map(acc => NfaTransition(acc, to, Epsilon)) :+
       NfaTransition(from, result.initial, Epsilon)
   }
 

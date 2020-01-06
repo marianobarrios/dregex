@@ -9,6 +9,8 @@ import scala.collection.immutable.Seq
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import dregex.impl.Util.StrictSortedMap
 
+import scala.collection.compat._
+
 object DfaAlgorithms {
 
   type BinaryOp[A <: State] = (Dfa[A], Dfa[A]) => Dfa[BiState[A]]
@@ -223,7 +225,7 @@ object DfaAlgorithms {
 
   def reverse[A <: State](dfa: Dfa[A]): Nfa = {
     val initial: State = new SimpleState
-    val first = dfa.accepting.to[Seq].map(s => NfaTransition(initial, s, Epsilon))
+    val first = dfa.accepting.to(Seq).map(s => NfaTransition(initial, s, Epsilon))
     val rest = for {
       (from, fn) <- dfa.defTransitions
       (char, to) <- fn
@@ -231,7 +233,7 @@ object DfaAlgorithms {
       NfaTransition(to, from, char)
     }
     val accepting = Set[State](dfa.initial)
-    Nfa(initial, first ++ rest.to[Seq], accepting)
+    Nfa(initial, first ++ rest.to(Seq), accepting)
   }
 
   /**
@@ -245,7 +247,7 @@ object DfaAlgorithms {
       NfaTransition(state, target, char)
     }
     val accepting: Set[State] = dfa.accepting.asInstanceOf[Set[State]] // fake covariance
-    Nfa(dfa.initial, transitions.to[Seq], accepting)
+    Nfa(dfa.initial, transitions.to(Seq), accepting)
   }
 
   def rewriteWithSimpleStates[A <: State](genericDfa: Dfa[A]): Dfa[SimpleState] = {

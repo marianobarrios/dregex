@@ -60,6 +60,7 @@ scalacOptions := Seq(
 libraryDependencies ++= 
   "org.slf4j" % "slf4j-api" % "1.7.29" ::
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2" ::
+  "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.3" ::
   "org.scalatest" %% "scalatest" % "3.1.0" % Test ::
   "ch.qos.logback" % "logback-classic" % "1.2.3" % Test ::
   Nil

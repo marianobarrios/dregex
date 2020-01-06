@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
 
+import scala.collection.compat._
+
 /**
   * A regular expression, ready to be tested against strings, or to take part in an operation against another.
   * Internally, instances of this type have a DFA (Deterministic Finite Automaton).
@@ -194,7 +196,7 @@ object Regex {
     * @param flags $flagsDesc
     */
   def compile(regexs: java.util.List[String], flags: Int): java.util.List[CompiledRegex] = {
-    compile(regexs.asScala.to[Seq], flags).asJava
+    compile(regexs.asScala.to(Seq), flags).asJava
   }
 
   /**
