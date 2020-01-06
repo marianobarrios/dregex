@@ -2,8 +2,6 @@ package dregex.impl
 
 import java.util.regex.Pattern
 
-import scala.collection.breakOut
-
 object GeneralCategory {
 
   /**
@@ -65,7 +63,7 @@ object GeneralCategory {
         isMethod.invoke(enumValue, codePoint.asInstanceOf[Object]).asInstanceOf[Boolean]
       }
       enumValue.name() -> evaluationFn _
-    }(breakOut)
+    }.toMap
   }
 
   private def binaryPropertiesJava11(): Map[String, Int => Boolean] = {
@@ -83,7 +81,7 @@ object GeneralCategory {
         isMethod.invoke(charPredicate, codePoint.asInstanceOf[Object]).asInstanceOf[Boolean]
       }
       m.getName -> evaluationFn _
-    }(breakOut)
+    }.toMap
   }
 
 }

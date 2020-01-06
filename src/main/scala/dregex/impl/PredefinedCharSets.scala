@@ -8,7 +8,6 @@ import dregex.impl.RegexTree.CharSet
 import dregex.impl.RegexTree.CharRange
 import java.lang.Character.UnicodeBlock
 
-import scala.collection.breakOut
 import java.lang.Character.UnicodeScript
 
 import org.slf4j.LoggerFactory
@@ -35,7 +34,7 @@ object PredefinedCharSets {
       javaBlocks.lift(i).map { block =>
         block -> CharSet.fromRange(CharRange(from.u, to.u))
       }
-    }(breakOut)
+    }.toMap
     val alias =
       Util.getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").asScala.toMap
     alias.mapValues { javaUnicodeBlock =>
