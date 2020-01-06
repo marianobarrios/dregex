@@ -21,8 +21,6 @@ object PredefinedCharSets {
 
   private[this] val logger = LoggerFactory.getLogger(PredefinedCharSets.getClass)
 
-  private val allCodePoints: Seq[Int] = UnicodeChar.min.codePoint to UnicodeChar.max.codePoint
-
   val unicodeBlocks: Map[String, CharSet] = {
     val blockStarts = Util.getPrivateStaticField[Array[Int]](classOf[UnicodeBlock], "blockStarts")
     val javaBlocks = Util.getPrivateStaticField[Array[UnicodeBlock]](classOf[UnicodeBlock], "blocks").toSeq
@@ -76,44 +74,6 @@ object PredefinedCharSets {
         (script.name(), charSet)
     }
     canonicalNames ++ aliases.mapValues(scriptToSetMap)
-  }
-
-  /*
-   * Use a lazy val because collecting the categories and the properties
-   * takes some time: only do it if used. This is because
-   * we don't use a static definition, but iterate over all code points
-   * and evaluate every property and the category.
-   */
-  lazy val (unicodeGeneralCategories, unicodeBinaryProperties): (Map[String, CharSet], Map[String, CharSet]) = {
-    logger.debug(s"initializing Unicode general category and binary property catalog " +
-      s"(testing ${GeneralCategory.binaryProperties.size} properties for ${allCodePoints.size} code points). " +
-      s"This can take some time...")
-    val (ret, elapsed) = Util.time {
-      val categoryBuilder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
-      val propertyBuilder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
-      for (codePoint <- allCodePoints) {
-
-        val char = Lit(codePoint.u)
-
-        // category
-        val categoryJavaId = Character.getType(codePoint).toByte
-        val category = GeneralCategory.categories(categoryJavaId)
-        categoryBuilder.getOrElseUpdate(category, ArrayBuffer()) += char
-        val parentCategory = category.substring(0, 1) // first letter
-        categoryBuilder.getOrElseUpdate(parentCategory, ArrayBuffer()) += char
-
-        // properties
-        for ((prop, fn) <- GeneralCategory.binaryProperties if fn(codePoint)) {
-          propertyBuilder.getOrElseUpdate(prop, ArrayBuffer()) += char
-        }
-
-      }
-      val categorySets = categoryBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
-      val propertySets = propertyBuilder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
-      (categorySets, propertySets)
-    }
-    logger.debug(s"initialized Unicode general category and binary property catalog in $elapsed")
-    ret
   }
 
   val lower = CharSet.fromRange(CharRange(from = 'a'.u, to = 'z'.u))
@@ -195,20 +155,60 @@ object PredefinedCharSets {
   )
 
   /*
-   * Use a lazy val because collecting the categories and the properties
+   * The following members are lazy val because collecting the categories and the properties
    * takes some time: only do it if used. This is because
    * we don't use a static definition, but iterate over all code points
    * and evaluate every property and the category.
    */
-  lazy val javaClasses: Map[String, CharSet] = {
-    logger.debug(s"initializing Java property catalog " +
-      s"(testing ${JavaCharacterProperties.properties.size} properties for ${allCodePoints.size} code points). " +
-      s"This can take some time...")
+
+  lazy val allUnicodeLit: Seq[Lit] = {
+    val (ret, elapsed) = Util.time {
+      for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) yield {
+        Lit(codePoint.u)
+      }
+    }
+    logger.debug(s"initialized ${ret.size} Unicode literals in $elapsed")
+    ret
+  }
+
+  lazy val unicodeGeneralCategories: Map[String, CharSet] = {
     val (ret, elapsed) = Util.time {
       val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
-      for (codePoint <- allCodePoints) {
-        val lit = Lit(codePoint.u)
-        for ((prop, fn) <- JavaCharacterProperties.properties if fn(codePoint)) {
+      for (lit <- allUnicodeLit) {
+        val categoryJavaId = Character.getType(lit.char.codePoint).toByte
+        val category = GeneralCategory.categories(categoryJavaId)
+        builder.getOrElseUpdate(category, ArrayBuffer()) += lit
+        val parentCategory = category.substring(0, 1) // first letter
+        builder.getOrElseUpdate(parentCategory, ArrayBuffer()) += lit
+      }
+      builder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
+    }
+    logger.debug(s"initialized Unicode general category catalog in $elapsed")
+    ret
+  }
+
+  lazy val unicodeBinaryProperties: Map[String, CharSet] = {
+    logger.debug(s"initializing binary property catalog. This can take some time...")
+    val (ret, elapsed) = Util.time {
+      val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
+      for {
+        lit <- allUnicodeLit
+        (prop, fn) <- GeneralCategory.binaryProperties
+        if fn(lit.char.codePoint)
+      } {
+        builder.getOrElseUpdate(prop, ArrayBuffer()) += lit
+      }
+      builder.mapValues(ranges => CharSet(RangeOps.union(ranges.to[Seq]))).toMap
+    }
+    logger.debug(s"initialized binary property catalog in $elapsed")
+    ret
+  }
+
+  lazy val javaClasses: Map[String, CharSet] = {
+    val (ret, elapsed) = Util.time {
+      val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
+      for (lit <- allUnicodeLit) {
+        for ((prop, fn) <- JavaCharacterProperties.properties if fn(lit.char.codePoint)) {
           builder.getOrElseUpdate(prop, ArrayBuffer()) += lit
         }
       }
