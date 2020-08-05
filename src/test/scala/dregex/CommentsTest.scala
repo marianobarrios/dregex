@@ -2,11 +2,10 @@ package dregex
 
 import dregex.impl.RegexParser
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
 import scala.collection.immutable.Seq
 
-class CommentsTest extends AnyFunSuite with Matchers {
+class CommentsTest extends AnyFunSuite {
 
   test("comments with flag") {
     def equiv(withComments: String, withoutComments: String): Boolean = {

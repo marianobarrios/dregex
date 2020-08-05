@@ -4,11 +4,10 @@ import dregex.impl.UnicodeChar
 import dregex.impl.RegexTree.CharRange
 import dregex.impl.RangeOps
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
 import scala.collection.immutable.Seq
 
-class RangeOpsTest extends AnyFunSuite with Matchers {
+class RangeOpsTest extends AnyFunSuite {
 
   implicit def intToUnicodeCharConversion(int: Int) = UnicodeChar(int)
 

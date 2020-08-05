@@ -4,9 +4,8 @@ import java.util.regex.Pattern
 
 import dregex.TestUtil.using
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
-class CaseInsensitiveTest extends AnyFunSuite with Matchers {
+class CaseInsensitiveTest extends AnyFunSuite {
 
   test("case insensitive") {
 

@@ -4,9 +4,8 @@ import java.util.regex.Pattern
 
 import dregex.TestUtil.using
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
-class CanonicalEqTest extends AnyFunSuite with Matchers {
+class CanonicalEqTest extends AnyFunSuite {
 
   test("canonical equivalence") {
 

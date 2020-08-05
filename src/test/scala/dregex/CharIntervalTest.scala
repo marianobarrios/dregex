@@ -4,11 +4,10 @@ import dregex.impl.UnicodeChar
 import dregex.impl.CharInterval
 import dregex.impl.RegexTree.CharRange
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.must.Matchers
 
 import scala.collection.immutable.Seq
 
-class CharIntervalTest extends AnyFunSuite with Matchers {
+class CharIntervalTest extends AnyFunSuite {
 
   implicit def intToUnicodeCharConversion(int: Int) = UnicodeChar(int)
 

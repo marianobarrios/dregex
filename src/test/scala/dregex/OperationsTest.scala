@@ -2,7 +2,6 @@ package dregex
 
 import java.util.regex.Pattern
 
-import org.scalatest.FunSuite
 import org.scalatest.funsuite.AnyFunSuite
 
 import scala.collection.immutable.Seq
