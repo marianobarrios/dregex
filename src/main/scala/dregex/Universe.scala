@@ -40,7 +40,7 @@ class Universe private[dregex] (parsedTrees: Seq[RegexTree.Node], val normalizat
   private[dregex] def collect(ast: Node): Seq[AbstractRange] = ast match {
     // Lookaround is also a ComplexPart, order important
     case Lookaround(dir, cond, value) => collect(value) :+ Wildcard
-    case complex: ComplexPart         => complex.values.map(collect).fold(Seq())(_ union _)
+    case complex: ComplexPart         => complex.values.flatMap(collect)
     case range: AbstractRange         => Seq(range)
     case CharSet(ranges)              => ranges
   }

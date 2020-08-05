@@ -39,7 +39,7 @@ object PredefinedCharSets {
     }.toMap
     val alias =
       Util.getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").asScala.toMap
-    alias.mapValues { javaUnicodeBlock =>
+    alias.view.mapValues { javaUnicodeBlock =>
       /*
        * As of Java 1.8, there exists one deprecated block (UnicodeBlock.SURROGATES_AREA)
        * that doesn't have any range assigned. Respect Java behavior and make it match nothing.
@@ -74,7 +74,7 @@ object PredefinedCharSets {
       case (script, charSet) =>
         (script.name(), charSet)
     }
-    canonicalNames ++ aliases.mapValues(scriptToSetMap)
+    canonicalNames ++ aliases.view.mapValues(scriptToSetMap)
   }
 
   val lower = CharSet.fromRange(CharRange(from = 'a'.u, to = 'z'.u))
@@ -182,7 +182,7 @@ object PredefinedCharSets {
         val parentCategory = category.substring(0, 1) // first letter
         builder.getOrElseUpdate(parentCategory, ArrayBuffer()) += lit
       }
-      builder.mapValues(ranges => CharSet(RangeOps.union(ranges.to(Seq)))).toMap
+      builder.view.mapValues(ranges => CharSet(RangeOps.union(ranges.to(Seq)))).toMap
     }
     logger.debug(s"initialized Unicode general category catalog in $elapsed")
     ret
@@ -199,7 +199,7 @@ object PredefinedCharSets {
       } {
         builder.getOrElseUpdate(prop, ArrayBuffer()) += lit
       }
-      builder.mapValues(ranges => CharSet(RangeOps.union(ranges.to(Seq)))).toMap
+      builder.view.mapValues(ranges => CharSet(RangeOps.union(ranges.to(Seq)))).toMap
     }
     logger.debug(s"initialized binary property catalog in $elapsed")
     ret
@@ -213,7 +213,7 @@ object PredefinedCharSets {
           builder.getOrElseUpdate(prop, ArrayBuffer()) += lit
         }
       }
-      builder.mapValues(ranges => CharSet(RangeOps.union(ranges.to(Seq)))).toMap
+      builder.view.mapValues(ranges => CharSet(RangeOps.union(ranges.to(Seq)))).toMap
     }
     logger.debug(s"initialized Java property catalog in $elapsed")
     ret

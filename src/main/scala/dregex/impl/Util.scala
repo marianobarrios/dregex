@@ -17,6 +17,7 @@ object Util {
       }
       k -> mergedValue
     }
+    // TODO: replace with view.filterKeys when updating Scala version
     merged ++ right.filterKeys(!left.contains(_))
   }
 
@@ -47,6 +48,7 @@ object Util {
   }
 
   def floorEntry[A, B](sortedMap: SortedMap[A, B], key: A): Option[(A, B)] = {
+    // TODO: replace with rangeTo when updating Scala version
     sortedMap.to(key).lastOption
   }
 
