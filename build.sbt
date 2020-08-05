@@ -5,8 +5,8 @@ description := "Deterministic Regular Expression Engine"
 homepage := Some(url("https://github.com/marianobarrios/dregex"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
 
-scalaVersion := "2.13.1"
-crossScalaVersions := Seq("2.11.12", "2.12.10", "2.13.1")
+scalaVersion := "2.13.3"
+crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.3")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
@@ -33,7 +33,6 @@ scalacOptions := Seq(
   "-Xlint:inaccessible",               // Warn about inaccessible types in method signatures.
   "-Xlint:infer-any",                  // Warn when a type argument is inferred to be `Any`.
   "-Xlint:missing-interpolator",       // A string literal appears to be missing an interpolator id.
-  "-Xlint:nullary-override",           // Warn when non-nullary `def f()' overrides nullary `def f'.
   "-Xlint:nullary-unit",               // Warn when nullary methods return Unit.
   "-Xlint:option-implicit",            // Option.apply used implicit view.
   "-Xlint:package-object-classes",     // Class or object defined in package object.
