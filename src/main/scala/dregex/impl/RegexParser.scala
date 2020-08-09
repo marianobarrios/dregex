@@ -421,15 +421,10 @@ object RegexParser {
 
   def parse(regex: String, flags: Flags = Flags()): (RegexTree.Node, Normalization) = {
     if (flags.literal) {
-      // quoted regexes don't need parsing
-      val literals = regex.map { char =>
-        RegexTree.Lit(UnicodeChar.fromChar(char))
-      }
-      (RegexTree.Juxt(literals), Normalization.NoNormalization)
+      parseLiteralRegex(regex)
     } else {
-      // proper regex: parse it
-      var effRegex = regex
       // process embedded flags
+      var effRegex = regex
       val matcher = embeddedFlagPattern.matcher(regex)
       while (matcher.find()) {
         if (matcher.start > 0) {
@@ -449,7 +444,6 @@ object RegexParser {
           effRegex = effRegex.substring(matcher.end)
         }
       }
-
       if (flags.multiline) {
         throw new InvalidRegexException("multiline flag is not supported; this class always works in multiline mode")
       }
@@ -458,32 +452,48 @@ object RegexParser {
       if (flags.comments) {
         effRegex = commentPattern.matcher(effRegex).replaceAll(" ")
       }
-
-      // normalize case
-      var normalizer: Normalization = if (flags.caseInsensitive) {
-        if (flags.unicodeClasses | flags.unicodeCase) {
-          Normalization.UnicodeLowerCase
-        } else {
-          Normalization.LowerCase
-        }
-      } else {
-        Normalization.NoNormalization
-      }
-
-      if (flags.canonicalEq) {
-        normalizer = Normalization.combine(Normalization.CanonicalDecomposition, normalizer)
-      }
-
-      // parsing proper
-      val parser = new RegexParser(flags.comments, flags.dotMatch, flags.unicodeClasses)
-
-      val tree = parser.parseAll(parser.regex, normalizer.normalize(effRegex)) match {
-        case parser.Success(ast, next)     => ast
-        case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
-      }
-
-      (tree, normalizer)
+      parseRegexImpl(effRegex, flags)
     }
+  }
+
+  /**
+    * Parse a quoted regex. They don't really need parsing.
+    */
+  private def parseLiteralRegex(regex: String): (RegexTree.Node, Normalization) = {
+    val literals: Seq[RegexTree.Lit] = regex.map { char =>
+      RegexTree.Lit(UnicodeChar.fromChar(char))
+    }
+    (RegexTree.Juxt(literals), Normalization.NoNormalization)
+  }
+
+  /**
+    * Parse an actual regex that is not a literal.
+    */
+  private def parseRegexImpl(regex: String, flags: Flags): (RegexTree.Node, Normalization) = {
+    // normalize case
+    var normalizer: Normalization = if (flags.caseInsensitive) {
+      if (flags.unicodeClasses | flags.unicodeCase) {
+        Normalization.UnicodeLowerCase
+      } else {
+        Normalization.LowerCase
+      }
+    } else {
+      Normalization.NoNormalization
+    }
+
+    if (flags.canonicalEq) {
+      normalizer = Normalization.combine(Normalization.CanonicalDecomposition, normalizer)
+    }
+
+    // parsing proper
+    val parser = new RegexParser(flags.comments, flags.dotMatch, flags.unicodeClasses)
+
+    val tree: RegexTree.Node = parser.parseAll(parser.regex, normalizer.normalize(regex)) match {
+      case parser.Success(ast, next)     => ast
+      case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
+    }
+
+    (tree, normalizer)
   }
 
 }
