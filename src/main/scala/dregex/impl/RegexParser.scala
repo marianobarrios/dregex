@@ -2,7 +2,7 @@ package dregex.impl
 
 import java.util.regex.Pattern
 
-import dregex.InvalidRegexException
+import dregex.{InvalidRegexException, ParsedRegex}
 import dregex.impl.RegexParser.DotMatch
 import dregex.impl.UnicodeChar.FromCharConversion
 
@@ -419,7 +419,7 @@ object RegexParser {
       var multiline: Boolean = false
   )
 
-  def parse(regex: String, flags: Flags = Flags()): (RegexTree.Node, Normalization) = {
+  def parse(regex: String, flags: Flags = Flags()): ParsedRegex = {
     if (flags.literal) {
       parseLiteralRegex(regex)
     } else {
@@ -459,17 +459,17 @@ object RegexParser {
   /**
     * Parse a quoted regex. They don't really need parsing.
     */
-  private def parseLiteralRegex(regex: String): (RegexTree.Node, Normalization) = {
+  private def parseLiteralRegex(regex: String): ParsedRegex = {
     val literals: Seq[RegexTree.Lit] = regex.map { char =>
       RegexTree.Lit(UnicodeChar.fromChar(char))
     }
-    (RegexTree.Juxt(literals), Normalization.NoNormalization)
+    new ParsedRegex(RegexTree.Juxt(literals), Normalization.NoNormalization)
   }
 
   /**
     * Parse an actual regex that is not a literal.
     */
-  private def parseRegexImpl(regex: String, flags: Flags): (RegexTree.Node, Normalization) = {
+  private def parseRegexImpl(regex: String, flags: Flags): ParsedRegex = {
     // normalize case
     var normalizer: Normalization = if (flags.caseInsensitive) {
       if (flags.unicodeClasses | flags.unicodeCase) {
@@ -493,7 +493,7 @@ object RegexParser {
       case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
     }
 
-    (tree, normalizer)
+    new ParsedRegex (tree, normalizer)
   }
 
 }

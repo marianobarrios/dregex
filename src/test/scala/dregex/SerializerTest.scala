@@ -22,8 +22,8 @@ class SerializerTest extends AnyFunSuite {
         logger.trace("Generated tree: " + canonicalTree)
         val serialized = canonicalTree.toRegex
         logger.debug("Serialized: " + serialized)
-        val (parserTree, _) = RegexParser.parse(serialized)
-        val reparsed = parserTree.canonical
+        val parserRegex = RegexParser.parse(serialized)
+        val reparsed = parserRegex.tree.canonical
         logger.trace("Reparsed: " + reparsed)
         val reserialized = reparsed.toRegex
         logger.trace("Reserialized: " + reserialized)

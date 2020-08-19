@@ -141,7 +141,13 @@ trait Regex {
 }
 
 /**
-  * @define flagsDesc match flags, a bit mask that may include `java.util.regex.Pattern.LITERAL`, and `java.util.regex.Pattern.COMMENTS`.
+  * @define flagsDesc match flags, a bit mask that may include `java.util.regex.Pattern.LITERAL`, and
+  *                   `java.util.regex.Pattern.COMMENTS`.
+  *
+  * @define parseDesc In general, this method is not needed; a call to one of the `compile` methods is usually simpler
+  *                   and more direct. However, there are cases in which the intermediate [[ParsedRegex]]s are needed.
+  *                   Most notably, when caching [[CompiledRegex]] instances (which are in general more expensive to
+  *                   create).
   */
 object Regex {
 
@@ -160,14 +166,58 @@ object Regex {
   }
 
   /**
+    * Parse a regular expression from a string.
+    *
+    * $parseDesc
+    */
+  def parse(regex: String): ParsedRegex = {
+    parse(regex, 0)
+  }
+
+  /**
+    * Parse a regular expression from a string, with the given flags.
+    *
+    * $parseDesc
+    *
+    * @param flags $flagsDesc
+    */
+  def parse(regex: String, flags: Int): ParsedRegex = {
+    RegexParser.parse(regex, flagsFromBits(flags))
+  }
+
+  /**
+    * Parse a set of regular expressions from a string, with the given flags. Scala version.
+    *
+    * $parseDesc
+    *
+    * @param flags $flagsDesc
+    */
+  def parse(regexes: Seq[String], flags: Int = 0): Seq[ParsedRegex] = {
+    regexes.map { r =>
+      parse(r, flags)
+    }
+  }
+
+  /**
+    * Parse a set of regular expressions from a string, with the given flags. Java version.
+    *
+    * $parseDesc
+    *
+    * @param flags $flagsDesc
+    */
+  def parse(regexes: java.util.List[String], flags: Int): java.util.List[ParsedRegex] = {
+    parse(regexes.asScala.to(Seq), flags).asJava
+  }
+
+  /**
     * Compile a regex from a string, using it's own [[Universe]], with the given flags.
     *
     * @param flags $flagsDesc
     */
   def compile(regex: String, flags: Int): CompiledRegex = {
-    val (tree, norm) = RegexParser.parse(regex, flagsFromBits(flags))
+    val parsedRegex = parse(regex, flags)
     val (compiled, time) = Util.time {
-      new CompiledRegex(regex, tree, new Universe(Seq(tree), norm))
+      new CompiledRegex(regex, parsedRegex.tree, new Universe(Seq(parsedRegex.tree), parsedRegex.norm))
     }
     logger.trace("{} compiled in {}", compiled, time: Any)
     compiled
@@ -195,28 +245,25 @@ object Regex {
     *
     * @param flags $flagsDesc
     */
-  def compile(regexs: java.util.List[String], flags: Int): java.util.List[CompiledRegex] = {
-    compile(regexs.asScala.to(Seq), flags).asJava
+  def compile(regexes: java.util.List[String], flags: Int): java.util.List[CompiledRegex] = {
+    compile(regexes.asScala.to(Seq), flags).asJava
   }
 
   /**
     * Compiles a set of regular expressions in the same [[Universe]]. Java version.
     */
-  def compile(regexs: java.util.List[String]): java.util.List[CompiledRegex] = compile(regexs, 0)
+  def compile(regexes: java.util.List[String]): java.util.List[CompiledRegex] = compile(regexes, 0)
 
   /**
     * Compiles a set of regular expressions in the same [[Universe]], with the given flags. Scala version.
     *
     * @param flags $flagsDesc
     */
-  def compile(regexs: Seq[String], flags: Int = 0): Seq[CompiledRegex] = {
-    val compilation = regexs.map { r =>
-      RegexParser.parse(r, flagsFromBits(flags))
-    }
-    val (trees, norms) = compilation.unzip
-    // TODO: head?
+  def compile(regexes: Seq[String], flags: Int = 0): Seq[CompiledRegex] = {
+    val parsedRegexes = parse(regexes, flags)
+    val (trees, norms) = parsedRegexes.map(p => (p.tree, p.norm)).unzip
     val universe = new Universe(trees, norms.head)
-    for ((regex, tree) <- regexs zip trees) yield {
+    for ((regex, tree) <- regexes zip trees) yield {
       val (res, time) = Util.time {
         new CompiledRegex(regex, tree, universe)
       }

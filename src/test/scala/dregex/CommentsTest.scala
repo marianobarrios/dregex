@@ -9,11 +9,11 @@ class CommentsTest extends AnyFunSuite {
 
   test("comments with flag") {
     def equiv(withComments: String, withoutComments: String): Boolean = {
-      val (normal, normNormal) = RegexParser.parse(withoutComments)
-      val (comments, _) = RegexParser.parse(withComments, RegexParser.Flags(comments = true))
-      val universe = new Universe(Seq(normal, comments), normNormal)
-      val cNormal = new CompiledRegex(withoutComments, normal, universe)
-      val cComments = new CompiledRegex(withComments, comments, universe)
+      val normal = RegexParser.parse(withoutComments)
+      val comments = RegexParser.parse(withComments, RegexParser.Flags(comments = true))
+      val universe = new Universe(Seq(normal.tree, comments.tree), normal.norm)
+      val cNormal = new CompiledRegex(withoutComments, normal.tree, universe)
+      val cComments = new CompiledRegex(withComments, comments.tree, universe)
       cNormal equiv cComments
     }
     assert(equiv("a b # comment\nc ", "abc"))
