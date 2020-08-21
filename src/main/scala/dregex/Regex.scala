@@ -210,6 +210,19 @@ object Regex {
   }
 
   /**
+    * Compile a regex parsed using one of the `parse` methods.
+    *
+    * $parseDesc
+    */
+  def compileParsed(parsedRegex: ParsedRegex, universe: Universe): CompiledRegex = {
+    val (res, time) = Util.time {
+      new CompiledRegex(parsedRegex.literal, parsedRegex.tree, universe)
+    }
+    logger.trace("{} compiled in {}", parsedRegex.literal, time: Any)
+    res
+  }
+
+  /**
     * Compile a regex from a string, using it's own [[Universe]], with the given flags.
     *
     * @param flags $flagsDesc
@@ -261,14 +274,9 @@ object Regex {
     */
   def compile(regexes: Seq[String], flags: Int = 0): Seq[CompiledRegex] = {
     val parsedRegexes = parse(regexes, flags)
-    val (trees, norms) = parsedRegexes.map(p => (p.tree, p.norm)).unzip
-    val universe = new Universe(trees, norms.head)
-    for ((regex, tree) <- regexes zip trees) yield {
-      val (res, time) = Util.time {
-        new CompiledRegex(regex, tree, universe)
-      }
-      logger.trace("{} compiled in {}", regex, time: Any)
-      res
+    val universe = new Universe(parsedRegexes.map(_.tree), parsedRegexes.head.norm)
+    for (parsedRegex <- parsedRegexes) yield {
+      compileParsed(parsedRegex, universe)
     }
   }
 

@@ -463,7 +463,7 @@ object RegexParser {
     val literals: Seq[RegexTree.Lit] = regex.map { char =>
       RegexTree.Lit(UnicodeChar.fromChar(char))
     }
-    new ParsedRegex(RegexTree.Juxt(literals), Normalization.NoNormalization)
+    new ParsedRegex(regex, RegexTree.Juxt(literals), Normalization.NoNormalization)
   }
 
   /**
@@ -493,7 +493,7 @@ object RegexParser {
       case parser.NoSuccess((msg, next)) => throw new InvalidRegexException(msg)
     }
 
-    new ParsedRegex (tree, normalizer)
+    new ParsedRegex(regex, tree, normalizer)
   }
 
 }
