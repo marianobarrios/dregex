@@ -7,8 +7,18 @@ import dregex.impl.Normalization
 import scala.collection.immutable.Seq
 
 /**
-  * Represent the set of characters that is the union of the sets of characters of a group of regular expressions.
-  * Regex must belong to the same Universe to be able to make operations between them.
+  * The purpose of this class is to enforce that set operation between regular expressions are only done when it is
+  * legal to do so, that is, when the regex are compatible.
+  *
+  * The way this is enforced is that every compiled regular expression contains a reference to a [[Universe]], and
+  * only expressions with the same universe are allowed to mix in set operation.
+  *
+  * The same [[Universe]] ensures the same "alphabet" and [[Normalization]] rules. Regular expressions compiled as a
+  * group will always have the same universe.
+  *
+  * In general, dealing with this class or calling the constructor is not necessary; a call to one of the `compile`
+  * methods is simpler and more direct. However, there are cases in which the intermediate [[ParsedRegex]]s are
+  * needed. Most notably, when caching [[CompiledRegex]] instances (which are in general more expensive to create).
   */
 class Universe(parsedTrees: Seq[RegexTree.Node], val normalization: Normalization) {
 

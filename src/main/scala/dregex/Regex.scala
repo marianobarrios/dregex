@@ -144,7 +144,7 @@ trait Regex {
   * @define flagsDesc match flags, a bit mask that may include `java.util.regex.Pattern.LITERAL`, and
   *                   `java.util.regex.Pattern.COMMENTS`.
   *
-  * @define parseDesc In general, this method is not needed; a call to one of the `compile` methods is usually simpler
+  * @define parseDesc In general, this method is not necessary; a call to one of the `compile` methods is simpler
   *                   and more direct. However, there are cases in which the intermediate [[ParsedRegex]]s are needed.
   *                   Most notably, when caching [[CompiledRegex]] instances (which are in general more expensive to
   *                   create).
