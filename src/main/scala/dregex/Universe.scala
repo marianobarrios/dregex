@@ -13,8 +13,8 @@ import scala.collection.immutable.Seq
   * The way this is enforced is that every compiled regular expression contains a reference to a [[Universe]], and
   * only expressions with the same universe are allowed to mix in set operation.
   *
-  * The same [[Universe]] ensures the same "alphabet" and [[Normalization]] rules. Regular expressions compiled as a
-  * group will always have the same universe.
+  * The same [[Universe]] ensures the same "alphabet" and normalization rules. Regular expressions
+  * compiled as a group will always have the same universe.
   *
   * In general, dealing with this class or calling the constructor is not necessary; a call to one of the `compile`
   * methods is simpler and more direct. However, there are cases in which the intermediate [[ParsedRegex]]s are
