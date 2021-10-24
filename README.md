@@ -2,7 +2,7 @@
 
 Dregex is a JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, and difference).
 
-[![Build Status](https://travis-ci.org/marianobarrios/dregex.svg?branch=master)](https://travis-ci.org/marianobarrios/dregex)
+[![Build Status](https://github.com/marianobarrios/dregex/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/dregex/actions)
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex_2.12)
 [![Scaladoc](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.12.svg?label=scaladoc)](http://javadoc-badge.appspot.com/com.github.marianobarrios/dregex_2.12)
