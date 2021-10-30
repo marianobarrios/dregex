@@ -45,11 +45,11 @@ scalacOptions := Seq(
 )
 
 libraryDependencies ++= 
-  "org.slf4j" % "slf4j-api" % "1.7.30" ::
+  "org.slf4j" % "slf4j-api" % "1.7.32" ::
   "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2" ::
   "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6" ::
-  "org.scalatest" %% "scalatest-funsuite" % "3.2.0" % Test ::
-  "ch.qos.logback" % "logback-classic" % "1.2.3" % Test ::
+  "org.scalatest" %% "scalatest-funsuite" % "3.2.9" % Test ::
+  "ch.qos.logback" % "logback-classic" % "1.2.6" % Test ::
   Nil
 
 // Do not include src/{main,test}/java in the configuration, to avoid having sbt-eclipse generate them empty
