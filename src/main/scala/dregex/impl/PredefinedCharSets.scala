@@ -31,7 +31,7 @@ object PredefinedCharSets {
         if (i == blockStarts.length - 1)
           UnicodeChar.max.codePoint
         else
-          blockStarts(i + 1)
+          blockStarts(i + 1) - 1
       // skip unassigned blocks
       javaBlocks.lift(i).map { block =>
         block -> CharSet.fromRange(CharRange(from.u, to.u))
