@@ -5,8 +5,8 @@ description := "Deterministic Regular Expression Engine"
 homepage := Some(url("https://github.com/marianobarrios/dregex"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
 
-scalaVersion := "2.13.3"
-crossScalaVersions := Seq("2.11.12", "2.12.12", "2.13.3")
+scalaVersion := "2.13.6"
+crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.6")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
