@@ -133,7 +133,9 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
     case start ~ _ ~ end => CharSet.fromRange(CharRange(start.char, end.char))
   }
 
-  def specialCharSetByName = backslash ~ "p" ~ "{" ~> "[a-z_]+".r ~ "=" ~ "[a-zA-Z ]+".r <~ "}" ^^ {
+  private val unicodeSubsetName = "[0-9a-zA-Z_ -]+".r
+
+  def specialCharSetByName = backslash ~ "p" ~ "{" ~> "[a-z_]+".r ~ "=" ~ unicodeSubsetName <~ "}" ^^ {
     case propName ~ _ ~ propValue =>
       if (propName == "block" || propName == "blk") {
         PredefinedCharSets.unicodeBlocks
@@ -149,7 +151,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
       }
   }
 
-  def specialCharSetWithIs = backslash ~ "p" ~ "{" ~ "Is" ~> "[a-zA-Z_ ]+".r <~ "}" ^^ { name =>
+  def specialCharSetWithIs = backslash ~ "p" ~ "{" ~ "Is" ~> unicodeSubsetName <~ "}" ^^ { name =>
     /*
      * If the property starts with "Is" it could be either a script,
      * general category or a binary property. Look for all.
@@ -163,12 +165,12 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
       }
   }
 
-  def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~> "[a-zA-Z ]+".r <~ "}" ^^ { blockName =>
+  def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~> unicodeSubsetName <~ "}" ^^ { blockName =>
     PredefinedCharSets.unicodeBlocks
       .getOrElse(blockName.toUpperCase(), throw new InvalidRegexException("Invalid Unicode block: " + blockName))
   }
 
-  def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~> "[a-zA-Z ]+".r <~ "}" ^^ { charClass =>
+  def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~> unicodeSubsetName <~ "}" ^^ { charClass =>
     PredefinedCharSets.javaClasses.getOrElse(
       charClass,
       throw new InvalidRegexException(
@@ -178,7 +180,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
     )
   }
 
-  def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> "[a-zA-Z ]+".r <~ "}" ^^ { name =>
+  def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> unicodeSubsetName <~ "}" ^^ { name =>
     val effPosixClasses = {
       if (unicodeClasses) {
         PredefinedCharSets.unicodePosixClasses

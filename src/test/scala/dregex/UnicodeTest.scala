@@ -1,9 +1,13 @@
 package dregex
 
 import TestUtil.using
+import dregex.impl.{PredefinedCharSets, UnicodeChar}
 import org.scalatest.funsuite.AnyFunSuite
+import org.slf4j.LoggerFactory
 
 class UnicodeTest extends AnyFunSuite {
+
+  private[this] val logger = LoggerFactory.getLogger(classOf[UnicodeTest])
 
   test("astral planes") {
     using(Regex.compile(".")) { r =>
@@ -85,6 +89,22 @@ class UnicodeTest extends AnyFunSuite {
     using(Regex.compile("""\p{blk=Greek}""")) { r =>
       assertResult(true)(r.matches("α"))
       assertResult(false)(r.matches("a"))
+    }
+
+    /*
+     * Exhaustively test all combinations of Unicode blocks and code points against
+     * the java.util.regex implementation.
+     */
+    for (block <- PredefinedCharSets.unicodeBlocks.keys.toSeq.sorted) {
+      logger.debug("testing Unicode block {}...", block)
+      // a regex that matches any character of the block
+      val regexString = f"\\p{block=$block}"
+      val regex = Regex.compile(regexString)
+      val javaRegex = java.util.regex.Pattern.compile(regexString)
+      for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+        val codePointAsString = new String(Array(codePoint), 0, 1)
+        assert(regex.matches(codePointAsString) == javaRegex.matcher(codePointAsString).matches())
+      }
     }
 
   }
