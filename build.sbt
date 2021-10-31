@@ -1,3 +1,5 @@
+import sbt.Keys.scalacOptions
+
 organization := "com.github.marianobarrios"
 name := "dregex"
 version := "0.7.0-SNAPSHOT"
@@ -46,24 +48,24 @@ scalacOptions := Seq(
 
 libraryDependencies ++= 
   "org.slf4j" % "slf4j-api" % "1.7.32" ::
-  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2" ::
-  "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6" ::
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "2.0.0" ::
+  "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0" ::
   "org.scalatest" %% "scalatest-funsuite" % "3.2.9" % Test ::
   "ch.qos.logback" % "logback-classic" % "1.2.6" % Test ::
   Nil
 
 // Do not include src/{main,test}/java in the configuration, to avoid having sbt-eclipse generate them empty
-unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
-unmanagedSourceDirectories in Test := (scalaSource in Test).value :: Nil
+Compile / unmanagedSourceDirectories := (Compile / scalaSource).value :: Nil
+Test / unmanagedSourceDirectories := (Test / scalaSource).value :: Nil
 
-scalacOptions in (Compile, doc) ++= Seq(
+Compile / doc / scalacOptions ++= Seq(
   "-doc-root-content", baseDirectory.value + "/root-doc.txt",
   "-skip-packages", "dregex.impl:dregex.extra",
 ) 
 
-testOptions in Test += Tests.Argument("-oF")
-parallelExecution in Test := false 
-fork in Test := true
+Test / testOptions += Tests.Argument("-oF")
+Test / parallelExecution := false
+Test / fork := true
 
 publishMavenStyle := true
 
