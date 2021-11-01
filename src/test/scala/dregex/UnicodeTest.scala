@@ -5,6 +5,8 @@ import dregex.impl.{PredefinedCharSets, UnicodeChar}
 import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
+import java.lang.Character.UnicodeScript
+
 class UnicodeTest extends AnyFunSuite {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[UnicodeTest])
@@ -136,6 +138,35 @@ class UnicodeTest extends AnyFunSuite {
     using(Regex.compile("""\p{sc=Greek}""")) { r =>
       assertResult(true)(r.matches("α"))
       assertResult(false)(r.matches("a"))
+    }
+
+    /*
+     * Exhaustively test all combinations of Unicode scripts and code points against
+     * the java.util.regex implementation.
+     */
+    for (script <- PredefinedCharSets.unicodeScripts.keys.toSeq.sorted) {
+      val scriptExistsInJava = try {
+        val javaScript = Character.UnicodeScript.forName(script)
+        javaScript != UnicodeScript.UNKNOWN
+      } catch {
+        case _: IllegalArgumentException => false
+      }
+      if (scriptExistsInJava) {
+        logger.debug("testing Unicode script {}...", script)
+        // a regex that matches any character of the block
+        val regexString = f"\\p{script=$script}"
+        val regex = Regex.compile(regexString)
+        val javaRegex = java.util.regex.Pattern.compile(regexString)
+        for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+          if (UnicodeScript.of(codePoint) != UnicodeScript.UNKNOWN) {
+            val codePointAsString = new String(Array(codePoint), 0, 1)
+            assert(regex.matches(codePointAsString) == javaRegex.matcher(codePointAsString).matches(),
+              s"- script: $script; java script: ${UnicodeScript.of(codePoint)}; code point: ${String.format("0x%04X", Int.box(codePoint))}")
+          }
+        }
+      } else {
+        logger.debug("skipping Unicode script {} as it's not present in the current Java version", script)
+      }
     }
 
   }
