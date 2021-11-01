@@ -6,16 +6,15 @@ import dregex.impl.UnicodeChar.FromCharConversion
 import dregex.impl.UnicodeChar.FromIntConversion
 import dregex.impl.RegexTree.CharSet
 import dregex.impl.RegexTree.CharRange
-import java.lang.Character.UnicodeBlock
-
-import java.lang.Character.UnicodeScript
 
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.JavaConverters.mapAsScalaMapConverter
+
+// [CROSS-BUILD] For immutable collections in Scala < 2.13
 import scala.collection.immutable.Seq
 
+// [CROSS-BUILD] For mapValues in Scala < 2.13
 import scala.collection.compat._
 
 object PredefinedCharSets {
@@ -23,58 +22,25 @@ object PredefinedCharSets {
   private[this] val logger = LoggerFactory.getLogger(PredefinedCharSets.getClass)
 
   val unicodeBlocks: Map[String, CharSet] = {
-    val blockStarts = Util.getPrivateStaticField[Array[Int]](classOf[UnicodeBlock], "blockStarts")
-    val javaBlocks = Util.getPrivateStaticField[Array[UnicodeBlock]](classOf[UnicodeBlock], "blocks").toSeq
-    val blockToSetMap: Map[UnicodeBlock, CharSet] = blockStarts.indices.flatMap { i =>
-      val from = blockStarts(i)
-      val to =
-        if (i == blockStarts.length - 1)
-          UnicodeChar.max.codePoint
-        else
-          blockStarts(i + 1) - 1
-      // skip unassigned blocks
-      javaBlocks.lift(i).map { block =>
-        block -> CharSet.fromRange(CharRange(from.u, to.u))
+    val ret = collection.mutable.Map[String, CharSet]()
+    for ((blocks, (from, to)) <- UnicodeDatabase.blocksRanges) {
+      val charSet = CharSet.fromRange(CharRange(from.u, to.u))
+      for (block <- blocks) {
+        ret.put(block, charSet)
       }
-    }.toMap
-    val alias =
-      Util.getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").asScala.toMap
-    alias.view.mapValues { javaUnicodeBlock =>
-      /*
-       * As of Java 1.8, there exists one deprecated block (UnicodeBlock.SURROGATES_AREA)
-       * that doesn't have any range assigned. Respect Java behavior and make it match nothing.
-       */
-      blockToSetMap.getOrElse(javaUnicodeBlock, CharSet(Seq()))
-    }.toMap
+    }
+    ret.toMap
   }
 
   val unicodeScripts: Map[String, CharSet] = {
-    val scriptStarts = Util.getPrivateStaticField[Array[Int]](classOf[UnicodeScript], "scriptStarts")
-    val javaScripts = Util.getPrivateStaticField[Array[UnicodeScript]](classOf[UnicodeScript], "scripts").toSeq
-    val scriptToSetMap = {
-      val builder = collection.mutable.Map[UnicodeScript, CharSet]()
-      for (i <- scriptStarts.indices) {
-        val from = scriptStarts(i)
-        val to =
-          if (i == scriptStarts.length - 1)
-            UnicodeChar.max.codePoint
-          else
-            scriptStarts(i + 1) - 1
-        // skip unassigned scripts
-        javaScripts.lift(i).foreach { script =>
-          val CharSet(existing) = builder.getOrElse(script, CharSet(Seq()))
-          builder.put(script, CharSet(existing :+ CharRange(from.u, to.u)))
-        }
+    val ret = collection.mutable.Map[String, CharSet]()
+    for ((blocks, ranges) <- UnicodeDatabase.scriptRanges) {
+      val chatSet = CharSet(ranges.map(range => CharRange(range._1.u, range._2.u)))
+      for (block <- blocks) {
+        ret.put(block, chatSet)
       }
-      builder.toMap
     }
-    val aliases =
-      Util.getPrivateStaticField[java.util.Map[String, UnicodeScript]](classOf[UnicodeScript], "aliases").asScala.toMap
-    val canonicalNames = scriptToSetMap.map {
-      case (script, charSet) =>
-        (script.name(), charSet)
-    }
-    canonicalNames ++ aliases.view.mapValues(scriptToSetMap)
+    ret.toMap
   }
 
   val lower = CharSet.fromRange(CharRange(from = 'a'.u, to = 'z'.u))

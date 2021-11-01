@@ -6,6 +6,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
 import java.lang.Character.UnicodeScript
+import scala.util.control.Breaks._
 
 class UnicodeTest extends AnyFunSuite {
 
@@ -98,14 +99,23 @@ class UnicodeTest extends AnyFunSuite {
      * the java.util.regex implementation.
      */
     for (block <- PredefinedCharSets.unicodeBlocks.keys.toSeq.sorted) {
-      logger.debug("testing Unicode block {}...", block)
-      // a regex that matches any character of the block
-      val regexString = f"\\p{block=$block}"
-      val regex = Regex.compile(regexString)
-      val javaRegex = java.util.regex.Pattern.compile(regexString)
-      for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
-        val codePointAsString = new String(Array(codePoint), 0, 1)
-        assert(regex.matches(codePointAsString) == javaRegex.matcher(codePointAsString).matches())
+      val blockExistsInJava = try {
+        Character.UnicodeBlock.forName(block); true
+      } catch {
+        case _: IllegalArgumentException => false
+      }
+      if (blockExistsInJava) {
+        logger.debug("testing Unicode block {}...", block)
+        // a regex that matches any character of the block
+        val regexString = f"\\p{block=$block}"
+        val regex = Regex.compile(regexString)
+        val javaRegex = java.util.regex.Pattern.compile(regexString)
+        for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+          val codePointAsString = new String(Array(codePoint), 0, 1)
+          assert(regex.matches(codePointAsString) == javaRegex.matcher(codePointAsString).matches())
+        }
+      } else {
+        logger.debug("skipping Unicode block {} as it's not present in the current Java version", block)
       }
     }
 
@@ -146,8 +156,7 @@ class UnicodeTest extends AnyFunSuite {
      */
     for (script <- PredefinedCharSets.unicodeScripts.keys.toSeq.sorted) {
       val scriptExistsInJava = try {
-        val javaScript = Character.UnicodeScript.forName(script)
-        javaScript != UnicodeScript.UNKNOWN
+        Character.UnicodeScript.forName(script); true
       } catch {
         case _: IllegalArgumentException => false
       }
@@ -158,7 +167,18 @@ class UnicodeTest extends AnyFunSuite {
         val regex = Regex.compile(regexString)
         val javaRegex = java.util.regex.Pattern.compile(regexString)
         for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
-          if (UnicodeScript.of(codePoint) != UnicodeScript.UNKNOWN) {
+          breakable {
+            // A few code points were removed from scripts as Java versions evolved, ignore them
+            codePoint match {
+              case 0xA92E | 0xA9CF | 0x0953 | 0x0954 => break()
+              case _ =>
+            }
+            // As code points are added to scripts, this test count fail, so we not assert when the
+            // code points are not assigned in Java (it can just be an old version).
+            val javaScript = UnicodeScript.of(codePoint)
+            if (javaScript == UnicodeScript.UNKNOWN || javaScript == UnicodeScript.COMMON) {
+              break()
+            }
             val codePointAsString = new String(Array(codePoint), 0, 1)
             assert(regex.matches(codePointAsString) == javaRegex.matcher(codePointAsString).matches(),
               s"- script: $script; java script: ${UnicodeScript.of(codePoint)}; code point: ${String.format("0x%04X", Int.box(codePoint))}")
