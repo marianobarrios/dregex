@@ -9,8 +9,17 @@ jobs:
         scala-version: [ "2.11.12", "2.12.15", "2.13.6" ]
     steps:
       - uses: actions/checkout@v2
+
       - uses: actions/setup-java@v2
         with:
           distribution: adopt
           java-version: ${{ matrix.java-version }}
-      - run: sbt ++${{ matrix.scala-version }} -v +test
+
+      - name: build
+        run: sbt ++${{ matrix.scala-version }} -v +test
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: test-log (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }})
+          path: ${{ github.workspace }}/dregex-test.log
+          if-no-files-found: error
