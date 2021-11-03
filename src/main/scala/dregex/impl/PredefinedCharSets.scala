@@ -59,7 +59,7 @@ object PredefinedCharSets {
           if (i == scriptStarts.length - 1)
             UnicodeChar.max.codePoint
           else
-            scriptStarts(i + 1)
+            scriptStarts(i + 1) - 1
         // skip unassigned scripts
         javaScripts.lift(i).foreach { script =>
           val CharSet(existing) = builder.getOrElse(script, CharSet(Seq()))

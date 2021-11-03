@@ -19,7 +19,7 @@ jobs:
         run: sbt ++${{ matrix.scala-version }} -v +test
 
       - uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: test-log (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }})
           path: ${{ github.workspace }}/dregex-test.log
-          if-no-files-found: error
