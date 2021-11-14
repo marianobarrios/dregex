@@ -61,7 +61,7 @@ Test / unmanagedSourceDirectories := (Test / scalaSource).value :: Nil
 Compile / doc / scalacOptions ++= Seq(
   "-doc-root-content", baseDirectory.value + "/root-doc.txt",
   "-skip-packages", "dregex.impl:dregex.extra",
-) 
+)
 
 Test / testOptions += Tests.Argument("-oF")
 Test / parallelExecution := false
