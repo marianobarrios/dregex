@@ -1,7 +1,5 @@
 package dregex.impl
 
-import java.util.regex.Pattern
-
 object GeneralCategory {
 
   /**
@@ -44,44 +42,67 @@ object GeneralCategory {
     )
   }
 
-  val binaryProperties: Map[String, Int => Boolean] = {
-    try {
-      binaryPropertiesJava8()
-    } catch {
-      case _: ClassNotFoundException =>
-        binaryPropertiesJava11()
-    }
+  val binaryProperties: Map[String, Int => Boolean] = Map(
+    "ALPHABETIC" -> Character.isAlphabetic,
+    "DIGIT" -> Character.isDigit,
+    "LETTER" -> Character.isLetter,
+    "IDEOGRAPHIC" -> Character.isIdeographic,
+    "LOWERCASE" -> Character.isLowerCase,
+    "UPPERCASE" -> Character.isUpperCase,
+    "TITLECASE" -> Character.isTitleCase,
+    "WHITE_SPACE" -> isPropertyWhiteSpace,
+    "CONTROL" -> isCharacterControl,
+    "PUNCTUATION" -> isPropertyPunctuation,
+    "HEX_DIGIT" -> isPropertyHexDigit,
+    "ASSIGNED" -> ((ch: Int) => Character.getType(ch) != Character.UNASSIGNED),
+    "NONCHARACTER_CODE_POINT" -> ((ch: Int) => (ch & 0xfffe) == 0xfffe || (ch >= 0xfdd0 && ch <= 0xfdef)),
+    "ALNUM" -> ((ch: Int) => Character.isAlphabetic(ch) || Character.isDigit(ch)),
+    "BLANK" -> isPropertyBlank,
+    "GRAPH" -> isPropertyGraph,
+    "PRINT" ->  ((ch: Int) => (isPropertyGraph(ch) || isPropertyBlank(ch)) && !isCharacterControl(ch)),
+    "JOIN_CONTROL" -> isPropertyJoinControl,
+    "WORD" -> isPropertyWord
+  )
+
+  private def isPropertyWhiteSpace(ch: Int) = {
+    val t = Character.getType(ch)
+    import Character._
+    val isWhiteSpaceCat = t == SPACE_SEPARATOR || t == LINE_SEPARATOR || t == PARAGRAPH_SEPARATOR
+    isWhiteSpaceCat || (ch >= 0x9 && ch <= 0xd) || (ch == 0x85)
   }
 
-  private def binaryPropertiesJava8(): Map[String, Int => Boolean] = {
-    val unicodePropClass = Class.forName("java.util.regex.UnicodeProp")
-    val isMethod = unicodePropClass.getMethod("is", classOf[Int])
-    isMethod.setAccessible(true)
-    unicodePropClass.getEnumConstants.map { value =>
-      val enumValue = value.asInstanceOf[Enum[_ <: Enum[_]]]
-      def evaluationFn(codePoint: Int) = {
-        isMethod.invoke(enumValue, codePoint.asInstanceOf[Object]).asInstanceOf[Boolean]
-      }
-      enumValue.name() -> evaluationFn _
-    }.toMap
+  private def isCharacterControl(ch: Int) = {
+    Character.getType(ch) == Character.CONTROL
   }
 
-  private def binaryPropertiesJava11(): Map[String, Int => Boolean] = {
-    val charPredicatesClass = Class.forName("java.util.regex.CharPredicates")
-    val charPredicateClass = classOf[Pattern].getDeclaredClasses.find(c => c.getSimpleName == "CharPredicate").get
-    val isMethod = charPredicateClass.getDeclaredMethod("is", classOf[Int])
-    isMethod.setAccessible(true)
-    val predicates = charPredicatesClass.getDeclaredMethods().filter { m =>
-      m.getReturnType == charPredicateClass && m.getName == m.getName.toUpperCase
-    }
-    predicates.map { m =>
-      m.setAccessible(true)
-      val charPredicate = m.invoke(null)
-      def evaluationFn(codePoint: Int) = {
-        isMethod.invoke(charPredicate, codePoint.asInstanceOf[Object]).asInstanceOf[Boolean]
-      }
-      m.getName -> evaluationFn _
-    }.toMap
+  private def isPropertyPunctuation(ch: Int) = {
+    val t = Character.getType(ch)
+    import Character._
+    t == CONNECTOR_PUNCTUATION || t == DASH_PUNCTUATION || t == START_PUNCTUATION || t == END_PUNCTUATION || t == OTHER_PUNCTUATION || t == INITIAL_QUOTE_PUNCTUATION || t == FINAL_QUOTE_PUNCTUATION
+  }
+
+  private def isPropertyHexDigit(ch: Int) = {
+    Character.isDigit(ch) || (ch >= 0x0030 && ch <= 0x0039) || (ch >= 0x0041 && ch <= 0x0046) || (ch >= 0x0061 && ch <= 0x0066) || (ch >= 0xFF10 && ch <= 0xFF19) || (ch >= 0xFF21 && ch <= 0xFF26) || (ch >= 0xFF41 && ch <= 0xFF46)
+  }
+
+  private def isPropertyBlank(ch: Int) = {
+    Character.getType(ch) == Character.SPACE_SEPARATOR || ch == 0x9 // \N{HT}
+  }
+
+  private def isPropertyGraph(ch: Int) = {
+    val t = Character.getType(ch)
+    import Character._
+    t == SPACE_SEPARATOR || t == LINE_SEPARATOR || t == PARAGRAPH_SEPARATOR || t == CONTROL || t == SURROGATE || t == UNASSIGNED
+  }
+
+  private def isPropertyJoinControl(ch: Int) = {
+    ch == 0x200C || ch == 0x200D
+  }
+
+  private def isPropertyWord(ch: Int) = {
+    val t = Character.getType(ch)
+    import Character._
+    Character.isAlphabetic(ch) || t == NON_SPACING_MARK || t == ENCLOSING_MARK || t == COMBINING_SPACING_MARK || t == DECIMAL_DIGIT_NUMBER || t == CONNECTOR_PUNCTUATION || isPropertyJoinControl(ch)
   }
 
 }
