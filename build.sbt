@@ -7,8 +7,8 @@ description := "Deterministic Regular Expression Engine"
 homepage := Some(url("https://github.com/marianobarrios/dregex"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
 
-scalaVersion := "2.13.6"
-crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.6")
+scalaVersion := "2.13.7"
+crossScalaVersions := Seq("2.11.12", "2.12.15", "2.13.7")
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
@@ -49,9 +49,9 @@ scalacOptions := Seq(
 libraryDependencies ++= 
   "org.slf4j" % "slf4j-api" % "1.7.32" ::
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.0.0" ::
-  "org.scala-lang.modules" %% "scala-collection-compat" % "2.5.0" ::
+  "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0" ::
   "org.scalatest" %% "scalatest-funsuite" % "3.2.9" % Test ::
-  "ch.qos.logback" % "logback-classic" % "1.2.6" % Test ::
+  "ch.qos.logback" % "logback-classic" % "1.2.9" % Test ::
   Nil
 
 // Do not include src/{main,test}/java in the configuration, to avoid having sbt-eclipse generate them empty
