@@ -2,7 +2,7 @@ import sbt.Keys.scalacOptions
 
 organization := "com.github.marianobarrios"
 name := "dregex"
-version := "0.7.0-SNAPSHOT"
+version := "0.7.0"
 description := "Deterministic Regular Expression Engine"
 homepage := Some(url("https://github.com/marianobarrios/dregex"))
 licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-license.php"))
