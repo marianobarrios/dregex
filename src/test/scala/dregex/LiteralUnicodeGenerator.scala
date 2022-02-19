@@ -15,6 +15,13 @@ import scala.collection.immutable.Seq
 // [CROSS-BUILD] For mapValues in Scala < 2.13
 import scala.collection.compat._
 
+/**
+  * This object will generate code with some Unicode information. We need code generation because the Java module
+  * system disallows by default some cross-module reflection. This program will do the reflection when run with the
+  * appropriate VM command-line arguments:
+  *
+  * --add-opens java.base/java.lang=ALL-UNNAMED
+  */
 object LiteralUnicodeGenerator {
 
   private val blockRanges: Seq[(UnicodeBlock, (Int, Int))] = {
