@@ -2,10 +2,7 @@ package dregex.impl
 
 import dregex.impl.RegexTree.AbstractRange
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.JavaConverters.setAsJavaSetConverter
-import scala.collection.immutable.Seq
-
-import scala.collection.compat._
+import scala.jdk.CollectionConverters._
 
 /**
   * A single or null char, i.e., including epsilon values

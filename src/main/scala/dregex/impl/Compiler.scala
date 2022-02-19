@@ -3,9 +3,6 @@ package dregex.impl
 import dregex.InvalidRegexException
 
 import scala.collection.mutable.Buffer
-import scala.collection.immutable.Seq
-
-import scala.collection.compat._
 
 /**
   * Take a regex AST and produce a NFA.

@@ -6,7 +6,6 @@ import dregex.{InvalidRegexException, ParsedRegex}
 import dregex.impl.RegexParser.DotMatch
 import dregex.impl.UnicodeChar.FromCharConversion
 
-import scala.collection.immutable.Seq
 import scala.util.parsing.combinator.RegexParsers
 
 class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean) extends RegexParsers {

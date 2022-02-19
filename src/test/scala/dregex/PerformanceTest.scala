@@ -3,8 +3,6 @@ package dregex
 import dregex.impl.Util
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.immutable.Seq
-
 class PerformanceTest extends AnyFunSuite {
 
   test("slow regexs") {

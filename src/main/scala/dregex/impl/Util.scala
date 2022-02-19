@@ -3,7 +3,7 @@ package dregex.impl
 import java.time.Duration
 
 import scala.collection.immutable.SortedMap
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object Util {
 

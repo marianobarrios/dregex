@@ -5,8 +5,6 @@ import dregex.impl.CharInterval
 import dregex.impl.RegexTree.CharRange
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.immutable.Seq
-
 class CharIntervalTest extends AnyFunSuite {
 
   implicit def intToUnicodeCharConversion(int: Int) = UnicodeChar(int)

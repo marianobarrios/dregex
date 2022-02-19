@@ -1,9 +1,6 @@
 package dregex.impl
 
 import scala.runtime.ScalaRunTime
-import scala.collection.immutable.Seq
-
-import scala.collection.compat._
 
 sealed trait Direction
 object Direction {

@@ -4,8 +4,6 @@ import java.util.regex.Pattern
 
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.immutable.Seq
-
 class OperationsTest extends AnyFunSuite {
 
   private def doIntersect(left: String, right: String): Boolean = {

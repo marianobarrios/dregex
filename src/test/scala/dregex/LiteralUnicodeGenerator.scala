@@ -4,16 +4,10 @@ import dregex.impl.RegexTree.{AbstractRange, CharRange, CharSet}
 import dregex.impl.{UnicodeChar, Util}
 
 import java.lang.Character.{UnicodeBlock, UnicodeScript}
-import scala.collection.JavaConverters.mapAsScalaMapConverter
+import scala.jdk.CollectionConverters._
 import dregex.impl.UnicodeChar.FromIntConversion
 
 import scala.collection.immutable.SortedMap
-
-// [CROSS-BUILD] For immutable collections in Scala < 2.13
-import scala.collection.immutable.Seq
-
-// [CROSS-BUILD] For mapValues in Scala < 2.13
-import scala.collection.compat._
 
 /**
   * This object will generate code with some Unicode information. We need code generation because the Java module
@@ -46,7 +40,6 @@ object LiteralUnicodeGenerator {
       Util.getPrivateStaticField[java.util.Map[String, UnicodeBlock]](classOf[UnicodeBlock], "map").asScala.toMap
     alias
       .groupBy { case (_, v) => v }
-      // [CROSS-BUILD] For immutable collections in Scala < 2.13
       .view
       .mapValues(v => v.keys.toIndexedSeq)
       .toMap
@@ -70,8 +63,7 @@ object LiteralUnicodeGenerator {
         builder += javaScripts(i) -> CharSet(existing :+ CharRange(from.u, to.u))
       }
     }
-    // [CROSS-BUILD] Ask for IndexedSeq to force immutable.Seq
-    builder.toIndexedSeq
+    builder.toSeq
   }
 
   private val scriptAliases: Map[UnicodeScript, Seq[String]] = {
@@ -79,7 +71,6 @@ object LiteralUnicodeGenerator {
       Util.getPrivateStaticField[java.util.Map[String, UnicodeScript]](classOf[UnicodeScript], "aliases").asScala.toMap
     alias
       .groupBy { case (_, v) => v }
-      // [CROSS-BUILD] For immutable collections in Scala < 2.13
       .view
       .mapValues(v => v.keys.toIndexedSeq)
       .toMap
