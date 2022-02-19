@@ -1,16 +1,8 @@
 package dregex.impl
 
 import java.io.InputStreamReader
-import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters._
 
-/**
-  * Sources:
-  * <ul>
-  * <li><a href="https://unicode.org/Public/UNIDATA/Blocks.txt">Blocks</a>
-  * <li><a href="https://www.unicode.org/Public/UCD/latest/ucd/Scripts.txt">Scripts</a>
-  * </ul>
-  */
 object UnicodeDatabase {
 
   val blocksRanges: Map[String, (Int, Int)] = {

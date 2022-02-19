@@ -10,12 +10,7 @@ import dregex.impl.RegexTree.CharRange
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ArrayBuffer
-
-// [CROSS-BUILD] For immutable collections in Scala < 2.13
-import scala.collection.immutable.Seq
-
-// [CROSS-BUILD] For mapValues in Scala < 2.13
-import scala.collection.compat._
+import scala.jdk.CollectionConverters._
 
 object PredefinedCharSets {
 

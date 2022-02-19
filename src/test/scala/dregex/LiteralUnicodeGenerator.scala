@@ -90,7 +90,7 @@ object LiteralUnicodeGenerator {
   }
 
   private def toHexPair(range: AbstractRange): String = {
-    s"(${toHex(range.from.codePoint)}, ${toHex(range.to.codePoint)})"
+    s"List.of(${toHex(range.from.codePoint)}, ${toHex(range.to.codePoint)})"
   }
 
   private def toHexPairs(set: CharSet): String = {
@@ -98,28 +98,28 @@ object LiteralUnicodeGenerator {
   }
 
   def main(args: Array[String]): Unit = {
-    println("val blocksRanges: Map[Seq[String], (Int, Int)] = Map(")
+    println("public static Map<List<String>, List<Integer>> blocksRanges = Map.ofEntries(")
     for (((block, (from, to)), i) <- blockRanges.zipWithIndex) yield {
       val blocksAndAliases = blockAliases(block)
       print(
-        s"  Seq(${blocksAndAliases.map(name => '"' + name + '"').mkString(", ")}) -> (${toHex(from)}, ${toHex(to)})")
+        s"  Map.entry(List.of(${blocksAndAliases.map(name => '"' + name + '"').mkString(", ")}), List.of(${toHex(from)}, ${toHex(to)}))")
       if (i < blockRanges.size - 1) {
         print(",")
       }
       println()
     }
 
-    println(")")
+    println(");")
     println()
-    println("val scriptRanges: Map[Seq[String], Seq[(Int, Int)]] = Map(")
+    println("public static Map<List<String>, List<List<Integer>>> scriptRanges = Map.ofEntries(")
     for (((script, charSet), i) <- scriptRanges.zipWithIndex) yield {
       val scriptsAndAliases = script.toString +: scriptAliases(script)
-      print(s"  Seq(${scriptsAndAliases.map(name => '"' + name + '"').mkString(", ")}) -> Seq(${toHexPairs(charSet)})")
+      print(s"  Map.entry(List.of(${scriptsAndAliases.map(name => '"' + name + '"').mkString(", ")}), List.of(${toHexPairs(charSet)}))")
       if (i < scriptRanges.size - 1) {
         print(",")
       }
       println()
     }
-    println(")")
+    println(");")
   }
 }

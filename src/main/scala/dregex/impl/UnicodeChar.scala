@@ -55,4 +55,8 @@ object UnicodeChar {
     def u = UnicodeChar(int)
   }
 
+  implicit class FromIntegerConversion(val int: java.lang.Integer) extends AnyVal {
+    def u = UnicodeChar(int)
+  }
+
 }

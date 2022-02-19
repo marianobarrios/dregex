@@ -5,8 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [ 8, 11, 17, 18 ]
-        scala-version: [ "2.11.12", "2.12.15", "2.13.6" ]
+        java-version: [ 11, 17, 18 ]
     steps:
       - uses: actions/checkout@v3
 
@@ -16,10 +15,10 @@ jobs:
           java-version: ${{ matrix.java-version }}
 
       - name: build
-        run: sbt ++${{ matrix.scala-version }} -v +test
+        run: sbt -v +test
 
       - uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: test-log (Java ${{ matrix.java-version }}, Scala ${{ matrix.scala-version }})
+          name: test-log (Java ${{ matrix.java-version }})
           path: ${{ github.workspace }}/dregex-test.log
