@@ -4,8 +4,6 @@ import java.util.regex.Pattern
 
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.immutable.Seq
-
 class EquivalenceTest extends AnyFunSuite {
 
   private def equiv(left: String, right: String): Boolean = {

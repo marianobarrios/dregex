@@ -10,10 +10,7 @@ import dregex.impl.Dfa
 import dregex.impl.RegexParser.DotMatch
 import org.slf4j.LoggerFactory
 
-import scala.collection.immutable.Seq
-import scala.collection.JavaConverters._
-
-import scala.collection.compat._
+import scala.jdk.CollectionConverters._
 
 /**
   * A regular expression, ready to be tested against strings, or to take part in an operation against another.

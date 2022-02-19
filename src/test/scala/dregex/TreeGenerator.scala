@@ -3,7 +3,6 @@ package dregex
 import dregex.impl.RegexTree
 import dregex.impl.UnicodeChar.FromCharConversion
 import dregex.impl.PredefinedCharSets
-import scala.collection.immutable.Seq
 
 /**
   * Generate some sample regex trees, useful for testing.

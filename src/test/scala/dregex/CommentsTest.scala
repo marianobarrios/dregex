@@ -3,8 +3,6 @@ package dregex
 import dregex.impl.RegexParser
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.immutable.Seq
-
 class CommentsTest extends AnyFunSuite {
 
   test("comments with flag") {

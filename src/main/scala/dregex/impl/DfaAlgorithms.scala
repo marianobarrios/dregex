@@ -5,11 +5,8 @@ import scala.collection.immutable.SortedMap
 import scala.collection.mutable
 import Util.StrictMap
 
-import scala.collection.immutable.Seq
-import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.jdk.CollectionConverters._
 import dregex.impl.Util.StrictSortedMap
-
-import scala.collection.compat._
 
 object DfaAlgorithms {
 

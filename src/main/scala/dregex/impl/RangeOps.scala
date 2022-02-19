@@ -2,7 +2,6 @@ package dregex.impl
 
 import dregex.impl.RegexTree.AbstractRange
 import dregex.impl.RegexTree.CharRange
-import scala.collection.immutable.Seq
 import scala.collection.immutable.IndexedSeq
 
 object RangeOps {

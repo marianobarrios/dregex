@@ -4,8 +4,6 @@ import dregex.impl.RegexTree
 import dregex.impl.CharInterval
 import dregex.impl.Normalization
 
-import scala.collection.immutable.Seq
-
 /**
   * The purpose of this class is to enforce that set operation between regular expressions are only done when it is
   * legal to do so, that is, when the regex are compatible.

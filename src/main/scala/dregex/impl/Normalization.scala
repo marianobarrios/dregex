@@ -2,7 +2,7 @@ package dregex.impl
 
 import java.text.Normalizer
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 sealed trait Normalization {
 
