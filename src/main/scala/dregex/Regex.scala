@@ -18,8 +18,6 @@ import scala.jdk.CollectionConverters._
   */
 trait Regex {
 
-  private[this] val logger = LoggerFactory.getLogger(classOf[Regex])
-
   private[dregex] def dfa: Dfa[SimpleState]
 
   /**
@@ -57,6 +55,7 @@ trait Regex {
     * the DFA of the operands.
     */
   def intersect(other: Regex): Regex = {
+    val logger = LoggerFactory.getLogger(classOf[Regex])
     val (res, time) = Util.time {
       checkUniverse(other)
       new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.intersect(this.dfa, other.dfa)), universe)
@@ -71,6 +70,7 @@ trait Regex {
     * and m are the number of states of the DFA of the operands.
     */
   def diff(other: Regex): Regex = {
+    val logger = LoggerFactory.getLogger(classOf[Regex])
     val (res, time) = Util.time {
       checkUniverse(other)
       new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.diff(this.dfa, other.dfa)), universe)
@@ -85,6 +85,7 @@ trait Regex {
     * of the operands.
     */
   def union(other: Regex): Regex = {
+    val logger = LoggerFactory.getLogger(classOf[Regex])
     val (res, time) = Util.time {
       checkUniverse(other)
       new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.union(this.dfa, other.dfa)), universe)
