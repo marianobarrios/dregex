@@ -9,6 +9,8 @@ licenses := Seq("BSD-style" -> url("http://www.opensource.org/licenses/bsd-licen
 
 scalaVersion := "2.13.10"
 
+javacOptions ++= Seq("-source", "11", "-target", "11")
+
 publishTo := {
   val nexus = "https://oss.sonatype.org/"
   if (isSnapshot.value)
@@ -49,6 +51,7 @@ libraryDependencies ++=
   "org.slf4j" % "slf4j-api" % "2.0.6" ::
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.2.0" ::
   "org.scala-lang.modules" %% "scala-collection-compat" % "2.9.0" ::
+  "org.projectlombok" % "lombok" % "1.18.22" ::
   "org.scalatest" %% "scalatest-funsuite" % "3.2.15" % Test ::
   "ch.qos.logback" % "logback-classic" % "1.2.11" % Test ::
   Nil
