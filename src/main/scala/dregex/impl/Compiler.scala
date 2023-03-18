@@ -2,14 +2,16 @@ package dregex.impl
 
 import dregex.InvalidRegexException
 
+import java.util.stream.Collectors
 import scala.collection.mutable.Buffer
+import scala.jdk.CollectionConverters._
 
 /**
   * Take a regex AST and produce a NFA.
   * Except when noted the Thompson-McNaughton-Yamada algorithm is used.
   * Reference: http://stackoverflow.com/questions/11819185/steps-to-creating-an-nfa-from-a-regular-expression
   */
-class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]]) {
+class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util.List[CharInterval]]) {
 
   import RegexTree._
 
@@ -30,8 +32,8 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
       // base case
 
       case range: AbstractRange =>
-        val intervals = intervalMapping(range)
-        intervals.map(interval => NfaTransition(from, to, interval))
+        val intervals = intervalMapping.get(range)
+        intervals.stream().map(interval => NfaTransition(from, to, interval)).collect(Collectors.toList()).asScala.toSeq
 
       // recurse
 
@@ -141,7 +143,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
   private def processJuxtNoLookaround(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     juxt match {
       case Juxt(Seq()) =>
-        Seq(NfaTransition(from, to, Epsilon))
+        Seq(NfaTransition(from, to, new Epsilon()))
 
       case Juxt(Seq(head)) =>
         fromTreeImpl(head, from, to)
@@ -178,7 +180,7 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         fromTreeImpl(value, from, to)
 
       case Rep(0, Some(0), value) =>
-        Seq(NfaTransition(from, to, Epsilon))
+        Seq(NfaTransition(from, to, new Epsilon()))
 
       // infinite repetitions
 
@@ -190,18 +192,18 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         val int1 = new SimpleState
         val int2 = new SimpleState
         fromTreeImpl(value, int1, int2) :+
-          NfaTransition(from, int1, Epsilon) :+
-          NfaTransition(int2, to, Epsilon) :+
-          NfaTransition(int2, int1, Epsilon)
+          NfaTransition(from, int1, new Epsilon()) :+
+          NfaTransition(int2, to, new Epsilon()) :+
+          NfaTransition(int2, int1, new Epsilon())
 
       case Rep(0, None, value) =>
         val int1 = new SimpleState
         val int2 = new SimpleState
         fromTreeImpl(value, int1, int2) :+
-          NfaTransition(from, int1, Epsilon) :+
-          NfaTransition(int2, to, Epsilon) :+
-          NfaTransition(from, to, Epsilon) :+
-          NfaTransition(int2, int1, Epsilon)
+          NfaTransition(from, int1, new Epsilon()) :+
+          NfaTransition(int2, to, new Epsilon()) :+
+          NfaTransition(from, to, new Epsilon()) :+
+          NfaTransition(int2, int1, new Epsilon())
 
       // finite repetitions
 
@@ -219,11 +221,11 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         for (i <- 1 until m - 1) {
           val int = new SimpleState
           transitions ++= fromTreeImpl(value, prev, int)
-          transitions += NfaTransition(prev, to, Epsilon)
+          transitions += NfaTransition(prev, to, new Epsilon())
           prev = int
         }
         transitions ++= fromTreeImpl(value, prev, to)
-        transitions += NfaTransition(prev, to, Epsilon)
+        transitions += NfaTransition(prev, to, new Epsilon())
         transitions.to(Seq)
 
       case Rep(0, Some(m), value) if m > 0 =>
@@ -233,11 +235,11 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
         for (i <- 0 until m - 1) {
           val int = new SimpleState
           transitions ++= fromTreeImpl(value, prev, int)
-          transitions += NfaTransition(prev, to, Epsilon)
+          transitions += NfaTransition(prev, to, new Epsilon())
           prev = int
         }
         transitions ++= fromTreeImpl(value, prev, to)
-        transitions += NfaTransition(prev, to, Epsilon)
+        transitions += NfaTransition(prev, to, new Epsilon())
         transitions.to(Seq)
 
     }
@@ -254,16 +256,16 @@ class Compiler(intervalMapping: Map[RegexTree.AbstractRange, Seq[CharInterval]])
     val result =
       DfaAlgorithms.toNfa(operation(leftDfa, rightDfa))
     result.transitions ++
-      result.accepting.to(Seq).map(acc => NfaTransition(acc, to, Epsilon)) :+
-      NfaTransition(from, result.initial, Epsilon)
+      result.accepting.to(Seq).map(acc => NfaTransition(acc, to, new Epsilon())) :+
+      NfaTransition(from, result.initial, new Epsilon())
   }
 
   def processCaptureGroup(value: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     val int1 = new SimpleState
     val int2 = new SimpleState
     fromTreeImpl(value, int1, int2) :+
-      NfaTransition(from, int1, Epsilon) :+
-      NfaTransition(int2, to, Epsilon)
+      NfaTransition(from, int1, new Epsilon()) :+
+      NfaTransition(int2, to, new Epsilon())
   }
 
 }

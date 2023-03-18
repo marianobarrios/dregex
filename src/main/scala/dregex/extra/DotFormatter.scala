@@ -21,7 +21,7 @@ object DotFormatter {
     }
     val transitions = for (transition <- nfa.transitions) yield {
       val weight =
-        if (transition.char == Epsilon)
+        if (transition.char == new Epsilon())
           1
         else
           2
