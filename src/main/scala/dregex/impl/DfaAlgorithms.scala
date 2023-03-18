@@ -185,7 +185,7 @@ object DfaAlgorithms {
     @tailrec
     def followEpsilonImpl(current: Set[State]): MultiState = {
       val immediate = for (state <- current) yield {
-        transitionMap.getOrElse(state, Map()).getOrElse(Epsilon, Set())
+        transitionMap.getOrElse(state, Map()).getOrElse(new Epsilon(), Set())
       }
       val expanded = immediate.fold(current)(_ union _)
       if (expanded == current)
@@ -229,7 +229,7 @@ object DfaAlgorithms {
 
   def reverse[A <: State](dfa: Dfa[A]): Nfa = {
     val initial: State = new SimpleState
-    val first = dfa.accepting.to(Seq).map(s => NfaTransition(initial, s, Epsilon))
+    val first = dfa.accepting.to(Seq).map(s => NfaTransition(initial, s, new Epsilon()))
     val rest = for {
       (from, fn) <- dfa.defTransitions
       (char, to) <- fn
@@ -282,7 +282,7 @@ object DfaAlgorithms {
       val char = UnicodeChar(codePoint)
       val currentTrans = dfa.defTransitions.getOrElse(current, SortedMap[CharInterval, A]())
       // O(log transitions) search in the range tree
-      val newState = Util.floorEntry(currentTrans, CharInterval(from = char, to = char)).flatMap {
+      val newState = Util.floorEntry(currentTrans, new CharInterval(char, char)).flatMap {
         case (interval, state) =>
           if (interval.to >= char) {
             Some(state)

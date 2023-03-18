@@ -1,8 +1,7 @@
 package dregex
 
-import dregex.impl.RegexTree
-import dregex.impl.CharInterval
-import dregex.impl.Normalization
+import dregex.impl.{CharInterval, Normalization, RegexTree}
+import scala.jdk.CollectionConverters._
 
 /**
   * The purpose of this class is to enforce that set operation between regular expressions are only done when it is
@@ -22,8 +21,8 @@ class Universe(parsedTrees: Seq[RegexTree.Node], val normalization: Normalizatio
 
   import RegexTree._
 
-  private[dregex] val alphabet: Map[AbstractRange, Seq[CharInterval]] = {
-    CharInterval.calculateNonOverlapping(parsedTrees.flatMap(t => collect(t)))
+  private[dregex] val alphabet: java.util.Map[AbstractRange, java.util.List[CharInterval]] = {
+    CharInterval.calculateNonOverlapping(parsedTrees.flatMap(t => collect(t)).asJava)
   }
 
   /**
