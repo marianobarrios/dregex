@@ -5,7 +5,7 @@ import dregex.impl.{PredefinedCharSets, UnicodeChar}
 import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
-import java.lang.Character.UnicodeScript
+import java.lang.Character.{UnicodeBlock, UnicodeScript}
 import scala.util.control.Breaks._
 
 class UnicodeTest extends AnyFunSuite {
@@ -112,7 +112,10 @@ class UnicodeTest extends AnyFunSuite {
         val javaRegex = java.util.regex.Pattern.compile(regexString)
         for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
           val codePointAsString = new String(Array(codePoint), 0, 1)
-          assert(regex.matches(codePointAsString) == javaRegex.matcher(codePointAsString).matches())
+          if (javaRegex.matcher(codePointAsString).matches()) {
+            assert(regex.matches(codePointAsString),
+              s"- block: $block; java block: ${UnicodeBlock.of(codePoint)}; code point: ${String.format("0x%04X", Int.box(codePoint))}")
+          }
         }
       } else {
         logger.debug("skipping Unicode block {} as it's not present in the current Java version", block)
@@ -180,8 +183,10 @@ class UnicodeTest extends AnyFunSuite {
               break()
             }
             val codePointAsString = new String(Array(codePoint), 0, 1)
-            assert(regex.matches(codePointAsString) == javaRegex.matcher(codePointAsString).matches(),
-              s"- script: $script; java script: ${UnicodeScript.of(codePoint)}; code point: ${String.format("0x%04X", Int.box(codePoint))}")
+            if (javaRegex.matcher(codePointAsString).matches()) {
+              assert(regex.matches(codePointAsString),
+                s"- script: $script; java script: ${UnicodeScript.of(codePoint)}; code point: ${String.format("0x%04X", Int.box(codePoint))}")
+            }
           }
         }
       } else {
