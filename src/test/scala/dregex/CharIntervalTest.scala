@@ -63,8 +63,6 @@ class CharIntervalTest extends AnyFunSuite {
         new CharInterval(17, 20),
         new CharInterval(21, 25))
     )
-    println(expected)
-    println(nonOverlapping)
     assert(expected == nonOverlapping)
   }
 

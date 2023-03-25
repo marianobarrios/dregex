@@ -18,11 +18,11 @@ object PredefinedCharSets {
 
   val unicodeBlocks: Map[String, CharSet] = {
     val ret = collection.mutable.Map[String, CharSet]()
-    for ((block, (from, to)) <- UnicodeDatabase.blocksRanges) {
-      val charSet = CharSet.fromRange(CharRange(from.u, to.u))
+    for ((block, range) <- UnicodeDatabase.blockRanges.asScala) {
+      val charSet = CharSet.fromRange(CharRange(range.from.u, range.to.u))
       ret.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet)
     }
-    for ((block, alias) <- UnicodeDatabase.blockSynomyms) {
+    for ((block, alias) <- UnicodeDatabase.blockSynonyms.asScala) {
       ret.put(UnicodeDatabaseReader.canonicalizeBlockName(alias), ret(UnicodeDatabaseReader.canonicalizeBlockName(block)))
     }
     ret.toMap
@@ -30,11 +30,11 @@ object PredefinedCharSets {
 
   val unicodeScripts: Map[String, CharSet] = {
     val ret = collection.mutable.Map[String, CharSet]()
-    for ((block, ranges) <- UnicodeDatabase.scriptRanges) {
-      val chatSet = CharSet(ranges.map(range => CharRange(range._1.u, range._2.u)))
+    for ((block, ranges) <- UnicodeDatabase.scriptRanges.asScala) {
+      val chatSet = CharSet(ranges.asScala.toSeq.map(range => CharRange(range.from.u, range.to.u)))
       ret.put(block.toUpperCase, chatSet)
     }
-    for ((script, alias) <- UnicodeDatabase.scriptSynomyms) {
+    for ((script, alias) <- UnicodeDatabase.scriptSynomyms.asScala) {
       ret.put(alias.toUpperCase, ret(script.toUpperCase))
     }
     ret.toMap
