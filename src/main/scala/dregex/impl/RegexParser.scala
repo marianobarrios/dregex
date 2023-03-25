@@ -138,8 +138,9 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   def specialCharSetByName = backslash ~ "p" ~ "{" ~> "[a-z_]+".r ~ "=" ~ unicodeSubsetName <~ "}" ^^ {
     case propName ~ _ ~ propValue =>
       if (propName == "block" || propName == "blk") {
+        val canonicalBlockName = UnicodeDatabaseReader.canonicalizeBlockName(propValue)
         PredefinedCharSets.unicodeBlocks
-          .getOrElse(propValue.toUpperCase(), throw new InvalidRegexException("Invalid Unicode block: " + propValue))
+          .getOrElse(canonicalBlockName, throw new InvalidRegexException("Invalid Unicode block: " + propValue))
       } else if (propName == "script" || propName == "sc") {
         PredefinedCharSets.unicodeScripts
           .getOrElse(propValue.toUpperCase(), throw new InvalidRegexException("Invalid Unicode script: " + propValue))
@@ -167,7 +168,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
 
   def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~> unicodeSubsetName <~ "}" ^^ { blockName =>
     PredefinedCharSets.unicodeBlocks
-      .getOrElse(blockName.toUpperCase(), throw new InvalidRegexException("Invalid Unicode block: " + blockName))
+      .getOrElse(UnicodeDatabaseReader.canonicalizeBlockName(blockName), throw new InvalidRegexException("Invalid Unicode block: " + blockName))
   }
 
   def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~> unicodeSubsetName <~ "}" ^^ { charClass =>

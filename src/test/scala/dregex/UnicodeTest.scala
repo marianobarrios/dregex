@@ -111,10 +111,22 @@ class UnicodeTest extends AnyFunSuite {
         val regex = Regex.compile(regexString)
         val javaRegex = java.util.regex.Pattern.compile(regexString)
         for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
-          val codePointAsString = new String(Array(codePoint), 0, 1)
-          if (javaRegex.matcher(codePointAsString).matches()) {
-            assert(regex.matches(codePointAsString),
-              s"- block: $block; java block: ${UnicodeBlock.of(codePoint)}; code point: ${String.format("0x%04X", Int.box(codePoint))}")
+          breakable {
+
+            codePoint match {
+              // Unicode 14 removed mistakenly added characters at the end of the "Tangut Supplement" block
+              // Excluding them for testing in old JVM versions, that can have the old range.
+              // Source: https://www.unicode.org/versions/Unicode14.0.0/erratafixed.html
+              case x if x >= 0x18D80 && x <= 0x18D8F => break()
+              case _ =>
+            }
+
+            val codePointAsString = new String(Array(codePoint), 0, 1)
+            if (javaRegex.matcher(codePointAsString).matches()) {
+              assert(regex.matches(codePointAsString),
+                s"- block: $block; java block: ${UnicodeBlock.of(codePoint)}; code point: ${String.format("0x%04X", Int.box(codePoint))}")
+            }
+
           }
         }
       } else {
@@ -173,15 +185,30 @@ class UnicodeTest extends AnyFunSuite {
           breakable {
             // A few code points were removed from scripts as Java versions evolved, ignore them
             codePoint match {
-              case 0xA92E | 0xA9CF | 0x0953 | 0x0954 => break()
+
+              // these 4 characters were moved from Devanagari to Inherited script,
+              // so we have to exclude them from the tests for them to work across different Java versions.
+              // Source: https://unicode.org/mail-arch/unicode-ml/y2002-m12/0053.html
+              case x if x >= 0x0951 && x <= 0x0954 => break()
+
+              // this character was apparently moved from Javanese to Common script,
+              // so we have to exclude them from the tests for them to work across different Java versions.
+              case 0xA9CF => break()
+
+              // this character was apparently moved from Kali to Common script,
+              // so we have to exclude them from the tests for them to work across different Java versions.
+              case 0xA92E => break()
+
               case _ =>
             }
+
             // As code points are added to scripts, this test count fail, so we not assert when the
             // code points are not assigned in Java (it can just be an old version).
             val javaScript = UnicodeScript.of(codePoint)
             if (javaScript == UnicodeScript.UNKNOWN || javaScript == UnicodeScript.COMMON) {
               break()
             }
+
             val codePointAsString = new String(Array(codePoint), 0, 1)
             if (javaRegex.matcher(codePointAsString).matches()) {
               assert(regex.matches(codePointAsString),
