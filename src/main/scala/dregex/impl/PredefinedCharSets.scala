@@ -23,22 +23,24 @@ object PredefinedCharSets {
 
   val unicodeBlocks: Map[String, CharSet] = {
     val ret = collection.mutable.Map[String, CharSet]()
-    for ((blocks, (from, to)) <- UnicodeDatabase.blocksRanges) {
+    for ((block, (from, to)) <- UnicodeDatabase.blocksRanges) {
       val charSet = CharSet.fromRange(CharRange(from.u, to.u))
-      for (block <- blocks) {
-        ret.put(block, charSet)
-      }
+      ret.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet)
+    }
+    for ((block, alias) <- UnicodeDatabase.blockSynomyms) {
+      ret.put(UnicodeDatabaseReader.canonicalizeBlockName(alias), ret(UnicodeDatabaseReader.canonicalizeBlockName(block)))
     }
     ret.toMap
   }
 
   val unicodeScripts: Map[String, CharSet] = {
     val ret = collection.mutable.Map[String, CharSet]()
-    for ((blocks, ranges) <- UnicodeDatabase.scriptRanges) {
+    for ((block, ranges) <- UnicodeDatabase.scriptRanges) {
       val chatSet = CharSet(ranges.map(range => CharRange(range._1.u, range._2.u)))
-      for (block <- blocks) {
-        ret.put(block, chatSet)
-      }
+      ret.put(block.toUpperCase, chatSet)
+    }
+    for ((script, alias) <- UnicodeDatabase.scriptSynomyms) {
+      ret.put(alias.toUpperCase, ret(script.toUpperCase))
     }
     ret.toMap
   }
