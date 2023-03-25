@@ -47,7 +47,7 @@ scalacOptions := Seq(
 )
 
 libraryDependencies ++= 
-  "org.slf4j" % "slf4j-api" % "2.0.6" ::
+  "org.slf4j" % "slf4j-api" % "2.0.7" ::
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.2.0" ::
   "org.scala-lang.modules" %% "scala-collection-compat" % "2.9.0" ::
   "org.scalatest" %% "scalatest-funsuite" % "3.2.15" % Test ::
