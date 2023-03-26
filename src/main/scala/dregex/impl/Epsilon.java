@@ -2,6 +2,10 @@ package dregex.impl;
 
 public final class Epsilon implements AtomPart {
 
+    public static final Epsilon instance = new Epsilon();
+
+    private Epsilon() {}
+
     public String toString() {
         return "ε";
     }

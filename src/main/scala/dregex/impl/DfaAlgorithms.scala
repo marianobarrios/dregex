@@ -185,7 +185,7 @@ object DfaAlgorithms {
     @tailrec
     def followEpsilonImpl(current: Set[State]): MultiState = {
       val immediate = for (state <- current) yield {
-        transitionMap.getOrElse(state, Map()).getOrElse(new Epsilon(), Set())
+        transitionMap.getOrElse(state, Map()).getOrElse(Epsilon.instance, Set())
       }
       val expanded = immediate.fold(current)(_ union _)
       if (expanded == current)
@@ -229,7 +229,7 @@ object DfaAlgorithms {
 
   def reverse[A <: State](dfa: Dfa[A]): Nfa = {
     val initial: State = new SimpleState
-    val first = dfa.accepting.to(Seq).map(s => NfaTransition(initial, s, new Epsilon()))
+    val first = dfa.accepting.to(Seq).map(s => NfaTransition(initial, s, Epsilon.instance))
     val rest = for {
       (from, fn) <- dfa.defTransitions
       (char, to) <- fn

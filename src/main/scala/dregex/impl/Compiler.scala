@@ -143,7 +143,7 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
   private def processJuxtNoLookaround(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     juxt match {
       case Juxt(Seq()) =>
-        Seq(NfaTransition(from, to, new Epsilon()))
+        Seq(NfaTransition(from, to, Epsilon.instance))
 
       case Juxt(Seq(head)) =>
         fromTreeImpl(head, from, to)
@@ -180,7 +180,7 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
         fromTreeImpl(value, from, to)
 
       case Rep(0, Some(0), value) =>
-        Seq(NfaTransition(from, to, new Epsilon()))
+        Seq(NfaTransition(from, to, Epsilon.instance))
 
       // infinite repetitions
 
@@ -192,18 +192,18 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
         val int1 = new SimpleState
         val int2 = new SimpleState
         fromTreeImpl(value, int1, int2) :+
-          NfaTransition(from, int1, new Epsilon()) :+
-          NfaTransition(int2, to, new Epsilon()) :+
-          NfaTransition(int2, int1, new Epsilon())
+          NfaTransition(from, int1, Epsilon.instance) :+
+          NfaTransition(int2, to, Epsilon.instance) :+
+          NfaTransition(int2, int1, Epsilon.instance)
 
       case Rep(0, None, value) =>
         val int1 = new SimpleState
         val int2 = new SimpleState
         fromTreeImpl(value, int1, int2) :+
-          NfaTransition(from, int1, new Epsilon()) :+
-          NfaTransition(int2, to, new Epsilon()) :+
-          NfaTransition(from, to, new Epsilon()) :+
-          NfaTransition(int2, int1, new Epsilon())
+          NfaTransition(from, int1, Epsilon.instance) :+
+          NfaTransition(int2, to, Epsilon.instance) :+
+          NfaTransition(from, to, Epsilon.instance) :+
+          NfaTransition(int2, int1, Epsilon.instance)
 
       // finite repetitions
 
@@ -221,11 +221,11 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
         for (i <- 1 until m - 1) {
           val int = new SimpleState
           transitions ++= fromTreeImpl(value, prev, int)
-          transitions += NfaTransition(prev, to, new Epsilon())
+          transitions += NfaTransition(prev, to, Epsilon.instance)
           prev = int
         }
         transitions ++= fromTreeImpl(value, prev, to)
-        transitions += NfaTransition(prev, to, new Epsilon())
+        transitions += NfaTransition(prev, to, Epsilon.instance)
         transitions.to(Seq)
 
       case Rep(0, Some(m), value) if m > 0 =>
@@ -235,11 +235,11 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
         for (i <- 0 until m - 1) {
           val int = new SimpleState
           transitions ++= fromTreeImpl(value, prev, int)
-          transitions += NfaTransition(prev, to, new Epsilon())
+          transitions += NfaTransition(prev, to, Epsilon.instance)
           prev = int
         }
         transitions ++= fromTreeImpl(value, prev, to)
-        transitions += NfaTransition(prev, to, new Epsilon())
+        transitions += NfaTransition(prev, to, Epsilon.instance)
         transitions.to(Seq)
 
     }
@@ -256,16 +256,16 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
     val result =
       DfaAlgorithms.toNfa(operation(leftDfa, rightDfa))
     result.transitions ++
-      result.accepting.to(Seq).map(acc => NfaTransition(acc, to, new Epsilon())) :+
-      NfaTransition(from, result.initial, new Epsilon())
+      result.accepting.to(Seq).map(acc => NfaTransition(acc, to, Epsilon.instance)) :+
+      NfaTransition(from, result.initial, Epsilon.instance)
   }
 
   def processCaptureGroup(value: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
     val int1 = new SimpleState
     val int2 = new SimpleState
     fromTreeImpl(value, int1, int2) :+
-      NfaTransition(from, int1, new Epsilon()) :+
-      NfaTransition(int2, to, new Epsilon())
+      NfaTransition(from, int1, Epsilon.instance) :+
+      NfaTransition(int2, to, Epsilon.instance)
   }
 
 }
