@@ -3,10 +3,12 @@ package dregex.extra
 import dregex.impl.Epsilon
 import dregex.impl.Nfa
 
+import scala.jdk.CollectionConverters._
+
 object DotFormatter {
 
   def format(nfa: Nfa): String = {
-    val states = for (state <- nfa.allStates) yield {
+    val states = for (state <- nfa.collectAllStates().asScala) yield {
       val shape =
         if (state == nfa.initial)
           "square"
@@ -19,13 +21,13 @@ object DotFormatter {
           1
       s""""${state.toString}" [shape=$shape,peripheries=$peripheries];"""
     }
-    val transitions = for (transition <- nfa.transitions) yield {
+    val transitions = for (transition <- nfa.transitions.asScala) yield {
       val weight =
-        if (transition.char == Epsilon.instance)
+        if (transition.char_ == Epsilon.instance)
           1
         else
           2
-      s""""${transition.from.toString}" -> "${transition.to.toString}" [label=${transition.char.toString}, weight=$weight];"""
+      s""""${transition.from.toString}" -> "${transition.to.toString}" [label=${transition.char_.toString}, weight=$weight];"""
     }
     s"""
       digraph graphname {

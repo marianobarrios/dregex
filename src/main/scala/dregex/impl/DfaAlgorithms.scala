@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.SortedMap
 import scala.collection.mutable
 import Util.StrictMap
+import dregex.impl.Nfa.Transition
 
 import scala.jdk.CollectionConverters._
 import dregex.impl.Util.StrictSortedMap
@@ -165,8 +166,8 @@ object DfaAlgorithms {
      * Group the list of transitions of the NFA into a nested map, for easy lookup.
      * The rest of this method will use this map instead of the original list.
      */
-    val transitionMap = nfa.transitions.groupBy(_.from).mapValuesNow { stateTransitions =>
-      stateTransitions.groupBy(_.char).mapValuesNow { states =>
+    val transitionMap = nfa.transitions.asScala.groupBy(_.from).mapValuesNow { stateTransitions =>
+      stateTransitions.groupBy(_.char_).mapValuesNow { states =>
         states.map(_.to).toSet
       }
     }
@@ -223,21 +224,21 @@ object DfaAlgorithms {
         dfaTransitions(current) = SortedMap(dfaCurrentTrans.toSeq: _*)
     }
     // a DFA state is accepting if any of its NFA member-states is
-    val dfaAccepting = dfaStates.filter(st => Util.doIntersect(st.states.asScala.to(Set), nfa.accepting)).toSet
+    val dfaAccepting = dfaStates.filter(st => Util.doIntersect(st.states.asScala.to(Set), nfa.accepting.asScala.toSet)).toSet
     Dfa(dfaInitial, dfaTransitions.toMap, dfaAccepting, minimal)
   }
 
   def reverse[A <: State](dfa: Dfa[A]): Nfa = {
     val initial: State = new SimpleState
-    val first = dfa.accepting.to(Seq).map(s => NfaTransition(initial, s, Epsilon.instance))
+    val first = dfa.accepting.to(Seq).map(s => new Transition(initial, s, Epsilon.instance))
     val rest = for {
       (from, fn) <- dfa.defTransitions
       (char, to) <- fn
     } yield {
-      NfaTransition(to, from, char)
+      new Transition(to, from, char)
     }
     val accepting = Set[State](dfa.initial)
-    Nfa(initial, first ++ rest.to(Seq), accepting)
+    new Nfa(initial, (first ++ rest.to(Seq)).asJava, accepting.asJava)
   }
 
   /**
@@ -248,10 +249,10 @@ object DfaAlgorithms {
       (state, transitionMap) <- dfa.defTransitions
       (char, target) <- transitionMap
     } yield {
-      NfaTransition(state, target, char)
+      new Transition(state, target, char)
     }
     val accepting: Set[State] = dfa.accepting.asInstanceOf[Set[State]] // fake covariance
-    Nfa(dfa.initial, transitions.to(Seq), accepting)
+    new Nfa(dfa.initial, transitions.toSeq.asJava, accepting.asJava)
   }
 
   def rewriteWithSimpleStates[A <: State](genericDfa: Dfa[A]): Dfa[SimpleState] = {
