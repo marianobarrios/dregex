@@ -2,7 +2,6 @@ package dregex
 
 import dregex.impl.RegexTree
 import scala.collection.mutable.ArrayBuffer
-import dregex.impl.UnicodeChar
 
 /**
   * Generates, given a regex tree, sample strings that match the regex.
@@ -27,7 +26,7 @@ object StringGenerator {
         for {
           i <- 0 until length
         } yield {
-          UnicodeChar(range.from.codePoint + i).toJavaString
+          new String(Character.toChars(range.from + i))
         }
 
       case Disj(values) =>

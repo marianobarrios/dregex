@@ -4,7 +4,6 @@ import java.util.regex.Pattern
 
 import dregex.{InvalidRegexException, ParsedRegex}
 import dregex.impl.RegexParser.DotMatch
-import dregex.impl.UnicodeChar.FromCharConversion
 
 import scala.util.parsing.combinator.RegexParsers
 
@@ -70,39 +69,39 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   // Parsers that return a literal Node
 
   def specialEscape = backslash ~> "[^dwsDWSuxcpR0123456789]".r ^^ {
-    case "n" => Lit('\n'.u)
-    case "r" => Lit('\r'.u)
-    case "t" => Lit('\t'.u)
-    case "f" => Lit('\f'.u)
-    case "b" => Lit('\b'.u)
-    case "v" => Lit('\u000B'.u) // vertical tab
-    case "a" => Lit('\u0007'.u) // bell
-    case "e" => Lit('\u001B'.u) // escape
-    case "B" => Lit('\\'.u)
-    case c   => Lit(UnicodeChar.fromSingletonString(c)) // remaining escaped characters stand for themselves
+    case "n" => Lit('\n')
+    case "r" => Lit('\r')
+    case "t" => Lit('\t')
+    case "f" => Lit('\f')
+    case "b" => Lit('\b')
+    case "v" => Lit('\u000B') // vertical tab
+    case "a" => Lit('\u0007') // bell
+    case "e" => Lit('\u001B') // escape
+    case "B" => Lit('\\')
+    case c   => Lit.fromSingletonString(c) // remaining escaped characters stand for themselves
   }
 
   def doubleUnicodeEscape = backslash ~ "u" ~ hexNumber(4) ~ backslash ~ "u" ~ hexNumber(4) ^? {
     case _ ~ _ ~ highNumber ~ _ ~ _ ~ lowNumber
         if Character.isHighSurrogate(highNumber.toChar) && Character.isLowSurrogate(lowNumber.toChar) =>
       val codePoint = Character.toCodePoint(highNumber.toChar, lowNumber.toChar)
-      Lit(UnicodeChar(codePoint))
+      Lit(codePoint)
   }
 
   def unicodeEscape = backslash ~ "u" ~> hexNumber(4) ^^ { codePoint =>
-    Lit(UnicodeChar(codePoint))
+    Lit(codePoint)
   }
 
   def hexEscape = backslash ~ "x" ~> hexNumber(2) ^^ { codePoint =>
-    Lit(UnicodeChar(codePoint))
+    Lit(codePoint)
   }
 
   def longHexEscape = backslash ~ "x" ~ "{" ~> hexNumber <~ "}" ^^ { codePoint =>
-    Lit(UnicodeChar(codePoint))
+    Lit(codePoint)
   }
 
   def octalEscape = backslash ~ "0" ~> (octalNumber(1) ||| octalNumber(2) ||| octalNumber(3)) ^^ { codePoint =>
-    Lit(UnicodeChar(codePoint))
+    Lit(codePoint)
   }
 
   /**
@@ -118,7 +117,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
       controlEscape |
       backReference
 
-  def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit(UnicodeChar.fromSingletonString(x))))
+  def anythingExcept(parser: Parser[_]) = not(parser) ~> (".".r ^^ (x => Lit.fromSingletonString(x)))
 
   def charLit = anchor | anythingExcept(charSpecial) | anyEscape
 
@@ -129,7 +128,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   def singleCharacterClassLit = characterClassLit ^^ (lit => CharSet(Seq(lit)))
 
   def charClassRange = characterClassLit ~ "-" ~ characterClassLit ^^ {
-    case start ~ _ ~ end => CharSet.fromRange(CharRange(start.char, end.char))
+    case start ~ _ ~ end => CharSet.fromRange(CharRange(start.codePoint, end.codePoint))
   }
 
   private val unicodeSubsetName = "[0-9a-zA-Z_ -]+".r
@@ -209,7 +208,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
   def dashClass = "[" ~> "^".? <~ "-" ~ "]" ^^ { negated =>
-    val set = CharSet.fromRange(Lit('-'.u))
+    val set = CharSet.fromRange(Lit('-'))
     if (negated.isDefined) {
       set.complement
     } else {
@@ -271,7 +270,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
     case negated ~ leftDash ~ charClass ~ rightDash =>
       val chars =
         if (leftDash.isDefined || rightDash.isDefined)
-          charClass :+ CharSet.fromRange(Lit('-'.u))
+          charClass :+ CharSet.fromRange(Lit('-'))
         else
           charClass
       val set = CharSet.fromCharSets(chars: _*)
@@ -289,17 +288,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   }
 
   def unicodeLineBreak = backslash ~ "R" ^^^ {
-    Disj(
-      Seq(
-        Juxt(Seq(Lit('\u000D'.u), Lit('\u000A'.u))),
-        Lit('\u000A'.u),
-        Lit('\u000B'.u),
-        Lit('\u000C'.u),
-        Lit('\u000D'.u),
-        Lit('\u0085'.u),
-        Lit('\u2028'.u),
-        Lit('\u2029'.u)
-      ))
+    Disj(Seq(Juxt(Seq(Lit('\u000D'), Lit('\u000A'))), Lit('\u000A'), Lit('\u000B'), Lit('\u000C'), Lit('\u000D'), Lit('\u0085'), Lit('\u2028'), Lit('\u2029')))
   }
 
   def group = "(" ~> ("?" ~ "<".? ~ "[:=!]".r).? ~ sp ~ regex <~ sp ~ ")" ^^ {
@@ -327,16 +316,9 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
       case DotMatch.All =>
         Wildcard
       case DotMatch.JavaLines =>
-        CharSet(
-          Seq(
-            Lit('\n'.u),
-            Lit('\r'.u),
-            Lit('\u0085'.u),
-            Lit('\u2028'.u),
-            Lit('\u2829'.u)
-          )).complement
+        CharSet(Seq(Lit('\n'), Lit('\r'), Lit('\u0085'), Lit('\u2028'), Lit('\u2829'))).complement
       case DotMatch.UnixLines =>
-        CharSet.fromRange(Lit('\n'.u)).complement
+        CharSet.fromRange(Lit('\n')).complement
     }
   }
 
@@ -463,7 +445,7 @@ object RegexParser {
     */
   private def parseLiteralRegex(regex: String): ParsedRegex = {
     val literals: Seq[RegexTree.Lit] = regex.map { char =>
-      RegexTree.Lit(UnicodeChar.fromChar(char))
+      RegexTree.Lit(char)
     }
     new ParsedRegex(regex, RegexTree.Juxt(literals), Normalization.NoNormalization)
   }

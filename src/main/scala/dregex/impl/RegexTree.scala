@@ -29,13 +29,13 @@ object RegexTree {
   /**
     * A single char, non empty, i.e, excluding epsilon values
     */
-  sealed trait AbstractRange extends Node with Product2[UnicodeChar, UnicodeChar] {
+  sealed trait AbstractRange extends Node with Product2[Int, Int] {
 
-    def from: UnicodeChar
-    def to: UnicodeChar
+    def from: Int
+    def to: Int
 
-    def _1 = from
-    def _2 = to
+    def _1: Int = from
+    def _2: Int = to
 
     override def equals(anyThat: Any) = anyThat match {
       case that: AbstractRange => this.from == that.from && this.to == that.to
@@ -46,43 +46,57 @@ object RegexTree {
 
     def canonical = {
       (from, to) match {
-        case (a, b) if a == b                   => Lit(a)
-        case (UnicodeChar.min, UnicodeChar.max) => Wildcard
-        case (a, b)                             => CharRange(a, b)
+        case (a, b) if a == b                                     => Lit(a)
+        case (Character.MIN_CODE_POINT, Character.MAX_CODE_POINT) => Wildcard
+        case (a, b)                                               => CharRange(a, b)
       }
     }
 
     def toCharClassLit: String
 
-    def size = to.codePoint - from.codePoint + 1
+    def size = to - from + 1
 
   }
 
-  case class CharRange(from: UnicodeChar, to: UnicodeChar) extends AbstractRange {
+  case class CharRange(from: Int, to: Int) extends AbstractRange {
 
     if (from > to)
       throw new IllegalArgumentException("from value cannot be larger than to")
 
     def toRegex = throw new UnsupportedOperationException("Cannot express a range outside a char class")
-    def toCharClassLit = s"${from.toRegex}-${to.toRegex}"
+    def toCharClassLit = s"${Lit(from).toRegex}-${Lit(to).toRegex}"
     def precedence = throw new UnsupportedOperationException("Cannot express a range outside a char class")
     override def toString = s"$from–$to"
 
   }
 
-  case class Lit(char: UnicodeChar) extends AbstractRange with Product1[UnicodeChar] {
-    // Product1 extended to override toString
-    def from = char
-    def to = char
-    def toRegex = char.toRegex
-    def toCharClassLit = char.toRegex
+  case class Lit(codePoint: Int) extends AbstractRange {
+
+    def from = codePoint
+    def to = codePoint
+    def toCharClassLit = toRegex()
     def precedence = 1
-    override def toString = char.toString
+    override def toString = codePoint.toString
+
+    def toRegex() = {
+      if (Character.isLetterOrDigit(codePoint))
+        new String(Character.toChars(codePoint))
+      else
+        f"\\x{$codePoint%X}"
+    }
+  }
+
+  object Lit {
+    def fromSingletonString(str: String): Lit = {
+      if (Character.codePointCount(str, 0, str.size) > 1)
+        throw new IllegalAccessException("String is no char: " + str)
+      Lit(Character.codePointAt(str, 0))
+    }
   }
 
   case object Wildcard extends AbstractRange {
-    def from = UnicodeChar.min
-    def to = UnicodeChar.max
+    def from = Character.MIN_CODE_POINT
+    def to = Character.MAX_CODE_POINT
     def toRegex = "."
     def toCharClassLit = throw new UnsupportedOperationException("Cannot express a wildcard inside a char class")
     def precedence = 1

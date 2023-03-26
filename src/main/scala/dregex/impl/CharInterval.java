@@ -6,18 +6,11 @@ import java.util.*;
 
 public final class CharInterval implements AtomPart, Ordered<CharInterval> {
 
-    public final UnicodeChar from;
-    public final UnicodeChar to;
+    public final int from;
+    public final int to;
 
-    public CharInterval(UnicodeChar from, UnicodeChar to) {
-        if (from == null) {
-            throw new NullPointerException("from is null");
-        }
-        if (to == null) {
-            throw new NullPointerException("to is null");
-        }
-
-        if (from.compare(to) > 0) {
+    public CharInterval(int from, int to) {
+        if (from > to) {
             throw new IllegalArgumentException("from value cannot be larger than to");
         }
         this.from = from;
@@ -29,7 +22,7 @@ public final class CharInterval implements AtomPart, Ordered<CharInterval> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CharInterval that = (CharInterval) o;
-        return Objects.equals(from, that.from) && Objects.equals(to, that.to);
+        return from == that.from && to == that.to;
     }
 
     @Override
@@ -39,28 +32,28 @@ public final class CharInterval implements AtomPart, Ordered<CharInterval> {
 
     @Override
     public int compare(CharInterval that) {
-        return this.from.compare(that.from);
+        return Integer.compare(from, that.from);
     }
 
     public String toString() {
-        if (from.equals(to)) {
-            return from.toString();
+        if (from == to) {
+            return Integer.toString(from);
         } else {
             return String.format("[%s-%s]", from, to);
         }
     }
 
     public static Map<RegexTree.AbstractRange, List<CharInterval>> calculateNonOverlapping(List<RegexTree.AbstractRange> ranges) {
-        Set<UnicodeChar> startSet = new HashSet<>();
-        Set<UnicodeChar> endSet = new HashSet<>();
+        Set<Integer> startSet = new HashSet<>();
+        Set<Integer> endSet = new HashSet<>();
         for (var range : ranges) {
             startSet.add(range.from());
-            if (range.from().compare(UnicodeChar.min()) > 0) {
-                endSet.add(range.from().$minus(1));
+            if (range.from() > Character.MIN_CODE_POINT) {
+                endSet.add(range.from() - 1);
             }
             endSet.add(range.to());
-            if (range.to().compare(UnicodeChar.max()) < 0) {
-                startSet.add(range.to().$plus(1));
+            if (range.to() < Character.MAX_CODE_POINT) {
+                startSet.add(range.to() + 1);
             }
         }
         Map<RegexTree.AbstractRange, List<CharInterval>> ret = new HashMap<>();

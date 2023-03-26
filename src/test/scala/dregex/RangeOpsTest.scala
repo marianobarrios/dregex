@@ -1,17 +1,14 @@
 package dregex
 
-import dregex.impl.UnicodeChar
 import dregex.impl.RegexTree.CharRange
 import dregex.impl.RangeOps
 import org.scalatest.funsuite.AnyFunSuite
 
 class RangeOpsTest extends AnyFunSuite {
 
-  implicit def intToUnicodeCharConversion(int: Int) = UnicodeChar(int)
-
   implicit def pairToRange(pair: (Int, Int)): CharRange = {
     pair match {
-      case (from, to) => CharRange(UnicodeChar(from), UnicodeChar(to))
+      case (from, to) => CharRange(from, to)
     }
   }
 
