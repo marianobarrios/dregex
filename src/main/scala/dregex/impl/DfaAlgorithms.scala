@@ -33,7 +33,7 @@ object DfaAlgorithms {
 
   private def doIntersection[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val commonChars = left.allChars intersect right.allChars
-    val newInitial = BiState[A](left.initial, right.initial)
+    val newInitial = new BiState[A](left.initial, right.initial)
     val newTransitions = for {
       (leftState, leftCharmap) <- left.defTransitions
       (rightState, rightCharmap) <- right.defTransitions
@@ -42,21 +42,21 @@ object DfaAlgorithms {
         leftDestState <- leftCharmap.get(char)
         rightDestState <- rightCharmap.get(char)
       } yield {
-        char -> BiState[A](leftDestState, rightDestState)
+        char -> new BiState[A](leftDestState, rightDestState)
       }
       if charMap.nonEmpty
     } yield {
-      BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
+      new BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the intersecting DFA
-    val accepting = for (l <- left.accepting; r <- right.accepting) yield BiState(l, r)
+    val accepting = for (l <- left.accepting; r <- right.accepting) yield new BiState(l, r)
     Dfa[BiState[A]](newInitial, newTransitions, accepting)
   }
 
   private def doDifference[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val NullState = null.asInstanceOf[A]
     val allChars = left.allChars union right.allChars
-    val newInitial = BiState[A](left.initial, right.initial)
+    val newInitial = new BiState[A](left.initial, right.initial)
     val newTransitions = for {
       (leftState, leftCharmap) <- left.defTransitions
       rightState <- right.allStates.toSeq :+ NullState
@@ -66,22 +66,22 @@ object DfaAlgorithms {
         leftDestState <- leftCharmap.get(char)
         rightDestState = rightCharmap.getOrElse(char, NullState)
       } yield {
-        char -> BiState[A](leftDestState, rightDestState)
+        char -> new BiState[A](leftDestState, rightDestState)
       }
       if charMap.nonEmpty
     } yield {
-      BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
+      new BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of
     // the right DFA that are no accepting
-    val accepting = for (l <- left.accepting; r <- right.allButAccepting + NullState) yield BiState[A](l, r)
+    val accepting = for (l <- left.accepting; r <- right.allButAccepting + NullState) yield new BiState[A](l, r)
     Dfa[BiState[A]](newInitial, newTransitions, accepting)
   }
 
   private def doUnion[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val NullState = null.asInstanceOf[A]
     val allChars = left.allChars union right.allChars
-    val newInitial = BiState[A](left.initial, right.initial)
+    val newInitial = new BiState[A](left.initial, right.initial)
     val newTransitions = for {
       leftState <- left.allStates.toSeq :+ NullState
       leftCharmap = left.transitionMap(leftState)
@@ -93,11 +93,11 @@ object DfaAlgorithms {
         rightDestState = rightCharmap.getOrElse(char, NullState)
         if leftDestState != NullState || rightDestState != NullState
       } yield {
-        char -> BiState(leftDestState, rightDestState)
+        char -> new BiState(leftDestState, rightDestState)
       }
       if charMap.nonEmpty
     } yield {
-      BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
+      new BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
     }
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of
     // the right DFA that are no accepting
@@ -106,7 +106,7 @@ object DfaAlgorithms {
       r <- right.allStates + NullState
       if left.accepting.contains(l) || right.accepting.contains(r)
     } yield {
-      BiState[A](l, r)
+      new BiState[A](l, r)
     }
     Dfa[BiState[A]](newInitial, newTransitions.toMap, accepting)
   }
@@ -189,7 +189,7 @@ object DfaAlgorithms {
       }
       val expanded = immediate.fold(current)(_ union _)
       if (expanded == current)
-        MultiState(current)
+        new MultiState(current.asJava)
       else
         followEpsilonImpl(expanded)
     }
@@ -201,7 +201,7 @@ object DfaAlgorithms {
       val current = pending.dequeue()
       dfaStates.add(current)
       // The set of all transition maps of the members of the current state
-      val currentTrans = current.states.map(x => epsilonFreeTransitions.getOrElse(x, Map()))
+      val currentTrans = current.states.asScala.map(x => epsilonFreeTransitions.getOrElse(x, Map()))
       // The transition function of the current state
       val mergedCurrentTrans = currentTrans.reduceLeft(Util.mergeWithUnion)
       // use a temporary set before enqueueing to avoid adding the same state twice
@@ -223,7 +223,7 @@ object DfaAlgorithms {
         dfaTransitions(current) = SortedMap(dfaCurrentTrans.toSeq: _*)
     }
     // a DFA state is accepting if any of its NFA member-states is
-    val dfaAccepting = dfaStates.filter(st => Util.doIntersect(st.states, nfa.accepting)).toSet
+    val dfaAccepting = dfaStates.filter(st => Util.doIntersect(st.states.asScala.to(Set), nfa.accepting)).toSet
     Dfa(dfaInitial, dfaTransitions.toMap, dfaAccepting, minimal)
   }
 
