@@ -22,18 +22,18 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
     val initial = new SimpleState
     val accepting = new SimpleState
     val transitions = fromTreeImpl(ast, initial, accepting)
-    val nfa = Nfa(initial, transitions, Set(accepting))
+    val nfa = new Nfa(initial, transitions.asJava, Set[State](accepting).asJava)
     DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.fromNfa(nfa))
   }
 
-  private def fromTreeImpl(node: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+  private def fromTreeImpl(node: Node, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     node match {
 
       // base case
 
       case range: AbstractRange =>
         val intervals = intervalMapping.get(range)
-        intervals.stream().map(interval => NfaTransition(from, to, interval)).collect(Collectors.toList()).asScala.toSeq
+        intervals.stream().map(interval => new Nfa.Transition(from, to, interval)).collect(Collectors.toList()).asScala.toSeq
 
       // recurse
 
@@ -83,7 +83,7 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
     * *
     * NOTE: Only lookahead is currently implemented
     */
-  private def processJuxt(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+  private def processJuxt(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     import Direction._
     import Condition._
     findLookaround(juxt.values) match {
@@ -140,17 +140,17 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
     Juxt(newValues)
   }
 
-  private def processJuxtNoLookaround(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+  private def processJuxtNoLookaround(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     juxt match {
       case Juxt(Seq()) =>
-        Seq(NfaTransition(from, to, Epsilon.instance))
+        Seq(new Nfa.Transition(from, to, Epsilon.instance))
 
       case Juxt(Seq(head)) =>
         fromTreeImpl(head, from, to)
 
       case Juxt(init :+ last) =>
         // doing this iteratively prevents stack overflows in the case of long literal strings
-        val transitions = Buffer[NfaTransition]()
+        val transitions = Buffer[Nfa.Transition]()
         var prev = from
         for (part <- init) {
           val int = new SimpleState
@@ -162,7 +162,7 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
     }
   }
 
-  private def processDisj(disj: Disj, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+  private def processDisj(disj: Disj, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     disj match {
       case Disj(Seq()) =>
         Seq()
@@ -171,7 +171,7 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
     }
   }
 
-  private def processRep(rep: Rep, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+  private def processRep(rep: Rep, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     rep match {
 
       // trivial cases
@@ -180,7 +180,7 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
         fromTreeImpl(value, from, to)
 
       case Rep(0, Some(0), value) =>
-        Seq(NfaTransition(from, to, Epsilon.instance))
+        Seq(new Nfa.Transition(from, to, Epsilon.instance))
 
       // infinite repetitions
 
@@ -192,18 +192,18 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
         val int1 = new SimpleState
         val int2 = new SimpleState
         fromTreeImpl(value, int1, int2) :+
-          NfaTransition(from, int1, Epsilon.instance) :+
-          NfaTransition(int2, to, Epsilon.instance) :+
-          NfaTransition(int2, int1, Epsilon.instance)
+          new Nfa.Transition(from, int1, Epsilon.instance) :+
+          new Nfa.Transition(int2, to, Epsilon.instance) :+
+          new Nfa.Transition(int2, int1, Epsilon.instance)
 
       case Rep(0, None, value) =>
         val int1 = new SimpleState
         val int2 = new SimpleState
         fromTreeImpl(value, int1, int2) :+
-          NfaTransition(from, int1, Epsilon.instance) :+
-          NfaTransition(int2, to, Epsilon.instance) :+
-          NfaTransition(from, to, Epsilon.instance) :+
-          NfaTransition(int2, int1, Epsilon.instance)
+          new Nfa.Transition(from, int1, Epsilon.instance) :+
+          new Nfa.Transition(int2, to, Epsilon.instance) :+
+          new Nfa.Transition(from, to, Epsilon.instance) :+
+          new Nfa.Transition(int2, int1, Epsilon.instance)
 
       // finite repetitions
 
@@ -215,31 +215,31 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
       case Rep(1, Some(m), value) if m > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
         val int1 = new SimpleState
-        val transitions = Buffer[NfaTransition]()
+        val transitions = Buffer[Nfa.Transition]()
         transitions ++= fromTreeImpl(value, from, int1)
         var prev = int1
         for (i <- 1 until m - 1) {
           val int = new SimpleState
           transitions ++= fromTreeImpl(value, prev, int)
-          transitions += NfaTransition(prev, to, Epsilon.instance)
+          transitions += new Nfa.Transition(prev, to, Epsilon.instance)
           prev = int
         }
         transitions ++= fromTreeImpl(value, prev, to)
-        transitions += NfaTransition(prev, to, Epsilon.instance)
+        transitions += new Nfa.Transition(prev, to, Epsilon.instance)
         transitions.to(Seq)
 
       case Rep(0, Some(m), value) if m > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
-        val transitions = Buffer[NfaTransition]()
+        val transitions = Buffer[Nfa.Transition]()
         var prev = from
         for (i <- 0 until m - 1) {
           val int = new SimpleState
           transitions ++= fromTreeImpl(value, prev, int)
-          transitions += NfaTransition(prev, to, Epsilon.instance)
+          transitions += new Nfa.Transition(prev, to, Epsilon.instance)
           prev = int
         }
         transitions ++= fromTreeImpl(value, prev, to)
-        transitions += NfaTransition(prev, to, Epsilon.instance)
+        transitions += new Nfa.Transition(prev, to, Epsilon.instance)
         transitions.to(Seq)
 
     }
@@ -250,22 +250,21 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
       left: Node,
       right: Node,
       from: SimpleState,
-      to: SimpleState): Seq[NfaTransition] = {
+      to: SimpleState): Seq[Nfa.Transition] = {
     val leftDfa = fromTree(left)
     val rightDfa = fromTree(right)
-    val result =
-      DfaAlgorithms.toNfa(operation(leftDfa, rightDfa))
-    result.transitions ++
-      result.accepting.to(Seq).map(acc => NfaTransition(acc, to, Epsilon.instance)) :+
-      NfaTransition(from, result.initial, Epsilon.instance)
-  }
+    val result = DfaAlgorithms.toNfa(operation(leftDfa, rightDfa))
+    result.transitions.asScala ++
+      result.accepting.asScala.to(Seq).map(acc => new Nfa.Transition(acc, to, Epsilon.instance)) ++
+      Seq(new Nfa.Transition(from, result.initial, Epsilon.instance))
+  }.toSeq
 
-  def processCaptureGroup(value: Node, from: SimpleState, to: SimpleState): Seq[NfaTransition] = {
+  def processCaptureGroup(value: Node, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     val int1 = new SimpleState
     val int2 = new SimpleState
     fromTreeImpl(value, int1, int2) :+
-      NfaTransition(from, int1, Epsilon.instance) :+
-      NfaTransition(int2, to, Epsilon.instance)
+      new Nfa.Transition(from, int1, Epsilon.instance) :+
+      new Nfa.Transition(int2, to, Epsilon.instance)
   }
 
 }
