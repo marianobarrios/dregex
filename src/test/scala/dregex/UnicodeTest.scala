@@ -1,7 +1,7 @@
 package dregex
 
 import TestUtil.using
-import dregex.impl.{PredefinedCharSets, UnicodeChar}
+import dregex.impl.PredefinedCharSets
 import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
@@ -110,7 +110,7 @@ class UnicodeTest extends AnyFunSuite {
         val regexString = f"\\p{block=$block}"
         val regex = Regex.compile(regexString)
         val javaRegex = java.util.regex.Pattern.compile(regexString)
-        for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+        for (codePoint <- Character.MIN_CODE_POINT to Character.MAX_CODE_POINT) {
           breakable {
 
             codePoint match {
@@ -181,7 +181,7 @@ class UnicodeTest extends AnyFunSuite {
         val regexString = f"\\p{script=$script}"
         val regex = Regex.compile(regexString)
         val javaRegex = java.util.regex.Pattern.compile(regexString)
-        for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+        for (codePoint <- Character.MIN_CODE_POINT to Character.MAX_CODE_POINT) {
           breakable {
             // A few code points were removed from scripts as Java versions evolved, ignore them
             codePoint match {

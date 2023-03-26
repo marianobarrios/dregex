@@ -1,7 +1,6 @@
 package dregex
 
 import dregex.impl.RegexTree
-import dregex.impl.UnicodeChar.FromCharConversion
 import dregex.impl.PredefinedCharSets
 
 /**
@@ -14,10 +13,10 @@ class TreeGenerator {
   private def generateFixedDepth(levels: Int): Iterator[Node] = {
     if (levels == 1) {
       Iterator(
-        Lit('a'.u),
+        Lit('a'),
         Wildcard,
-        CharSet.fromRange(CharRange('d'.u, 'f'.u)),
-        CharSet.fromRange(CharRange('d'.u, 'f'.u)).complement,
+        CharSet.fromRange(CharRange('d', 'f')),
+        CharSet.fromRange(CharRange('d', 'f')).complement,
         PredefinedCharSets.digit)
     } else {
       generateFixedDepth(levels - 1).flatMap { node =>

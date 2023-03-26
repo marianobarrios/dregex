@@ -280,12 +280,11 @@ object DfaAlgorithms {
     var current = dfa.initial
     var i = 0
     for (codePoint <- string.codePoints.iterator.asScala) {
-      val char = UnicodeChar(codePoint)
       val currentTrans = dfa.defTransitions.getOrElse(current, SortedMap[CharInterval, A]())
       // O(log transitions) search in the range tree
-      val newState = Util.floorEntry(currentTrans, new CharInterval(char, char)).flatMap {
+      val newState = Util.floorEntry(currentTrans, new CharInterval(codePoint, codePoint)).flatMap {
         case (interval, state) =>
-          if (interval.to >= char) {
+          if (interval.to >= codePoint) {
             Some(state)
           } else {
             None

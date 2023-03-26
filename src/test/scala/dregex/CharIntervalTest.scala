@@ -1,6 +1,5 @@
 package dregex
 
-import dregex.impl.UnicodeChar
 import dregex.impl.CharInterval
 import dregex.impl.RegexTree.CharRange
 import dregex.impl.RegexTree.AbstractRange
@@ -9,17 +8,15 @@ import scala.jdk.CollectionConverters._
 
 class CharIntervalTest extends AnyFunSuite {
 
-  implicit def intToUnicodeCharConversion(int: Int) = UnicodeChar(int)
-
   implicit def pairToRange(pair: (Int, Int)): CharRange = {
     pair match {
-      case (from, to) => CharRange(UnicodeChar(from), UnicodeChar(to))
+      case (from, to) => CharRange(from, to)
     }
   }
 
   implicit def pairToInterval(pair: (Int, Int)): CharInterval = {
     pair match {
-      case (from, to) => new CharInterval(UnicodeChar(from), UnicodeChar(to))
+      case (from, to) => new CharInterval(from, to)
     }
   }
 

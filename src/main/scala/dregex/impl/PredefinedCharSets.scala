@@ -2,8 +2,6 @@ package dregex.impl
 
 import dregex.impl.RegexTree.AbstractRange
 import dregex.impl.RegexTree.Lit
-import dregex.impl.UnicodeChar.FromCharConversion
-import dregex.impl.UnicodeChar.FromIntConversion
 import dregex.impl.RegexTree.CharSet
 import dregex.impl.RegexTree.CharRange
 
@@ -19,7 +17,7 @@ object PredefinedCharSets {
   val unicodeBlocks: Map[String, CharSet] = {
     val ret = collection.mutable.Map[String, CharSet]()
     for ((block, range) <- UnicodeDatabase.blockRanges.asScala) {
-      val charSet = CharSet.fromRange(CharRange(range.from.u, range.to.u))
+      val charSet = CharSet.fromRange(CharRange(range.from, range.to))
       ret.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet)
     }
     for ((block, alias) <- UnicodeDatabase.blockSynonyms.asScala) {
@@ -31,7 +29,7 @@ object PredefinedCharSets {
   val unicodeScripts: Map[String, CharSet] = {
     val ret = collection.mutable.Map[String, CharSet]()
     for ((block, ranges) <- UnicodeDatabase.scriptRanges.asScala) {
-      val chatSet = CharSet(ranges.asScala.toSeq.map(range => CharRange(range.from.u, range.to.u)))
+      val chatSet = CharSet(ranges.asScala.toSeq.map(range => CharRange(range.from, range.to)))
       ret.put(block.toUpperCase, chatSet)
     }
     for ((script, alias) <- UnicodeDatabase.scriptSynomyms.asScala) {
@@ -40,29 +38,29 @@ object PredefinedCharSets {
     ret.toMap
   }
 
-  val lower = CharSet.fromRange(CharRange(from = 'a'.u, to = 'z'.u))
-  val upper = CharSet.fromRange(CharRange(from = 'A'.u, to = 'Z'.u))
+  val lower = CharSet.fromRange(CharRange(from = 'a', to = 'z'))
+  val upper = CharSet.fromRange(CharRange(from = 'A', to = 'Z'))
   val alpha = CharSet.fromCharSets(lower, upper)
-  val digit = CharSet.fromRange(CharRange(from = '0'.u, to = '9'.u))
+  val digit = CharSet.fromRange(CharRange(from = '0', to = '9'))
   val alnum = CharSet.fromCharSets(alpha, digit)
-  val punct = CharSet("""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~""".map(char => Lit(UnicodeChar(char))))
+  val punct = CharSet("""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~""".map(char => Lit(char)))
   val graph = CharSet.fromCharSets(alnum, punct)
-  val space = CharSet(Seq(Lit('\n'.u), Lit('\t'.u), Lit('\r'.u), Lit('\f'.u), Lit(' '.u), Lit(0x0B.u)))
-  val wordChar = CharSet(alnum.ranges :+ Lit('_'.u))
+  val space = CharSet(Seq(Lit('\n'), Lit('\t'), Lit('\r'), Lit('\f'), Lit(' '), Lit(0x0B)))
+  val wordChar = CharSet(alnum.ranges :+ Lit('_'))
 
   val posixClasses = Map(
     "Lower" -> lower,
     "Upper" -> upper,
-    "ASCII" -> CharSet.fromRange(CharRange(from = 0.u, to = 0x7F.u)),
+    "ASCII" -> CharSet.fromRange(CharRange(from = 0, to = 0x7F)),
     "Alpha" -> alpha,
     "Digit" -> digit,
     "Alnum" -> alnum,
     "Punct" -> punct,
     "Graph" -> graph,
-    "Print" -> CharSet(graph.ranges :+ Lit(0x20.u)),
-    "Blank" -> CharSet(Seq(Lit(0x20.u), Lit('\t'.u))),
-    "Cntrl" -> CharSet(Seq(CharRange(from = 0.u, to = 0x1F.u), Lit(0x7F.u))),
-    "XDigit" -> CharSet(digit.ranges ++ Seq(CharRange(from = 'a'.u, to = 'f'.u), CharRange(from = 'A'.u, to = 'F'.u))),
+    "Print" -> CharSet(graph.ranges :+ Lit(0x20)),
+    "Blank" -> CharSet(Seq(Lit(0x20), Lit('\t'))),
+    "Cntrl" -> CharSet(Seq(CharRange(from = 0, to = 0x1F), Lit(0x7F))),
+    "XDigit" -> CharSet(digit.ranges ++ Seq(CharRange(from = 'a', to = 'f'), CharRange(from = 'A', to = 'F'))),
     "Space" -> space
   )
 
@@ -86,7 +84,7 @@ object PredefinedCharSets {
       unicodeSpace.ranges,
       unicodeGeneralCategories("Zl").ranges ++
         unicodeGeneralCategories("Zp").ranges ++
-        Seq(CharRange(from = '\u000a'.u, to = '\u000d'.u)) ++ Seq(Lit('\u0085'.u))
+        Seq(CharRange(from = '\u000a', to = '\u000d')) ++ Seq(Lit('\u0085'))
     ))
 
   val unicodeWordChar = CharSet.fromCharSets(
@@ -127,8 +125,8 @@ object PredefinedCharSets {
 
   lazy val allUnicodeLit: Seq[Lit] = {
     val (ret, elapsed) = Util.time {
-      for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) yield {
-        Lit(codePoint.u)
+      for (codePoint <- Character.MIN_CODE_POINT to Character.MAX_CODE_POINT) yield {
+        Lit(codePoint)
       }
     }
     logger.debug(s"initialized ${ret.size} Unicode literals in $elapsed")
@@ -139,7 +137,7 @@ object PredefinedCharSets {
     val (ret, elapsed) = Util.time {
       val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
       for (lit <- allUnicodeLit) {
-        val categoryJavaId = Character.getType(lit.char.codePoint).toByte
+        val categoryJavaId = Character.getType(lit.codePoint).toByte
         val category = GeneralCategory.categories(categoryJavaId)
         builder.getOrElseUpdate(category, ArrayBuffer()) += lit
         val parentCategory = category.substring(0, 1) // first letter
@@ -158,7 +156,7 @@ object PredefinedCharSets {
       for {
         lit <- allUnicodeLit
         (prop, fn) <- GeneralCategory.binaryProperties
-        if fn(lit.char.codePoint)
+        if fn(lit.codePoint)
       } {
         builder.getOrElseUpdate(prop, ArrayBuffer()) += lit
       }
@@ -172,7 +170,7 @@ object PredefinedCharSets {
     val (ret, elapsed) = Util.time {
       val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
       for (lit <- allUnicodeLit) {
-        for ((prop, fn) <- JavaCharacterProperties.properties if fn(lit.char.codePoint)) {
+        for ((prop, fn) <- JavaCharacterProperties.properties if fn(lit.codePoint)) {
           builder.getOrElseUpdate(prop, ArrayBuffer()) += lit
         }
       }
