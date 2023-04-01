@@ -47,11 +47,6 @@ object Util {
     def mapValuesNow[B](f: A => B): Map[K, B] = map.map { case (a, b) => (a, f(b)) }
   }
 
-  def floorEntry[A, B](sortedMap: SortedMap[A, B], key: A): Option[(A, B)] = {
-    // TODO: replace with rangeTo when updating Scala version
-    sortedMap.to(key).lastOption
-  }
-
   def getPrivateStaticField[A](clazz: Class[_], name: String): A = {
     val field = clazz.getDeclaredField(name)
     field.setAccessible(true)

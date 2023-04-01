@@ -283,6 +283,6 @@ object Regex {
     * string. Despite the theoretical equivalence of automata and regular expressions, in practice there is no regular
     * expression that does not match anything.
     */
-  def nullRegex(u: Universe): Regex = new SynteticRegex(Dfa.NothingDfa, u)
+  def nullRegex(u: Universe): Regex = new SynteticRegex(Dfa.nothingDfa, u)
 
 }

@@ -1,13 +1,11 @@
 package dregex.impl
 
 import scala.annotation.tailrec
-import scala.collection.immutable.SortedMap
 import scala.collection.mutable
 import Util.StrictMap
 import dregex.impl.Nfa.Transition
 
 import scala.jdk.CollectionConverters._
-import dregex.impl.Util.StrictSortedMap
 
 object DfaAlgorithms {
 
@@ -33,61 +31,61 @@ object DfaAlgorithms {
    */
 
   private def doIntersection[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
-    val commonChars = left.allChars intersect right.allChars
+    val commonChars: Set[CharInterval] = (left.allChars().asScala intersect right.allChars().asScala).toSet
     val newInitial = new BiState[A](left.initial, right.initial)
     val newTransitions = for {
-      (leftState, leftCharmap) <- left.defTransitions
-      (rightState, rightCharmap) <- right.defTransitions
+      (leftState, leftCharmap) <- left.defTransitions.asScala
+      (rightState, rightCharmap) <- right.defTransitions.asScala
       charMap = for {
         char <- commonChars.toSeq
-        leftDestState <- leftCharmap.get(char)
-        rightDestState <- rightCharmap.get(char)
+        leftDestState <- leftCharmap.asScala.get(char)
+        rightDestState <- rightCharmap.asScala.get(char)
       } yield {
         char -> new BiState[A](leftDestState, rightDestState)
       }
       if charMap.nonEmpty
     } yield {
-      new BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
+      new BiState[A](leftState, rightState) -> new java.util.TreeMap[CharInterval, BiState[A]](Map(charMap: _*).asJava)
     }
     // the accepting states of the new DFA are formed by the accepting states of the intersecting DFA
-    val accepting = for (l <- left.accepting; r <- right.accepting) yield new BiState(l, r)
-    Dfa[BiState[A]](newInitial, newTransitions, accepting)
+    val accepting = for (l <- left.accepting.asScala; r <- right.accepting.asScala) yield new BiState(l, r)
+    new Dfa[BiState[A]](newInitial, newTransitions.asJava, accepting.asJava, false)
   }
 
   private def doDifference[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val NullState = null.asInstanceOf[A]
-    val allChars = left.allChars union right.allChars
+    val allChars = left.allChars.asScala union right.allChars.asScala
     val newInitial = new BiState[A](left.initial, right.initial)
     val newTransitions = for {
-      (leftState, leftCharmap) <- left.defTransitions
-      rightState <- right.allStates.toSeq :+ NullState
-      rightCharmap = right.transitionMap(rightState)
+      (leftState, leftCharmap) <- left.defTransitions.asScala
+      rightState <- right.allStates().asScala.toSeq :+ NullState
+      rightCharmap = right.transitionMap(rightState).asScala
       charMap = for {
         char <- allChars.toSeq
-        leftDestState <- leftCharmap.get(char)
+        leftDestState <- leftCharmap.asScala.get(char)
         rightDestState = rightCharmap.getOrElse(char, NullState)
       } yield {
         char -> new BiState[A](leftDestState, rightDestState)
       }
       if charMap.nonEmpty
     } yield {
-      new BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
+      new BiState[A](leftState, rightState) -> new java.util.TreeMap[CharInterval, BiState[A]](Map(charMap: _*).asJava)
     }
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of
     // the right DFA that are no accepting
-    val accepting = for (l <- left.accepting; r <- right.allButAccepting + NullState) yield new BiState[A](l, r)
-    Dfa[BiState[A]](newInitial, newTransitions, accepting)
+    val accepting = for (l <- left.accepting.asScala; r <- right.allButAccepting.asScala + NullState) yield new BiState[A](l, r)
+    new Dfa[BiState[A]](newInitial, newTransitions.asJava, accepting.asJava, false)
   }
 
   private def doUnion[A <: State](left: Dfa[A], right: Dfa[A]): Dfa[BiState[A]] = {
     val NullState = null.asInstanceOf[A]
-    val allChars = left.allChars union right.allChars
+    val allChars = left.allChars().asScala union right.allChars().asScala
     val newInitial = new BiState[A](left.initial, right.initial)
     val newTransitions = for {
-      leftState <- left.allStates.toSeq :+ NullState
-      leftCharmap = left.transitionMap(leftState)
-      rightState <- right.allStates.toSeq :+ NullState
-      rightCharmap = right.transitionMap(rightState)
+      leftState <- left.allStates.asScala.toSeq :+ NullState
+      leftCharmap = left.transitionMap(leftState).asScala
+      rightState <- right.allStates.asScala.toSeq :+ NullState
+      rightCharmap = right.transitionMap(rightState).asScala
       charMap = for {
         char <- allChars.toSeq
         leftDestState = leftCharmap.getOrElse(char, NullState)
@@ -98,18 +96,18 @@ object DfaAlgorithms {
       }
       if charMap.nonEmpty
     } yield {
-      new BiState[A](leftState, rightState) -> SortedMap(charMap: _*)
+      new BiState[A](leftState, rightState) -> new java.util.TreeMap[CharInterval, BiState[A]](Map(charMap: _*).asJava)
     }
     // the accepting states of the new DFA are formed by the accepting states of the left DFA, and any the states of
     // the right DFA that are no accepting
     val accepting = for {
-      l <- left.allStates + NullState
-      r <- right.allStates + NullState
+      l <- left.allStates.asScala + NullState
+      r <- right.allStates.asScala + NullState
       if left.accepting.contains(l) || right.accepting.contains(r)
     } yield {
       new BiState[A](l, r)
     }
-    Dfa[BiState[A]](newInitial, newTransitions.toMap, accepting)
+    new Dfa[BiState[A]](newInitial, newTransitions.toMap.asJava, accepting.asJava, false)
   }
 
   /**
@@ -124,7 +122,7 @@ object DfaAlgorithms {
       } else {
         visited += current
         for {
-          targetState <- dfa.transitionMap(current).values
+          targetState <- dfa.transitionMap(current).asScala.values
           if !visited.contains(targetState)
         } {
           if (hasPathToAccepting(targetState))
@@ -142,19 +140,19 @@ object DfaAlgorithms {
     while (pending.nonEmpty) {
       val currentState = pending.dequeue()
       visited += currentState
-      val currentTransitions = dfa.transitionMap(currentState)
+      val currentTransitions = dfa.transitionMap(currentState).asScala
       val currentPossibleTargets = currentTransitions.values.toSet
       for (targetState <- currentPossibleTargets if !visited.contains(targetState)) {
         pending.enqueue(targetState)
       }
     }
-    val filteredTransitions = dfa.defTransitions
+    val filteredTransitions = dfa.defTransitions.asScala
       .view
       .filterKeys(visited) // using set as function
       .toMap // fix laziness
-    val filteredAccepting = dfa.accepting
+    val filteredAccepting = dfa.accepting.asScala
       .filter(visited) // using set as function
-    Dfa(initial = dfa.initial, defTransitions = filteredTransitions, accepting = filteredAccepting)
+    new Dfa(dfa.initial, filteredTransitions.asJava, filteredAccepting.asJava, false)
   }
 
   /**
@@ -166,23 +164,23 @@ object DfaAlgorithms {
      * Group the list of transitions of the NFA into a nested map, for easy lookup.
      * The rest of this method will use this map instead of the original list.
      */
-    val transitionMap = nfa.transitions.asScala.groupBy(_.from).mapValuesNow { stateTransitions =>
+    val transitionMap = nfa.transitions.asScala.groupBy(_.from).view.mapValues { stateTransitions =>
       stateTransitions.groupBy(_.char_).mapValuesNow { states =>
         states.map(_.to).toSet
       }
     }
-    val epsilonFreeTransitions = transitionMap.mapValuesNow { trans =>
+    val epsilonFreeTransitions = transitionMap.view.mapValues { trans =>
       // warn: partial function in for comprehension!
       for ((char: CharInterval, target) <- trans) yield char -> target
     }
     val epsilonExpansionCache = mutable.Map[Set[State], MultiState]()
     // Given a transition map and a set of states of a NFA, this function augments that set, following all epsilon
     // transitions recursively
-    def followEpsilon(current: Set[State]) = epsilonExpansionCache.get(current).getOrElse {
+    def followEpsilon(current: Set[State]) = epsilonExpansionCache.getOrElse(current, {
       val res = followEpsilonImpl(current)
       epsilonExpansionCache(current) = res
       res
-    }
+    })
     @tailrec
     def followEpsilonImpl(current: Set[State]): MultiState = {
       val immediate = for (state <- current) yield {
@@ -195,7 +193,7 @@ object DfaAlgorithms {
         followEpsilonImpl(expanded)
     }
     val dfaInitial = followEpsilon(Set(nfa.initial))
-    val dfaTransitions = mutable.Map[MultiState, SortedMap[CharInterval, MultiState]]()
+    val dfaTransitions = mutable.Map[MultiState, java.util.TreeMap[CharInterval, MultiState]]()
     val dfaStates = mutable.Set[MultiState]()
     val pending = mutable.Queue[MultiState](dfaInitial)
     while (pending.nonEmpty) {
@@ -221,24 +219,29 @@ object DfaAlgorithms {
       }
 
       if (dfaCurrentTrans.nonEmpty)
-        dfaTransitions(current) = SortedMap(dfaCurrentTrans.toSeq: _*)
+        dfaTransitions(current) = new java.util.TreeMap[CharInterval, MultiState](Map(dfaCurrentTrans.toSeq: _*).asJava)
     }
     // a DFA state is accepting if any of its NFA member-states is
     val dfaAccepting = dfaStates.filter(st => Util.doIntersect(st.states.asScala.to(Set), nfa.accepting.asScala.toSet)).toSet
-    Dfa(dfaInitial, dfaTransitions.toMap, dfaAccepting, minimal)
+    new Dfa(
+      dfaInitial,
+      dfaTransitions.toMap.mapValuesNow(x => new java.util.TreeMap[CharInterval, MultiState](x)).asJava,
+      dfaAccepting.asJava,
+      minimal
+    )
   }
 
   def reverse[A <: State](dfa: Dfa[A]): Nfa = {
     val initial: State = new SimpleState
-    val first = dfa.accepting.to(Seq).map(s => new Transition(initial, s, Epsilon.instance))
-    val rest = for {
-      (from, fn) <- dfa.defTransitions
-      (char, to) <- fn
+    val first = dfa.accepting.asScala.to(Seq).map(s => new Transition(initial, s, Epsilon.instance))
+    val rest: Seq[Transition] = (for {
+      (from, fn) <- dfa.defTransitions.asScala
+      (char, to) <- fn.asScala
     } yield {
       new Transition(to, from, char)
-    }
+    }).toSeq
     val accepting = Set[State](dfa.initial)
-    new Nfa(initial, (first ++ rest.to(Seq)).asJava, accepting.asJava)
+    new Nfa(initial, (first ++ rest).asJava, accepting.asJava)
   }
 
   /**
@@ -246,12 +249,12 @@ object DfaAlgorithms {
     */
   def toNfa[A <: State](dfa: Dfa[A]): Nfa = {
     val transitions = for {
-      (state, transitionMap) <- dfa.defTransitions
-      (char, target) <- transitionMap
+      (state, transitionMap) <- dfa.defTransitions.asScala
+      (char, target) <- transitionMap.asScala
     } yield {
       new Transition(state, target, char)
     }
-    val accepting: Set[State] = dfa.accepting.asInstanceOf[Set[State]] // fake covariance
+    val accepting: Set[State] = dfa.accepting.asScala.toSet
     new Nfa(dfa.initial, transitions.toSeq.asJava, accepting.asJava)
   }
 
@@ -268,7 +271,14 @@ object DfaAlgorithms {
       dfa
     } else {
       val reversedDfa = reverseAsDfa(dfa)
-      rewriteWithSimpleStates(reverseAsDfa(reversedDfa)).copy(minimal = true)
+      val doubleReversedDfa = reverseAsDfa(reversedDfa)
+      val minimalDfa = new Dfa[MultiState](
+        doubleReversedDfa.initial,
+        doubleReversedDfa.defTransitions,
+        doubleReversedDfa.accepting,
+        true
+      )
+      rewriteWithSimpleStates(minimalDfa)
     }
   }
 
@@ -280,9 +290,9 @@ object DfaAlgorithms {
     var current = dfa.initial
     var i = 0
     for (codePoint <- string.codePoints.iterator.asScala) {
-      val currentTrans = dfa.defTransitions.getOrElse(current, SortedMap[CharInterval, A]())
+      val currentTrans = dfa.defTransitions.asScala.getOrElse(current, new java.util.TreeMap[CharInterval, A]())
       // O(log transitions) search in the range tree
-      val newState = Util.floorEntry(currentTrans, new CharInterval(codePoint, codePoint)).flatMap {
+      val newState = Option(currentTrans.floorEntry(new CharInterval(codePoint, codePoint))).map(e => (e.getKey, e.getValue)).flatMap {
         case (interval, state) =>
           if (interval.to >= codePoint) {
             Some(state)
@@ -323,11 +333,14 @@ object DfaAlgorithms {
     * This function does not change the language matched by the DFA
     */
   def rewrite[A <: State, B <: State](dfa: Dfa[A], stateFactory: () => B): Dfa[B] = {
-    val mapping = (for (state <- dfa.allStates) yield state -> stateFactory()).toMap
-    Dfa[B](
-      initial = mapping(dfa.initial),
-      defTransitions = for ((s, fn) <- dfa.defTransitions) yield mapping(s) -> fn.mapValuesNow(mapping),
-      accepting = dfa.accepting.map(mapping)
+    val mapping = (for (state <- dfa.allStates.asScala) yield state -> stateFactory()).toMap
+    new Dfa[B](
+      mapping(dfa.initial),
+      (for ((s, fn) <- dfa.defTransitions.asScala) yield {
+        mapping(s) -> new java.util.TreeMap[CharInterval, B](fn.asScala.view.mapValues(mapping).toMap.asJava)
+      }).toMap.asJava,
+      dfa.accepting.asScala.map(mapping).asJava,
+      false
     )
   }
 
