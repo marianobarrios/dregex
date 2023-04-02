@@ -1,12 +1,7 @@
 package dregex
 
 import java.util.regex.Pattern
-
-import dregex.impl.RegexParser
-import dregex.impl.Util
-import dregex.impl.SimpleState
-import dregex.impl.DfaAlgorithms
-import dregex.impl.Dfa
+import dregex.impl.{Dfa, DfaAlgorithms, RegexParser, SimpleState, Util}
 import dregex.impl.RegexParser.DotMatch
 import org.slf4j.LoggerFactory
 
@@ -46,7 +41,8 @@ trait Regex {
     * failure.
     */
   def matchAndReport(string: CharSequence): (Boolean, Int) = {
-    DfaAlgorithms.matchString(dfa, universe.normalization.normalize(string))
+    val ret = DfaAlgorithms.matchString(dfa, universe.normalization.normalize(string))
+    (ret.matches, ret.i)
   }
 
   /**
@@ -58,7 +54,7 @@ trait Regex {
     val logger = LoggerFactory.getLogger(classOf[Regex])
     val (res, time) = Util.time {
       checkUniverse(other)
-      new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.intersect(this.dfa, other.dfa)), universe)
+      new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.doIntersect(this.dfa, other.dfa)), universe)
     }
     logger.trace("{} and {} intersected in {}", this, other, time)
     res

@@ -11,12 +11,12 @@ public class Nfa {
 
         public final State from;
         public final State to;
-        public final AtomPart char_;
+        public final AtomPart ch;
 
-        public Transition(State from, State to, AtomPart char_) {
+        public Transition(State from, State to, AtomPart ch) {
             this.from = from;
             this.to = to;
-            this.char_ = char_;
+            this.ch = ch;
         }
     }
 
