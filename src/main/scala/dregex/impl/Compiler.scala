@@ -53,7 +53,7 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
         processRep(rep, from, to)
 
       case Intersection(left, right) =>
-        processOp(DfaAlgorithms.intersect, left, right, from, to)
+        processOp(DfaAlgorithms.doIntersect, left, right, from, to)
 
       case Union(left, right) =>
         processOp(DfaAlgorithms.union, left, right, from, to)
@@ -245,8 +245,10 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
     }
   }
 
+  private type BinaryOp[A <: State] = (Dfa[A], Dfa[A]) => Dfa[BiState[A]]
+
   private def processOp(
-      operation: DfaAlgorithms.BinaryOp[SimpleState],
+      operation: BinaryOp[SimpleState],
       left: Node,
       right: Node,
       from: SimpleState,

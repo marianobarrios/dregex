@@ -23,11 +23,11 @@ object DotFormatter {
     }
     val transitions = for (transition <- nfa.transitions.asScala) yield {
       val weight =
-        if (transition.char_ == Epsilon.instance)
+        if (transition.ch == Epsilon.instance)
           1
         else
           2
-      s""""${transition.from.toString}" -> "${transition.to.toString}" [label=${transition.char_.toString}, weight=$weight];"""
+      s""""${transition.from.toString}" -> "${transition.to.toString}" [label=${transition.ch.toString}, weight=$weight];"""
     }
     s"""
       digraph graphname {
