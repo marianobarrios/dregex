@@ -1,10 +1,11 @@
 package dregex
 
 import java.util.regex.Pattern
-import dregex.impl.{Dfa, DfaAlgorithms, RegexParser, SimpleState, Util}
+import dregex.impl.{Dfa, DfaAlgorithms, RegexParser, SimpleState}
 import dregex.impl.RegexParser.DotMatch
 import org.slf4j.LoggerFactory
 
+import java.time.Duration
 import scala.jdk.CollectionConverters._
 
 /**
@@ -52,10 +53,10 @@ trait Regex {
     */
   def intersect(other: Regex): Regex = {
     val logger = LoggerFactory.getLogger(classOf[Regex])
-    val (res, time) = Util.time {
-      checkUniverse(other)
-      new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.doIntersect(this.dfa, other.dfa)), universe)
-    }
+    checkUniverse(other)
+    val start = System.nanoTime()
+    val res = new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.doIntersect(this.dfa, other.dfa)), universe)
+    val time = Duration.ofNanos(System.nanoTime() - start)
     logger.trace("{} and {} intersected in {}", this, other, time)
     res
   }
@@ -67,10 +68,10 @@ trait Regex {
     */
   def diff(other: Regex): Regex = {
     val logger = LoggerFactory.getLogger(classOf[Regex])
-    val (res, time) = Util.time {
-      checkUniverse(other)
-      new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.diff(this.dfa, other.dfa)), universe)
-    }
+    val start = System.nanoTime()
+    checkUniverse(other)
+    val res = new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.diff(this.dfa, other.dfa)), universe)
+    val time = Duration.ofNanos(System.nanoTime() - start)
     logger.trace("{} and {} diffed in {}", this, other, time)
     res
   }
@@ -82,10 +83,10 @@ trait Regex {
     */
   def union(other: Regex): Regex = {
     val logger = LoggerFactory.getLogger(classOf[Regex])
-    val (res, time) = Util.time {
-      checkUniverse(other)
-      new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.union(this.dfa, other.dfa)), universe)
-    }
+    val start = System.nanoTime()
+    checkUniverse(other)
+    val res = new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.union(this.dfa, other.dfa)), universe)
+    val time = Duration.ofNanos(System.nanoTime() - start)
     logger.trace("{} and {} unioned in {}", this, other, time)
     res
   }
@@ -209,9 +210,9 @@ object Regex {
     * $parseDesc
     */
   def compileParsed(parsedRegex: ParsedRegex, universe: Universe): CompiledRegex = {
-    val (res, time) = Util.time {
-      new CompiledRegex(parsedRegex.literal, parsedRegex.tree, universe)
-    }
+    val start = System.nanoTime()
+    val res = new CompiledRegex(parsedRegex.literal, parsedRegex.tree, universe)
+    val time = Duration.ofNanos(System.nanoTime() - start)
     logger.trace("{} compiled in {}", parsedRegex.literal, time: Any)
     res
   }
@@ -223,9 +224,9 @@ object Regex {
     */
   def compile(regex: String, flags: Int): CompiledRegex = {
     val parsedRegex = parse(regex, flags)
-    val (compiled, time) = Util.time {
-      new CompiledRegex(regex, parsedRegex.tree, new Universe(Seq(parsedRegex.tree), parsedRegex.norm))
-    }
+    val start = System.nanoTime()
+    val compiled = new CompiledRegex(regex, parsedRegex.tree, new Universe(Seq(parsedRegex.tree), parsedRegex.norm))
+    val time = Duration.ofNanos(System.nanoTime() - start)
     logger.trace("{} compiled in {}", compiled, time: Any)
     compiled
   }
