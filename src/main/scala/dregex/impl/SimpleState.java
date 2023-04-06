@@ -9,7 +9,16 @@ public class SimpleState implements State {
 
     @Override
     public String toString() {
-        return Util.toSubscriptString(id);
+        return toSubscriptString(id);
+    }
+
+    private String toSubscriptString(int number) {
+        var string = Integer.toString(number);
+        var ret = new StringBuffer();
+        string.codePoints().forEach(codePoint -> {
+            ret.append(Character.toChars(codePoint + 8272));
+        });
+        return ret.toString();
     }
 
     private static final AtomicInteger counter = new AtomicInteger();

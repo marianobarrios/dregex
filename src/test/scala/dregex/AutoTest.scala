@@ -1,10 +1,10 @@
 package dregex
 
 import dregex.impl.Normalization
-import dregex.impl.Util
 import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
+import java.time.Duration
 import collection.immutable.Seq
 
 /**
@@ -21,19 +21,19 @@ class AutoTest extends AnyFunSuite {
     val generator = new TreeGenerator
     var totalTrees = 0
     var totalStrings = 0
-    val elapsed = Util.time {
-      for (tree <- generator.generate(maxDepth = 3)) {
-        totalTrees += 1
-        val regexString = tree.toRegex
-        val regex = new CompiledRegex(regexString, tree, new Universe(Seq(tree), Normalization.NoNormalization))
-        val strings = StringGenerator.generate(tree, maxAlternatives = 3, maxRepeat = 3)
-        totalStrings += strings.size
-        logger.debug("Testing: {}, generated: {}", regexString, strings.size)
-        for (string <- strings) {
-          assertResult(true)(regex.matches(string))
-        }
+    val start = System.nanoTime()
+    for (tree <- generator.generate(maxDepth = 3)) {
+      totalTrees += 1
+      val regexString = tree.toRegex
+      val regex = new CompiledRegex(regexString, tree, new Universe(Seq(tree), Normalization.NoNormalization))
+      val strings = StringGenerator.generate(tree, maxAlternatives = 3, maxRepeat = 3)
+      totalStrings += strings.size
+      logger.debug("Testing: {}, generated: {}", regexString, strings.size)
+      for (string <- strings) {
+        assertResult(true)(regex.matches(string))
       }
     }
+    val elapsed = Duration.ofNanos(System.nanoTime() - start)
     logger.debug(
       "Trees iteration took: {}; trees generated: {}; strings tested: {}",
       elapsed,

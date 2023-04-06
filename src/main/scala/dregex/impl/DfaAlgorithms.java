@@ -351,7 +351,7 @@ public class DfaAlgorithms {
             }
         }
         // a DFA state is accepting if any of its NFA member-states is
-        var dfaAccepting = dfaStates.stream().filter(st -> Util2.doIntersect(st.states, nfa.accepting)).collect(Collectors.toSet());
+        var dfaAccepting = dfaStates.stream().filter(st -> Util.doIntersect(st.states, nfa.accepting)).collect(Collectors.toSet());
 
         return new Dfa<>(dfaInitial, dfaTransitions, dfaAccepting, false);
     }
@@ -361,7 +361,7 @@ public class DfaAlgorithms {
         for (var state : current) {
             immediate.add(transitionMap.getOrDefault(state, Map.of()).getOrDefault(Epsilon.instance, Set.of()));
         }
-        Set<State> expanded = immediate.stream().reduce(current, (a, b) -> Util2.union(a, b));
+        Set<State> expanded = immediate.stream().reduce(current, (a, b) -> Util.union(a, b));
         if (expanded.equals(current)) {
             return new MultiState(current);
         } else {
