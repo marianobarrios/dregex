@@ -455,7 +455,7 @@ object RegexParser {
     */
   private def parseRegexImpl(regex: String, flags: Flags): ParsedRegex = {
     // normalize case
-    var normalizer: Normalization = if (flags.caseInsensitive) {
+    var normalizer: Normalizer = if (flags.caseInsensitive) {
       if (flags.unicodeClasses | flags.unicodeCase) {
         Normalization.UnicodeLowerCase
       } else {
@@ -466,7 +466,7 @@ object RegexParser {
     }
 
     if (flags.canonicalEq) {
-      normalizer = Normalization.combine(Normalization.CanonicalDecomposition, normalizer)
+      normalizer = Normalizer.combine(Normalization.CanonicalDecomposition, normalizer)
     }
 
     // parsing proper

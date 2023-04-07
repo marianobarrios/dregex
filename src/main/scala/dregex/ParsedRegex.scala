@@ -1,5 +1,5 @@
 package dregex
 
-import dregex.impl.{Normalization, RegexTree}
+import dregex.impl.{Normalizer, RegexTree}
 
-class ParsedRegex private[dregex] (val literal: String, val tree: RegexTree.Node, val norm: Normalization)
+class ParsedRegex private[dregex] (val literal: String, val tree: RegexTree.Node, val norm: Normalizer)
