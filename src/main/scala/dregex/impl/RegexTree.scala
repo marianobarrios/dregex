@@ -1,6 +1,7 @@
 package dregex.impl
 
 import scala.runtime.ScalaRunTime
+import scala.jdk.CollectionConverters._
 
 sealed trait Direction
 object Direction {
@@ -109,11 +110,19 @@ object RegexTree {
     def canonical = this
     def precedence = 1
     override def toString = s"${getClass.getSimpleName}(${ranges.mkString(",")})"
+    def javaRanges() = ranges.asJava
   }
 
   object CharSet {
     def fromCharSets(charSets: CharSet*): CharSet = CharSet(charSets.to(Seq).flatMap(_.ranges))
+
+    def fromCharSetsJava(charSets: java.util.List[CharSet]) = fromCharSets(charSets.asScala.toSeq: _*)
+
     def fromRange(interval: AbstractRange) = CharSet(Seq(interval))
+
+    def fromJava(ranges: java.util.List[AbstractRange]): CharSet = {
+      CharSet(ranges.asScala.toSeq)
+    }
   }
 
   case class Disj(values: Seq[Node]) extends ComplexPart {

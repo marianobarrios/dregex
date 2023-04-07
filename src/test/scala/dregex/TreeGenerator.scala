@@ -1,7 +1,7 @@
 package dregex
 
 import dregex.impl.RegexTree
-import dregex.impl.PredefinedCharSets
+import dregex.impl.PredefinedPosixCharSets
 
 /**
   * Generate some sample regex trees, useful for testing.
@@ -17,7 +17,7 @@ class TreeGenerator {
         Wildcard,
         CharSet.fromRange(CharRange('d', 'f')),
         CharSet.fromRange(CharRange('d', 'f')).complement,
-        PredefinedCharSets.digit)
+        PredefinedPosixCharSets.digit)
     } else {
       generateFixedDepth(levels - 1).flatMap { node =>
         val simple = Iterator(
