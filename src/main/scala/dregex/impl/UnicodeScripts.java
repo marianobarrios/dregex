@@ -2,36 +2,24 @@ package dregex.impl;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-public class UnicodeDatabase {
+public class UnicodeScripts {
 
-    public static Map<String, UnicodeDatabaseReader.Range> blockRanges;
+    private static final Map<String, List<UnicodeDatabaseReader.Range>> ranges;
 
     static {
-        try (var blocksFile = UnicodeDatabase.class.getResourceAsStream("/Blocks.txt")) {
-            blockRanges = UnicodeDatabaseReader.getBlocks(new InputStreamReader(blocksFile));
+        try (var scriptsFile = UnicodeScripts.class.getResourceAsStream("/Scripts.txt")) {
+            ranges = UnicodeDatabaseReader.getScripts(new InputStreamReader(scriptsFile));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static Map<String, String> blockSynonyms = Map.of(
-            "Greek and Coptic", "Greek"
-    );
-
-    public static Map<String, List<UnicodeDatabaseReader.Range>> scriptRanges;
-
-    static {
-        try (var scriptsFile = UnicodeDatabase.class.getResourceAsStream("/Scripts.txt")) {
-            scriptRanges = UnicodeDatabaseReader.getScripts(new InputStreamReader(scriptsFile));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static Map<String, String> scriptSynomyms = Map.ofEntries(
+    private static final Map<String, String> synomyms = Map.ofEntries(
             Map.entry("COMMON", "ZYYY"),
             Map.entry("LATIN", "LATN"),
             Map.entry("GREEK", "GREK"),
@@ -188,5 +176,24 @@ public class UnicodeDatabase {
             Map.entry("CHORASMIAN", "CHRS"),
             Map.entry("DIVES_AKURU", "DIAK"),
             Map.entry("KHITAN_SMALL_SCRIPT", "KITS"));
+
+
+    public static final Map<String, RegexTree.CharSet> unicodeScripts;
+
+    static {
+        unicodeScripts = new HashMap<>();
+        for (var entry : ranges.entrySet()) {
+            var block = entry.getKey();
+            var ranges = entry.getValue();
+            var chatSet = RegexTree.CharSet$.MODULE$.fromJava(ranges.stream().map(
+                    range -> new RegexTree.CharRange(range.from, range.to)).collect(Collectors.toList()));
+            unicodeScripts.put(block.toUpperCase(), chatSet);
+        }
+        for (var entry : synomyms.entrySet()) {
+            var script = entry.getKey();
+            var alias = entry.getValue();
+            unicodeScripts.put(alias.toUpperCase(), unicodeScripts.get(script.toUpperCase()));
+        }
+    }
 
 }

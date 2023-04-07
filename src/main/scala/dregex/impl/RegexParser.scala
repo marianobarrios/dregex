@@ -6,6 +6,7 @@ import dregex.{InvalidRegexException, ParsedRegex}
 import dregex.impl.RegexParser.DotMatch
 
 import scala.util.parsing.combinator.RegexParsers
+import scala.jdk.CollectionConverters._
 
 class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean) extends RegexParsers {
 
@@ -137,11 +138,17 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
     case propName ~ _ ~ propValue =>
       if (propName == "block" || propName == "blk") {
         val canonicalBlockName = UnicodeDatabaseReader.canonicalizeBlockName(propValue)
-        PredefinedCharSets.unicodeBlocks
-          .getOrElse(canonicalBlockName, throw new InvalidRegexException("Invalid Unicode block: " + propValue))
+        val block = UnicodeBlocks.unicodeBlocks.get(canonicalBlockName)
+        if (block == null) {
+          throw new InvalidRegexException("Invalid Unicode block: " + propValue)
+        }
+        block
       } else if (propName == "script" || propName == "sc") {
-        PredefinedCharSets.unicodeScripts
-          .getOrElse(propValue.toUpperCase(), throw new InvalidRegexException("Invalid Unicode script: " + propValue))
+        val script = UnicodeScripts.unicodeScripts.get(propValue.toUpperCase())
+        if (script == null) {
+          throw new InvalidRegexException("Invalid Unicode script: " + propValue)
+        }
+        script
       } else if (propName == "general_category" || propName == "gc") {
         PredefinedCharSets.unicodeGeneralCategories
           .getOrElse(propValue, throw new InvalidRegexException("Invalid Unicode general category: " + propValue))
@@ -155,7 +162,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
      * If the property starts with "Is" it could be either a script,
      * general category or a binary property. Look for all.
      */
-    PredefinedCharSets.unicodeScripts
+    UnicodeScripts.unicodeScripts.asScala
       .get(name.toUpperCase())
       .orElse(PredefinedCharSets.unicodeGeneralCategories.get(name))
       .orElse(PredefinedCharSets.unicodeBinaryProperties.get(name.toUpperCase()))
@@ -165,8 +172,11 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   }
 
   def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~> unicodeSubsetName <~ "}" ^^ { blockName =>
-    PredefinedCharSets.unicodeBlocks
-      .getOrElse(UnicodeDatabaseReader.canonicalizeBlockName(blockName), throw new InvalidRegexException("Invalid Unicode block: " + blockName))
+    val block = UnicodeBlocks.unicodeBlocks.get(UnicodeDatabaseReader.canonicalizeBlockName(blockName))
+    if (block == null) {
+      throw new InvalidRegexException("Invalid Unicode block: " + blockName)
+    }
+    block
   }
 
   def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~> unicodeSubsetName <~ "}" ^^ { charClass =>
@@ -184,7 +194,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
       if (unicodeClasses) {
         PredefinedCharSets.unicodePosixClasses
       } else {
-        PredefinedCharSets.posixClasses
+        PredefinedPosixCharSets.classes.asScala
       }
     }
     effPosixClasses.get(name).orElse(PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
@@ -228,42 +238,42 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
     if (unicodeClasses)
       PredefinedCharSets.unicodeDigit
     else
-      PredefinedCharSets.digit
+      PredefinedPosixCharSets.digit
   }
 
   def shorthandCharSetDigitCompl = backslash ~ "D" ^^^ {
     if (unicodeClasses)
       PredefinedCharSets.unicodeDigit.complement
     else
-      PredefinedCharSets.digit.complement
+      PredefinedPosixCharSets.digit.complement
   }
 
   def shorthandCharSetSpace = backslash ~ "s" ^^^ {
     if (unicodeClasses)
       PredefinedCharSets.unicodeSpace
     else
-      PredefinedCharSets.space
+      PredefinedPosixCharSets.space
   }
 
   def shorthandCharSetSpaceCompl = backslash ~ "S" ^^^ {
     if (unicodeClasses)
       PredefinedCharSets.unicodeSpace.complement
     else
-      PredefinedCharSets.space.complement
+      PredefinedPosixCharSets.space.complement
   }
 
   def shorthandCharSetWord = backslash ~ "w" ^^^ {
     if (unicodeClasses)
       PredefinedCharSets.unicodeWordChar
     else
-      PredefinedCharSets.wordChar
+      PredefinedPosixCharSets.wordChar
   }
 
   def shorthandCharSetWordCompl = backslash ~ "W" ^^^ {
     if (unicodeClasses)
       PredefinedCharSets.unicodeWordChar.complement
     else
-      PredefinedCharSets.wordChar.complement
+      PredefinedPosixCharSets.wordChar.complement
   }
 
   def charClass = "[" ~> "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? <~ "]" ^^ {

@@ -14,56 +14,6 @@ object PredefinedCharSets {
 
   private[this] val logger = LoggerFactory.getLogger(PredefinedCharSets.getClass)
 
-  val unicodeBlocks: Map[String, CharSet] = {
-    val ret = collection.mutable.Map[String, CharSet]()
-    for ((block, range) <- UnicodeDatabase.blockRanges.asScala) {
-      val charSet = CharSet.fromRange(CharRange(range.from, range.to))
-      ret.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet)
-    }
-    for ((block, alias) <- UnicodeDatabase.blockSynonyms.asScala) {
-      ret.put(UnicodeDatabaseReader.canonicalizeBlockName(alias), ret(UnicodeDatabaseReader.canonicalizeBlockName(block)))
-    }
-    ret.toMap
-  }
-
-  val unicodeScripts: Map[String, CharSet] = {
-    val ret = collection.mutable.Map[String, CharSet]()
-    for ((block, ranges) <- UnicodeDatabase.scriptRanges.asScala) {
-      val chatSet = CharSet(ranges.asScala.toSeq.map(range => CharRange(range.from, range.to)))
-      ret.put(block.toUpperCase, chatSet)
-    }
-    for ((script, alias) <- UnicodeDatabase.scriptSynomyms.asScala) {
-      ret.put(alias.toUpperCase, ret(script.toUpperCase))
-    }
-    ret.toMap
-  }
-
-  val lower = CharSet.fromRange(CharRange(from = 'a', to = 'z'))
-  val upper = CharSet.fromRange(CharRange(from = 'A', to = 'Z'))
-  val alpha = CharSet.fromCharSets(lower, upper)
-  val digit = CharSet.fromRange(CharRange(from = '0', to = '9'))
-  val alnum = CharSet.fromCharSets(alpha, digit)
-  val punct = CharSet("""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~""".map(char => Lit(char)))
-  val graph = CharSet.fromCharSets(alnum, punct)
-  val space = CharSet(Seq(Lit('\n'), Lit('\t'), Lit('\r'), Lit('\f'), Lit(' '), Lit(0x0B)))
-  val wordChar = CharSet(alnum.ranges :+ Lit('_'))
-
-  val posixClasses = Map(
-    "Lower" -> lower,
-    "Upper" -> upper,
-    "ASCII" -> CharSet.fromRange(CharRange(from = 0, to = 0x7F)),
-    "Alpha" -> alpha,
-    "Digit" -> digit,
-    "Alnum" -> alnum,
-    "Punct" -> punct,
-    "Graph" -> graph,
-    "Print" -> CharSet(graph.ranges :+ Lit(0x20)),
-    "Blank" -> CharSet(Seq(Lit(0x20), Lit('\t'))),
-    "Cntrl" -> CharSet(Seq(CharRange(from = 0, to = 0x1F), Lit(0x7F))),
-    "XDigit" -> CharSet(digit.ranges ++ Seq(CharRange(from = 'a', to = 'f'), CharRange(from = 'A', to = 'F'))),
-    "Space" -> space
-  )
-
   // Unicode version of POSIX-defined character classes
 
   val unicodeDigit = unicodeBinaryProperties("DIGIT")
@@ -101,7 +51,7 @@ object PredefinedCharSets {
   val unicodePosixClasses = Map(
     "Lower" -> unicodeBinaryProperties("LOWERCASE"),
     "Upper" -> unicodeBinaryProperties("UPPERCASE"),
-    "ASCII" -> posixClasses("ASCII"),
+    "ASCII" -> PredefinedPosixCharSets.classes.get("ASCII"),
     "Alpha" -> unicodeBinaryProperties("ALPHABETIC"),
     "Digit" -> unicodeDigit,
     "Alnum" -> CharSet.fromCharSets(unicodeBinaryProperties("ALPHABETIC"), unicodeDigit),
