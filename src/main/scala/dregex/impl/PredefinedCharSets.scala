@@ -138,7 +138,7 @@ object PredefinedCharSets {
     val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
     for (lit <- allUnicodeLit) {
       val categoryJavaId = Character.getType(lit.codePoint).toByte
-      val category = GeneralCategory.categories(categoryJavaId)
+      val category = GeneralCategory.categories.get(categoryJavaId)
       builder.getOrElseUpdate(category, ArrayBuffer()) += lit
       val parentCategory = category.substring(0, 1) // first letter
       builder.getOrElseUpdate(parentCategory, ArrayBuffer()) += lit
@@ -155,8 +155,8 @@ object PredefinedCharSets {
     val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
     for {
       lit <- allUnicodeLit
-      (prop, fn) <- GeneralCategory.binaryProperties
-      if fn(lit.codePoint)
+      (prop, fn) <- GeneralCategory.binaryProperties.asScala
+      if fn.test(lit.codePoint)
     } {
       builder.getOrElseUpdate(prop, ArrayBuffer()) += lit
     }
