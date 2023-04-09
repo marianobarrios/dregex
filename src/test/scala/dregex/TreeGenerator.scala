@@ -1,33 +1,38 @@
 package dregex
 
-import dregex.impl.RegexTree
 import dregex.impl.PredefinedPosixCharSets
-
+import dregex.impl.tree.Node
+import dregex.impl.tree.Lit
+import dregex.impl.tree.CharRange
+import dregex.impl.tree.Wildcard
+import dregex.impl.tree.CharSet
+import dregex.impl.tree.Disj
+import dregex.impl.tree.Rep
+import dregex.impl.tree.Juxt
+import java.util.Optional
 /**
   * Generate some sample regex trees, useful for testing.
   */
 class TreeGenerator {
 
-  import RegexTree._
-
   private def generateFixedDepth(levels: Int): Iterator[Node] = {
     if (levels == 1) {
       Iterator(
-        Lit('a'),
-        Wildcard,
-        CharSet.fromRange(CharRange('d', 'f')),
-        CharSet.fromRange(CharRange('d', 'f')).complement,
+        new Lit('a'),
+        Wildcard.instance,
+        CharSet.fromRange(new CharRange('d', 'f')),
+        CharSet.fromRange(new CharRange('d', 'f')).complement,
         PredefinedPosixCharSets.digit)
     } else {
       generateFixedDepth(levels - 1).flatMap { node =>
         val simple = Iterator(
-          Rep(0, None, node),
-          Rep(1, None, node),
-          Rep(2, None, node),
-          Rep(2, Some(3), node),
-          Rep(0, Some(1), node))
+          new Rep(0, Optional.empty(), node),
+          new Rep(1, Optional.empty(), node),
+          new Rep(2, Optional.empty(), node),
+          new Rep(2, Optional.of(3), node),
+          new Rep(0, Optional.of(1), node))
         val double = generateFixedDepth(levels - 1).flatMap { secondNode =>
-          Iterator(Disj(Seq(node, secondNode)), Juxt(Seq(node, secondNode)))
+          Iterator(new Disj(java.util.List.of(node, secondNode)), new Juxt(java.util.List.of(node, secondNode)))
         //Juxt(Seq(Lit('x'.u), Lookaround(Direction.Ahead, Condition.Negative, node), secondNode)),
         //Juxt(Seq(Lit('x'.u), Lookaround(Direction.Ahead, Condition.Positive, node), secondNode)))
         }

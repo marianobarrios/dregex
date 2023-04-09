@@ -1,17 +1,26 @@
 package dregex.impl
 
-import dregex.impl.RegexTree.AbstractRange
-import dregex.impl.RegexTree.CharRange
+import dregex.impl.tree.AbstractRange
+import dregex.impl.tree.CharRange
 import scala.collection.immutable.IndexedSeq
+import scala.jdk.CollectionConverters._
 
 object RangeOps {
 
-  def diff(left: Seq[AbstractRange], right: Seq[AbstractRange]): Seq[AbstractRange] = {
-    left.flatMap(diff(_, right))
+  def diff(left: java.util.List[AbstractRange], right: Seq[AbstractRange]): Seq[AbstractRange] = {
+    left.asScala.toSeq.flatMap(diff(_, right))
+  }
+
+  def diff(left: java.util.List[AbstractRange], right: java.util.List[AbstractRange]): Seq[AbstractRange] = {
+    left.asScala.toSeq.flatMap(diff(_, right.asScala.toSeq))
   }
 
   def diff(left: AbstractRange, right: Seq[AbstractRange]): Seq[AbstractRange] = {
     right.foldLeft(Seq(left))(diff)
+  }
+
+  def diff(left: AbstractRange, right: java.util.List[AbstractRange]): java.util.List[AbstractRange] = {
+    right.asScala.foldLeft(Seq(left))(diff).asJava
   }
 
   def diff(left: Seq[AbstractRange], right: AbstractRange): Seq[AbstractRange] = {
@@ -26,11 +35,11 @@ object RangeOps {
     } else if (left.to < right.from) {
       Seq(left)
     } else if (left.from < right.from && left.to > right.to) {
-      Seq(CharRange(from = left.from, to = right.from - 1), CharRange(from = right.to + 1, to = left.to))
+      Seq(new CharRange(left.from, right.from - 1), new CharRange(right.to + 1, left.to))
     } else if (left.from < right.from && left.to <= right.to) {
-      Seq(CharRange(from = left.from, to = right.from - 1))
+      Seq(new CharRange(left.from, right.from - 1))
     } else if (left.from >= right.from && left.to > right.to) {
-      Seq(CharRange(from = right.to + 1, to = left.to))
+      Seq(new CharRange(right.to + 1, left.to))
     } else {
       throw new AssertionError
     }
@@ -49,25 +58,29 @@ object RangeOps {
     }
   }
 
+  def union(ranges: java.util.List[AbstractRange]): Seq[AbstractRange] = {
+    union(ranges.asScala.toSeq)
+  }
+
   def union(left: AbstractRange, right: AbstractRange): Seq[AbstractRange] = {
     if (left.from >= right.from && left.to <= right.to) {
       Seq(right)
     } else if (left.from > right.to) {
       if (right.to + 1 == left.from)
-        Seq(CharRange(right.from, left.to))
+        Seq(new CharRange(right.from, left.to))
       else
         Seq(right, left)
     } else if (left.to < right.from) {
       if (left.to + 1 == right.from)
-        Seq(CharRange(left.from, right.to))
+        Seq(new CharRange(left.from, right.to))
       else
         Seq(left, right)
     } else if (left.from < right.from && left.to > right.to) {
       Seq(left)
     } else if (left.from < right.from && left.to <= right.to) {
-      Seq(CharRange(from = left.from, to = right.to))
+      Seq(new CharRange(left.from, right.to))
     } else if (left.from >= right.from && left.to > right.to) {
-      Seq(CharRange(from = right.from, to = left.to))
+      Seq(new CharRange(right.from, left.to))
     } else {
       throw new AssertionError
     }

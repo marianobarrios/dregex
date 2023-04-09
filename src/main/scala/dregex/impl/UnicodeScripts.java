@@ -1,5 +1,8 @@
 package dregex.impl;
 
+import dregex.impl.tree.CharRange;
+import dregex.impl.tree.CharSet;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
@@ -178,15 +181,14 @@ public class UnicodeScripts {
             Map.entry("KHITAN_SMALL_SCRIPT", "KITS"));
 
 
-    public static final Map<String, RegexTree.CharSet> unicodeScripts;
+    public static final Map<String, CharSet> unicodeScripts;
 
     static {
         unicodeScripts = new HashMap<>();
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var ranges = entry.getValue();
-            var chatSet = RegexTree.CharSet$.MODULE$.fromJava(ranges.stream().map(
-                    range -> new RegexTree.CharRange(range.from, range.to)).collect(Collectors.toList()));
+            var chatSet = new CharSet(ranges.stream().map(range -> new CharRange(range.from, range.to)).collect(Collectors.toList()));
             unicodeScripts.put(block.toUpperCase(), chatSet);
         }
         for (var entry : synomyms.entrySet()) {

@@ -2,9 +2,9 @@ package dregex;
 
 import dregex.impl.Compiler;
 import dregex.impl.Dfa;
-import dregex.impl.RegexTree;
 import dregex.impl.SimpleState;
 import lombok.NonNull;
+import dregex.impl.tree.Node;
 
 /**
  * A fully-compiled regular expression that was generated from a string literal.
@@ -13,10 +13,10 @@ public class CompiledRegex implements Regex {
 
     private final Universe _universe;
     private final String _originalString;
-    private final RegexTree.Node _parsedTree;
+    private final Node _parsedTree;
     private final Dfa<SimpleState> _dfa;
 
-    public CompiledRegex(@NonNull String originalString, @NonNull RegexTree.Node parsedTree, @NonNull Universe universe) {
+    public CompiledRegex(@NonNull String originalString, @NonNull Node parsedTree, @NonNull Universe universe) {
         this._universe = universe;
         this._originalString = originalString;
         this._parsedTree = parsedTree;
@@ -32,7 +32,7 @@ public class CompiledRegex implements Regex {
         return _originalString;
     }
 
-    public RegexTree.Node parsedTree() {
+    public Node parsedTree() {
         return _parsedTree;
     }
 

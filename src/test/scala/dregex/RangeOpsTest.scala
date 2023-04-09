@@ -1,14 +1,14 @@
 package dregex
 
-import dregex.impl.RegexTree.CharRange
 import dregex.impl.RangeOps
 import org.scalatest.funsuite.AnyFunSuite
+import dregex.impl.tree.CharRange
 
 class RangeOpsTest extends AnyFunSuite {
 
   implicit def pairToRange(pair: (Int, Int)): CharRange = {
     pair match {
-      case (from, to) => CharRange(from, to)
+      case (from, to) => new CharRange(from, to)
     }
   }
 

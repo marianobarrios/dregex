@@ -1,6 +1,7 @@
 package dregex
 
-import dregex.impl.{CharInterval, Normalization, Normalizer, RegexTree}
+import dregex.impl.tree.{AbstractRange, CaptureGroup, CharSet, Disj, Juxt, Lookaround, Node, Operation, Rep, Wildcard}
+import dregex.impl.{CharInterval, Normalization, Normalizer}
 
 import scala.jdk.CollectionConverters._
 
@@ -18,9 +19,7 @@ import scala.jdk.CollectionConverters._
   * methods is simpler and more direct. However, there are cases in which the intermediate [[ParsedRegex]]s are
   * needed. Most notably, when caching [[CompiledRegex]] instances (which are in general more expensive to create).
   */
-class Universe(parsedTrees: Seq[RegexTree.Node], val normalization: Normalizer) {
-
-  import RegexTree._
+class Universe(parsedTrees: Seq[Node], val normalization: Normalizer) {
 
   private[dregex] val alphabet: java.util.Map[AbstractRange, java.util.List[CharInterval]] = {
     CharInterval.calculateNonOverlapping(parsedTrees.flatMap(t => collect(t)).asJava)
@@ -46,11 +45,15 @@ class Universe(parsedTrees: Seq[RegexTree.Node], val normalization: Normalizer) 
     * This method collects the interval, so they can then be made disjoint.
     */
   private[dregex] def collect(ast: Node): Seq[AbstractRange] = ast match {
-    // Lookaround is also a ComplexPart, order important
-    case Lookaround(dir, cond, value) => collect(value) :+ Wildcard
-    case complex: ComplexPart         => complex.values.flatMap(collect)
+    // order important
+    case lookaround: Lookaround       => collect(lookaround.value) :+ Wildcard.instance
+    case captureGroup: CaptureGroup   => collect(captureGroup.value)
+    case operation: Operation         => Seq(operation.left, operation.right).flatMap(collect)
+    case disj: Disj                   => disj.values.asScala.toSeq.flatMap(collect)
+    case juxt: Juxt                   => juxt.values.asScala.toSeq.flatMap(collect)
+    case rep: Rep                     => collect(rep.value)
     case range: AbstractRange         => Seq(range)
-    case CharSet(ranges)              => ranges
+    case set: CharSet                 => set.ranges.asScala.toSeq
   }
 
 }
