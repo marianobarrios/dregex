@@ -53,7 +53,7 @@ libraryDependencies ++=
   "org.scala-lang.modules" %% "scala-collection-compat" % "2.9.0" ::
   "org.projectlombok" % "lombok" % "1.18.22" ::
   "org.scalatest" %% "scalatest-funsuite" % "3.2.15" % Test ::
-  "ch.qos.logback" % "logback-classic" % "1.2.11" % Test ::
+  "ch.qos.logback" % "logback-classic" % "1.4.6" % Test ::
   Nil
 
 // Do not include src/{main,test}/java in the configuration, to avoid having sbt-eclipse generate them empty

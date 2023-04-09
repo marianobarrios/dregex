@@ -1,5 +1,6 @@
 package dregex.impl;
 
+import dregex.impl.tree.AbstractRange;
 import scala.math.Ordered;
 
 import java.util.*;
@@ -43,7 +44,7 @@ public final class CharInterval implements AtomPart, Ordered<CharInterval> {
         }
     }
 
-    public static Map<RegexTree.AbstractRange, List<CharInterval>> calculateNonOverlapping(List<RegexTree.AbstractRange> ranges) {
+    public static Map<AbstractRange, List<CharInterval>> calculateNonOverlapping(List<AbstractRange> ranges) {
         Set<Integer> startSet = new HashSet<>();
         Set<Integer> endSet = new HashSet<>();
         for (var range : ranges) {
@@ -56,7 +57,7 @@ public final class CharInterval implements AtomPart, Ordered<CharInterval> {
                 startSet.add(range.to() + 1);
             }
         }
-        Map<RegexTree.AbstractRange, List<CharInterval>> ret = new HashMap<>();
+        Map<AbstractRange, List<CharInterval>> ret = new HashMap<>();
         for (var range : ranges) {
             var startCopySet = new java.util.TreeSet<>(startSet);
             var endCopySet = new java.util.TreeSet<>(endSet);

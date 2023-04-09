@@ -1,5 +1,8 @@
 package dregex.impl;
 
+import dregex.impl.tree.CharRange;
+import dregex.impl.tree.CharSet;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
@@ -21,14 +24,14 @@ public class UnicodeBlocks {
             "Greek and Coptic", "Greek"
     );
 
-    public static final Map<String, RegexTree.CharSet> unicodeBlocks;
+    public static final Map<String, CharSet> unicodeBlocks;
 
     static {
         unicodeBlocks = new HashMap<>();
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var range = entry.getValue();
-            var charSet = RegexTree.CharSet$.MODULE$.fromRange(new RegexTree.CharRange(range.from, range.to));
+            var charSet = CharSet.fromRange(new CharRange(range.from, range.to));
             unicodeBlocks.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet);
         }
         for (var entry : synonyms.entrySet()) {

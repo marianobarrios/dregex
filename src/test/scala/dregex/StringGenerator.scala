@@ -1,45 +1,49 @@
 package dregex
 
-import dregex.impl.RegexTree
 import scala.collection.mutable.ArrayBuffer
+import dregex.impl.tree.Node
+import dregex.impl.tree.AbstractRange
+import dregex.impl.tree.CharSet
+import dregex.impl.tree.Disj
+import dregex.impl.tree.Rep
+import dregex.impl.tree.Juxt
+import scala.jdk.CollectionConverters._
 
 /**
   * Generates, given a regex tree, sample strings that match the regex.
   */
 object StringGenerator {
 
-  import RegexTree._
-
   def generate(regex: Node, maxAlternatives: Int, maxRepeat: Int): Seq[String] = {
     regex match {
 
-      case CharSet(ranges) =>
+      case set: CharSet =>
         val gen = for {
-          range <- ranges
+          range <- set.ranges.asScala.toSeq
         } yield {
           generate(range, maxAlternatives, maxRepeat)
         }
         gen.flatten
 
       case range: AbstractRange =>
-        val length = math.min(maxAlternatives, range.size)
+        val length = math.min(maxAlternatives, range.to - range.from + 1)
         for {
           i <- 0 until length
         } yield {
           new String(Character.toChars(range.from + i))
         }
 
-      case Disj(values) =>
-        values.flatMap(v => generate(v, maxAlternatives, maxRepeat))
+      case disj: Disj =>
+        disj.values.asScala.toSeq.flatMap(v => generate(v, maxAlternatives, maxRepeat))
 
-      case Rep(min, maxOpt, value) =>
+      case rep: Rep =>
         import scala.util.control.Breaks._
-        val max = maxOpt.getOrElse(Int.MaxValue - 1)
+        val max = rep.max.orElseGet(() => Int.MaxValue - 1)
         var count = 0
         val res = ArrayBuffer[String]()
         breakable {
-          for (i <- min to max) {
-            res ++= fixedRepeat(value, maxAlternatives, maxRepeat, i)
+          for (i <- rep.min to max) {
+            res ++= fixedRepeat(rep.value, maxAlternatives, maxRepeat, i)
             count += 1
             if (count >= maxRepeat)
               break()
@@ -47,16 +51,16 @@ object StringGenerator {
         }
         res.toSeq
 
-      case Juxt(Seq()) =>
+      case juxt: Juxt if juxt.values.isEmpty() =>
         Seq()
 
-      case Juxt(Seq(value)) =>
-        generate(value, maxAlternatives, maxRepeat)
+      case juxt: Juxt if juxt.values.size() == 1 =>
+        generate(juxt.values.get(0), maxAlternatives, maxRepeat)
 
-      case Juxt(first +: rest) =>
+      case juxt: Juxt if juxt.values.size() > 0 =>
         for {
-          left <- generate(first, maxAlternatives, maxRepeat)
-          right <- generate(Juxt(rest), maxAlternatives, maxRepeat)
+          left <- generate(juxt.values.get(0), maxAlternatives, maxRepeat)
+          right <- generate(new Juxt(juxt.values.subList(1, juxt.values.size() - 1)), maxAlternatives, maxRepeat)
         } yield {
           left + right
         }

@@ -5,15 +5,16 @@ import dregex.InvalidRegexException
 import java.util.stream.Collectors
 import scala.collection.mutable.Buffer
 import scala.jdk.CollectionConverters._
+import dregex.impl.tree.{AbstractRange, CharSet, Condition, Difference, Direction, Disj, Intersection, Lookaround, NamedCaptureGroup, Node, Operation, PositionalCaptureGroup, Rep, Union, Wildcard, Juxt}
+
+import java.util.Optional
 
 /**
   * Take a regex AST and produce a NFA.
   * Except when noted the Thompson-McNaughton-Yamada algorithm is used.
   * Reference: http://stackoverflow.com/questions/11819185/steps-to-creating-an-nfa-from-a-regular-expression
   */
-class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util.List[CharInterval]]) {
-
-  import RegexTree._
+class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[CharInterval]]) {
 
   /**
     * Transform a regular expression abstract syntax tree into a corresponding NFA
@@ -37,14 +38,14 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
 
       // recurse
 
-      case CharSet(intervals) =>
-        fromTreeImpl(Disj(intervals), from, to)
+      case set: CharSet =>
+        fromTreeImpl(new Disj(set.ranges), from, to)
 
       case juxt: Juxt =>
         processJuxt(combineNegLookaheads(juxt), from, to)
 
       case la: Lookaround =>
-        fromTreeImpl(Juxt(Seq(la)), from, to)
+        fromTreeImpl(new Juxt(java.util.List.of(la)), from, to)
 
       case disj: Disj =>
         processDisj(disj, from, to)
@@ -52,14 +53,14 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
       case rep: Rep =>
         processRep(rep, from, to)
 
-      case Intersection(left, right) =>
-        processOp(DfaAlgorithms.doIntersect, left, right, from, to)
+      case intersection: Intersection =>
+        processOp(DfaAlgorithms.doIntersect, intersection.left, intersection.right, from, to)
 
-      case Union(left, right) =>
-        processOp(DfaAlgorithms.union, left, right, from, to)
+      case union: Union =>
+        processOp(DfaAlgorithms.union, union.left, union.right, from, to)
 
-      case Difference(left, right) =>
-        processOp(DfaAlgorithms.diff, left, right, from, to)
+      case difference: Difference =>
+        processOp(DfaAlgorithms.diff, difference.left, difference.right, from, to)
 
       case cg: PositionalCaptureGroup =>
         processCaptureGroup(cg.value, from, to)
@@ -86,30 +87,30 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
   private def processJuxt(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     import Direction._
     import Condition._
-    findLookaround(juxt.values) match {
+    findLookaround(juxt.values.asScala.toSeq) match {
       case Some(i) =>
-        val prefix = juxt.values.slice(0, i)
-        val suffix = juxt.values.slice(i + 1, juxt.values.size)
-        val wildcard = Rep(min = 0, max = None, value = Wildcard)
-        juxt.values(i).asInstanceOf[Lookaround] match {
-          case Lookaround(Ahead, cond, value) =>
-            val rightSide: Node = cond match {
-              case Positive => Intersection(Juxt(suffix), Juxt(Seq(value, wildcard)))
-              case Negative => Difference(Juxt(suffix), Juxt(Seq(value, wildcard)))
+        val prefix = juxt.values.asScala.slice(0, i)
+        val suffix = juxt.values.asScala.slice(i + 1, juxt.values.asScala.size)
+        val wildcard = new Rep(0, Optional.empty(), Wildcard.instance)
+        juxt.values.asScala(i).asInstanceOf[Lookaround] match {
+          case lookaround if lookaround.dir == Ahead =>
+            val rightSide: Node = lookaround.cond match {
+              case Positive => new Intersection(new Juxt(suffix.asJava), new Juxt(java.util.List.of(lookaround.value, wildcard)))
+              case Negative => new Difference(new Juxt(suffix.asJava), new Juxt(java.util.List.of(lookaround.value, wildcard)))
             }
             if (prefix.isEmpty)
               fromTreeImpl(rightSide, from, to)
             else
-              fromTreeImpl(Juxt(prefix :+ rightSide), from, to)
-          case Lookaround(Behind, cond, value) =>
-            val leftSide: Node = cond match {
-              case Positive => Intersection(Juxt(prefix), Juxt(Seq(value, wildcard)))
-              case Negative => Difference(Juxt(prefix), Juxt(Seq(value, wildcard)))
+              fromTreeImpl(new Juxt((prefix :+ rightSide).asJava), from, to)
+          case lookaround if lookaround.dir == Behind =>
+            val leftSide: Node = lookaround.cond match {
+              case Positive => new Intersection(new Juxt(prefix.asJava), new Juxt(java.util.List.of(lookaround.value, wildcard)))
+              case Negative => new Difference(new Juxt(prefix.asJava), new Juxt(java.util.List.of(lookaround.value, wildcard)))
             }
             if (suffix.isEmpty)
               fromTreeImpl(leftSide, from, to)
             else
-              fromTreeImpl(Juxt(leftSide +: suffix), from, to)
+              fromTreeImpl(new Juxt((leftSide +: suffix).asJava), from, to)
         }
       case None =>
         processJuxtNoLookaround(juxt, from, to)
@@ -129,46 +130,50 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
   def combineNegLookaheads(juxt: Juxt): Juxt = {
     import Direction._
     import Condition._
-    val newValues = juxt.values.foldLeft(Seq[Node]()) { (acc, x) =>
-      (acc, x) match {
-        case (init :+ Lookaround(Ahead, Negative, v1), Lookaround(Ahead, Negative, v2)) =>
-          init :+ Lookaround(Ahead, Negative, Disj(Seq(v1, v2)))
-        case _ =>
+    val newValues = juxt.values.asScala.foldLeft(Seq[Node]()) { (acc, x) =>
+      if (!acc.isEmpty && acc.last.isInstanceOf[Lookaround] && x.isInstanceOf[Lookaround]) {
+        val la1 = acc.last.asInstanceOf[Lookaround]
+        val la2 = x.asInstanceOf[Lookaround]
+        if (la1.dir == Ahead && la2.dir == Ahead) {
+          if (la1.cond == Negative && la2.cond == Negative) {
+            acc.init :+ new Lookaround(Ahead, Negative, new Disj(java.util.List.of(la1.value, la2.value)))
+          } else {
+            acc :+ x
+          }
+        } else {
           acc :+ x
+        }
+      } else {
+        acc :+ x
       }
     }
-    Juxt(newValues)
+    new Juxt(newValues.asJava)
   }
 
   private def processJuxtNoLookaround(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     juxt match {
-      case Juxt(Seq()) =>
+      case juxt: Juxt if juxt.values.isEmpty =>
         Seq(new Nfa.Transition(from, to, Epsilon.instance))
 
-      case Juxt(Seq(head)) =>
-        fromTreeImpl(head, from, to)
+      case just: Juxt if just.values.size() == 1 =>
+        fromTreeImpl(juxt.values.get(0), from, to)
 
-      case Juxt(init :+ last) =>
+      case just: Juxt =>
         // doing this iteratively prevents stack overflows in the case of long literal strings
         val transitions = Buffer[Nfa.Transition]()
         var prev = from
-        for (part <- init) {
+        for (part <- just.values.subList(0, just.values.size() - 1).asScala) {
           val int = new SimpleState
           transitions ++= fromTreeImpl(part, prev, int)
           prev = int
         }
-        transitions ++= fromTreeImpl(last, prev, to)
+        transitions ++= fromTreeImpl(just.values.get(juxt.values.size() - 1), prev, to)
         transitions.to(Seq)
     }
   }
 
   private def processDisj(disj: Disj, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
-    disj match {
-      case Disj(Seq()) =>
-        Seq()
-      case Disj(parts) =>
-        parts.map(part => fromTreeImpl(part, from, to)).flatten
-    }
+    disj.values.asScala.toSeq.flatMap(part => fromTreeImpl(part, from, to))
   }
 
   private def processRep(rep: Rep, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
@@ -176,30 +181,30 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
 
       // trivial cases
 
-      case Rep(1, Some(1), value) =>
-        fromTreeImpl(value, from, to)
+      case rep: Rep if rep.min == 1 && rep.max == Optional.of(1) =>
+        fromTreeImpl(rep.value, from, to)
 
-      case Rep(0, Some(0), value) =>
+      case rep: Rep if rep.min == 0 && rep.max == Optional.of(0) =>
         Seq(new Nfa.Transition(from, to, Epsilon.instance))
 
       // infinite repetitions
 
-      case Rep(n, None, value) if n > 1 =>
-        val juxt = Juxt(Seq.fill(n)(value) :+ Rep(0, None, value))
+      case rep: Rep if rep.min > 1 && rep.max.isEmpty =>
+        val juxt = new Juxt((Seq.fill(rep.min)(rep.value) :+ new Rep(0, Optional.empty(), rep.value)).asJava)
         fromTreeImpl(juxt, from, to)
 
-      case Rep(1, None, value) =>
+      case rep: Rep if rep.min == 1 && rep.max.isEmpty =>
         val int1 = new SimpleState
         val int2 = new SimpleState
-        fromTreeImpl(value, int1, int2) :+
+        fromTreeImpl(rep.value, int1, int2) :+
           new Nfa.Transition(from, int1, Epsilon.instance) :+
           new Nfa.Transition(int2, to, Epsilon.instance) :+
           new Nfa.Transition(int2, int1, Epsilon.instance)
 
-      case Rep(0, None, value) =>
+      case rep: Rep if rep.min == 0 && rep.max.isEmpty =>
         val int1 = new SimpleState
         val int2 = new SimpleState
-        fromTreeImpl(value, int1, int2) :+
+        fromTreeImpl(rep.value, int1, int2) :+
           new Nfa.Transition(from, int1, Epsilon.instance) :+
           new Nfa.Transition(int2, to, Epsilon.instance) :+
           new Nfa.Transition(from, to, Epsilon.instance) :+
@@ -207,38 +212,38 @@ class Compiler(intervalMapping: java.util.Map[RegexTree.AbstractRange, java.util
 
       // finite repetitions
 
-      case Rep(n, Some(m), value) if n > 1 =>
-        val x = n - 1
-        val juxt = Juxt(Seq.fill(x)(value) :+ Rep(1, Some(m - x), value))
+      case rep: Rep if rep.min > 1 && rep.max.isPresent =>
+        val x = rep.min - 1
+        val juxt = new Juxt((Seq.fill(x)(rep.value) :+ new Rep(1, Optional.of(rep.max.get() - x), rep.value)).asJava)
         fromTreeImpl(juxt, from, to)
 
-      case Rep(1, Some(m), value) if m > 0 =>
+      case rep: Rep if rep.min == 1 && rep.max.isPresent && rep.max.get() > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
         val int1 = new SimpleState
         val transitions = Buffer[Nfa.Transition]()
-        transitions ++= fromTreeImpl(value, from, int1)
+        transitions ++= fromTreeImpl(rep.value, from, int1)
         var prev = int1
-        for (i <- 1 until m - 1) {
+        for (i <- 1 until rep.max.get() - 1) {
           val int = new SimpleState
-          transitions ++= fromTreeImpl(value, prev, int)
+          transitions ++= fromTreeImpl(rep.value, prev, int)
           transitions += new Nfa.Transition(prev, to, Epsilon.instance)
           prev = int
         }
-        transitions ++= fromTreeImpl(value, prev, to)
+        transitions ++= fromTreeImpl(rep.value, prev, to)
         transitions += new Nfa.Transition(prev, to, Epsilon.instance)
         transitions.to(Seq)
 
-      case Rep(0, Some(m), value) if m > 0 =>
+      case rep: Rep if rep.min == 0 && rep.max.isPresent && rep.max.get() > 0 =>
         // doing this iteratively prevents stack overflows in the case of long repetitions
         val transitions = Buffer[Nfa.Transition]()
         var prev = from
-        for (i <- 0 until m - 1) {
+        for (i <- 0 until rep.max.get() - 1) {
           val int = new SimpleState
-          transitions ++= fromTreeImpl(value, prev, int)
+          transitions ++= fromTreeImpl(rep.value, prev, int)
           transitions += new Nfa.Transition(prev, to, Epsilon.instance)
           prev = int
         }
-        transitions ++= fromTreeImpl(value, prev, to)
+        transitions ++= fromTreeImpl(rep.value, prev, to)
         transitions += new Nfa.Transition(prev, to, Epsilon.instance)
         transitions.to(Seq)
 
