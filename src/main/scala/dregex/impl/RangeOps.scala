@@ -7,16 +7,8 @@ import scala.jdk.CollectionConverters._
 
 object RangeOps {
 
-  def diff(left: java.util.List[AbstractRange], right: Seq[AbstractRange]): Seq[AbstractRange] = {
-    left.asScala.toSeq.flatMap(diff(_, right))
-  }
-
-  def diff(left: java.util.List[AbstractRange], right: java.util.List[AbstractRange]): Seq[AbstractRange] = {
-    left.asScala.toSeq.flatMap(diff(_, right.asScala.toSeq))
-  }
-
-  def diff(left: AbstractRange, right: Seq[AbstractRange]): Seq[AbstractRange] = {
-    right.foldLeft(Seq(left))(diff)
+  def diff(left: java.util.List[AbstractRange], right: java.util.List[AbstractRange]): java.util.List[AbstractRange] = {
+    left.asScala.toSeq.flatMap(diff(_, right).asScala).asJava
   }
 
   def diff(left: AbstractRange, right: java.util.List[AbstractRange]): java.util.List[AbstractRange] = {
@@ -56,10 +48,6 @@ object RangeOps {
         case Seq()        => IndexedSeq(range)
       }
     }
-  }
-
-  def union(ranges: java.util.List[AbstractRange]): Seq[AbstractRange] = {
-    union(ranges.asScala.toSeq)
   }
 
   def union(left: AbstractRange, right: AbstractRange): Seq[AbstractRange] = {

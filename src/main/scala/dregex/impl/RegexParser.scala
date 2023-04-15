@@ -195,7 +195,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> unicodeSubsetName <~ "}" ^^ { name =>
     val effPosixClasses = {
       if (unicodeClasses) {
-        PredefinedCharSets.unicodePosixClasses
+        PredefinedUnicodePosixCharSets.unicodePosixClasses.asScala
       } else {
         PredefinedPosixCharSets.classes.asScala
       }
@@ -239,42 +239,42 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
 
   def shorthandCharSetDigit = backslash ~ "d" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeDigit
+      PredefinedCharSets.unicodeBinaryProperties("DIGIT")
     else
       PredefinedPosixCharSets.digit
   }
 
   def shorthandCharSetDigitCompl = backslash ~ "D" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeDigit.complement
+      PredefinedCharSets.unicodeBinaryProperties("DIGIT").complement
     else
       PredefinedPosixCharSets.digit.complement
   }
 
   def shorthandCharSetSpace = backslash ~ "s" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeSpace
+      PredefinedCharSets.unicodeBinaryProperties("WHITE_SPACE")
     else
       PredefinedPosixCharSets.space
   }
 
   def shorthandCharSetSpaceCompl = backslash ~ "S" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeSpace.complement
+      PredefinedCharSets.unicodeBinaryProperties("WHITE_SPACE").complement
     else
       PredefinedPosixCharSets.space.complement
   }
 
   def shorthandCharSetWord = backslash ~ "w" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeWordChar
+      PredefinedUnicodePosixCharSets.unicodeWordChar
     else
       PredefinedPosixCharSets.wordChar
   }
 
   def shorthandCharSetWordCompl = backslash ~ "W" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeWordChar.complement
+      PredefinedUnicodePosixCharSets.unicodeWordChar.complement
     else
       PredefinedPosixCharSets.wordChar.complement
   }
