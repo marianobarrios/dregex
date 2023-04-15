@@ -15,11 +15,6 @@ class PropertiesCalculationBenchmark extends AnyFunSuite {
     PredefinedCharSets.javaClasses
   }
 
-  test("unicode general categories") {
-    // force "lazy val" evaluation
-    PredefinedCharSets.unicodeGeneralCategories
-  }
-
   test("unicode properties") {
     // force "lazy val" evaluation
     PredefinedCharSets.unicodeBinaryProperties

@@ -67,9 +67,9 @@ public class UnicodeDatabaseReader {
         return ret;
     }
 
-    public static SortedMap<String, UnicodeDatabaseReader.Range> getBlocks(Reader reader) throws IOException {
+    public static SortedMap<String, Range> getBlocks(Reader reader) throws IOException {
         SortedMap<Range, String> data = parseDatabase(reader);
-        SortedMap<String, UnicodeDatabaseReader.Range> ret = new TreeMap<>();
+        SortedMap<String, Range> ret = new TreeMap<>();
         for (Map.Entry<Range, String> entry : data.entrySet()) {
             ret.put(entry.getValue(), entry.getKey());
         }
@@ -78,9 +78,26 @@ public class UnicodeDatabaseReader {
 
     public static SortedMap<String, List<Range>> getScripts(Reader reader) throws IOException {
         SortedMap<Range, String> data = parseDatabase(reader);
-        SortedMap<String, List<UnicodeDatabaseReader.Range>> ret = new TreeMap<>();
+        SortedMap<String, List<Range>> ret = new TreeMap<>();
         for (Map.Entry<Range, String> entry : data.entrySet()) {
-            List<UnicodeDatabaseReader.Range> list = ret.computeIfAbsent(entry.getValue(), x -> new ArrayList<>());
+            List<Range> list = ret.computeIfAbsent(entry.getValue(), x -> new ArrayList<>());
+            list.add(entry.getKey());
+        }
+        return ret;
+    }
+
+    public static SortedMap<String, List<Range>> getGeneralCategories(Reader reader) throws IOException {
+        SortedMap<Range, String> data = parseDatabase(reader);
+        SortedMap<String, List<Range>> ret = new TreeMap<>();
+        // process categories (two letters)
+        for (Map.Entry<Range, String> entry : data.entrySet()) {
+            List<Range> list = ret.computeIfAbsent(entry.getValue(), x -> new ArrayList<>());
+            list.add(entry.getKey());
+        }
+        // process category groups (first letter)
+        for (Map.Entry<Range, String> entry : data.entrySet()) {
+            var categoryGroup = entry.getValue().substring(0, 1); // first letter of the two
+            List<Range> list = ret.computeIfAbsent(categoryGroup, x -> new ArrayList<>());
             list.add(entry.getKey());
         }
         return ret;

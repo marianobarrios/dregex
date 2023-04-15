@@ -20,28 +20,28 @@ object PredefinedCharSets {
   val unicodeGraph = CharSet
     .fromCharSets(
       unicodeSpace,
-      unicodeGeneralCategories("Cc"),
-      unicodeGeneralCategories("Cs"),
-      unicodeGeneralCategories("Cn")
+      UnicodeGeneralCategories.unicodeGeneralCategories.get("Cc"),
+      UnicodeGeneralCategories.unicodeGeneralCategories.get("Cs"),
+      UnicodeGeneralCategories.unicodeGeneralCategories.get("Cn")
     )
     .complement
 
   val unicodeBlank = new CharSet(
     RangeOps.diff(
       unicodeSpace.ranges,
-      (unicodeGeneralCategories("Zl").ranges.asScala.toSeq ++
-        unicodeGeneralCategories("Zp").ranges.asScala.toSeq ++
+      (UnicodeGeneralCategories.unicodeGeneralCategories.get("Zl").ranges.asScala.toSeq ++
+        UnicodeGeneralCategories.unicodeGeneralCategories.get("Zp").ranges.asScala.toSeq ++
         Seq(new CharRange('\u000a', '\u000d')) ++ Seq(new Lit('\u0085'))).asJava
     ).asJava)
 
   val unicodeWordChar = CharSet.fromCharSets(
     unicodeBinaryProperties("ALPHABETIC"),
-    unicodeGeneralCategories("Mn"),
-    unicodeGeneralCategories("Me"),
-    unicodeGeneralCategories("Mc"),
-    unicodeGeneralCategories("Mn"),
+    UnicodeGeneralCategories.unicodeGeneralCategories.get("Mn"),
+    UnicodeGeneralCategories.unicodeGeneralCategories.get("Me"),
+    UnicodeGeneralCategories.unicodeGeneralCategories.get("Mc"),
+    UnicodeGeneralCategories.unicodeGeneralCategories.get("Mn"),
     unicodeDigit,
-    unicodeGeneralCategories("Pc"),
+    UnicodeGeneralCategories.unicodeGeneralCategories.get("Pc"),
     unicodeBinaryProperties("JOIN_CONTROL")
   )
 
@@ -55,10 +55,11 @@ object PredefinedCharSets {
     "Punct" -> unicodeBinaryProperties("PUNCTUATION"),
     "Graph" -> unicodeGraph,
     "Print" -> new CharSet(
-      RangeOps.diff(CharSet.fromCharSets(unicodeGraph, unicodeBlank).ranges, unicodeGeneralCategories("Cc").ranges).asJava),
+      RangeOps.diff(CharSet.fromCharSets(unicodeGraph, unicodeBlank).ranges,
+        UnicodeGeneralCategories.unicodeGeneralCategories.get("Cc").ranges).asJava),
     "Blank" -> unicodeBlank,
-    "Cntrl" -> unicodeGeneralCategories("Cc"),
-    "XDigit" -> CharSet.fromCharSets(unicodeGeneralCategories("Nd"), unicodeBinaryProperties("HEX_DIGIT")),
+    "Cntrl" -> UnicodeGeneralCategories.unicodeGeneralCategories.get("Cc"),
+    "XDigit" -> CharSet.fromCharSets(UnicodeGeneralCategories.unicodeGeneralCategories.get("Nd"), unicodeBinaryProperties("HEX_DIGIT")),
     "Space" -> unicodeSpace
   )
 
@@ -76,22 +77,6 @@ object PredefinedCharSets {
     }
     val elapsed = Duration.ofNanos(System.nanoTime() - start)
     logger.debug(s"initialized ${ret.size} Unicode literals in $elapsed")
-    ret
-  }
-
-  lazy val unicodeGeneralCategories: Map[String, CharSet] = {
-    val start = System.nanoTime()
-    val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
-    for (lit <- allUnicodeLit) {
-      val categoryJavaId = Character.getType(lit.codePoint).toByte
-      val category = GeneralCategory.categories.get(categoryJavaId)
-      builder.getOrElseUpdate(category, ArrayBuffer()) += lit
-      val parentCategory = category.substring(0, 1) // first letter
-      builder.getOrElseUpdate(parentCategory, ArrayBuffer()) += lit
-    }
-    val ret = builder.view.mapValues(ranges => new CharSet(RangeOps.union(ranges.to(Seq).asJava).asJava)).toMap
-    val elapsed = Duration.ofNanos(System.nanoTime() - start)
-    logger.debug(s"initialized Unicode general category catalog in $elapsed")
     ret
   }
 

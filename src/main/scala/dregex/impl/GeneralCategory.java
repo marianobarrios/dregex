@@ -7,42 +7,6 @@ import static java.lang.Character.*;
 
 public class GeneralCategory {
 
-  /**
-    * Unicode categories are named in Java using an integer. The mapping
-    * is not explicit, so we need to add it here.
-    */
-  public static final Map<Byte, String> categories = Map.ofEntries(
-          Map.entry(UNASSIGNED, "Cn"),
-          Map.entry(UPPERCASE_LETTER, "Lu"),
-          Map.entry(LOWERCASE_LETTER, "Ll"),
-          Map.entry(TITLECASE_LETTER, "Lt"),
-          Map.entry(MODIFIER_LETTER, "Lm"),
-          Map.entry(OTHER_LETTER, "Lo"),
-          Map.entry(NON_SPACING_MARK, "Mn"),
-          Map.entry(ENCLOSING_MARK, "Me"),
-          Map.entry(COMBINING_SPACING_MARK, "Mc"),
-          Map.entry(DECIMAL_DIGIT_NUMBER, "Nd"),
-          Map.entry(LETTER_NUMBER, "Nl"),
-          Map.entry(OTHER_NUMBER, "No"),
-          Map.entry(SPACE_SEPARATOR, "Zs"),
-          Map.entry(LINE_SEPARATOR, "Zl"),
-          Map.entry(PARAGRAPH_SEPARATOR, "Zp"),
-          Map.entry(CONTROL, "Cc"),
-          Map.entry(FORMAT, "Cf"),
-          Map.entry(PRIVATE_USE, "Co"),
-          Map.entry(SURROGATE, "Cs"),
-          Map.entry(DASH_PUNCTUATION, "Pd"),
-          Map.entry(START_PUNCTUATION, "Ps"),
-          Map.entry(END_PUNCTUATION, "Pe"),
-          Map.entry(CONNECTOR_PUNCTUATION, "Pc"),
-          Map.entry(OTHER_PUNCTUATION, "Po"),
-          Map.entry(MATH_SYMBOL, "Sm"),
-          Map.entry(CURRENCY_SYMBOL, "Sc"),
-          Map.entry(MODIFIER_SYMBOL, "Sk"),
-          Map.entry(OTHER_SYMBOL, "So"),
-          Map.entry(INITIAL_QUOTE_PUNCTUATION, "Pi"),
-          Map.entry(FINAL_QUOTE_PUNCTUATION, "Pf"));
-
   public static final Map<String, IntPredicate> binaryProperties = Map.ofEntries(
           Map.entry("ALPHABETIC", ch -> Character.isAlphabetic(ch)),
           Map.entry("DIGIT", ch -> Character.isDigit(ch)),
