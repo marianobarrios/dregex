@@ -249,6 +249,7 @@ class UnicodeTest extends AnyFunSuite {
 
     using(Regex.compile("""\p{general_category=L}""")) { r =>
       assertResult(true)(r.matches("A"))
+      assertResult(true)(r.matches("a"))
       assertResult(false)(r.matches("-"))
     }
 

@@ -150,8 +150,11 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
         }
         script
       } else if (propName == "general_category" || propName == "gc") {
-        PredefinedCharSets.unicodeGeneralCategories
-          .getOrElse(propValue, throw new InvalidRegexException("Invalid Unicode general category: " + propValue))
+        val gc = UnicodeGeneralCategories.unicodeGeneralCategories.get(propValue)
+        if (gc == null) {
+          throw new InvalidRegexException("Invalid Unicode general category: " + propValue)
+        }
+        gc
       } else {
         throw new InvalidRegexException("Invalid Unicode character property name: " + propName)
       }
@@ -164,7 +167,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
      */
     UnicodeScripts.unicodeScripts.asScala
       .get(name.toUpperCase())
-      .orElse(PredefinedCharSets.unicodeGeneralCategories.get(name))
+      .orElse(Option(UnicodeGeneralCategories.unicodeGeneralCategories.get(name)))
       .orElse(PredefinedCharSets.unicodeBinaryProperties.get(name.toUpperCase()))
       .getOrElse {
         throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + name)
@@ -197,7 +200,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
         PredefinedPosixCharSets.classes.asScala
       }
     }
-    effPosixClasses.get(name).orElse(PredefinedCharSets.unicodeGeneralCategories.get(name)).getOrElse {
+    effPosixClasses.get(name).orElse(Option(UnicodeGeneralCategories.unicodeGeneralCategories.get(name))).getOrElse {
       throw new InvalidRegexException("Invalid POSIX character class: " + name)
     }
   }
