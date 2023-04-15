@@ -11,58 +11,6 @@ object PredefinedCharSets {
 
   private[this] val logger = LoggerFactory.getLogger(PredefinedCharSets.getClass)
 
-  // Unicode version of POSIX-defined character classes
-
-  val unicodeDigit = unicodeBinaryProperties("DIGIT")
-
-  val unicodeSpace = unicodeBinaryProperties("WHITE_SPACE")
-
-  val unicodeGraph = CharSet
-    .fromCharSets(
-      unicodeSpace,
-      UnicodeGeneralCategories.unicodeGeneralCategories.get("Cc"),
-      UnicodeGeneralCategories.unicodeGeneralCategories.get("Cs"),
-      UnicodeGeneralCategories.unicodeGeneralCategories.get("Cn")
-    )
-    .complement
-
-  val unicodeBlank = new CharSet(
-    RangeOps.diff(
-      unicodeSpace.ranges,
-      (UnicodeGeneralCategories.unicodeGeneralCategories.get("Zl").ranges.asScala.toSeq ++
-        UnicodeGeneralCategories.unicodeGeneralCategories.get("Zp").ranges.asScala.toSeq ++
-        Seq(new CharRange('\u000a', '\u000d')) ++ Seq(new Lit('\u0085'))).asJava
-    ).asJava)
-
-  val unicodeWordChar = CharSet.fromCharSets(
-    unicodeBinaryProperties("ALPHABETIC"),
-    UnicodeGeneralCategories.unicodeGeneralCategories.get("Mn"),
-    UnicodeGeneralCategories.unicodeGeneralCategories.get("Me"),
-    UnicodeGeneralCategories.unicodeGeneralCategories.get("Mc"),
-    UnicodeGeneralCategories.unicodeGeneralCategories.get("Mn"),
-    unicodeDigit,
-    UnicodeGeneralCategories.unicodeGeneralCategories.get("Pc"),
-    unicodeBinaryProperties("JOIN_CONTROL")
-  )
-
-  val unicodePosixClasses = Map(
-    "Lower" -> unicodeBinaryProperties("LOWERCASE"),
-    "Upper" -> unicodeBinaryProperties("UPPERCASE"),
-    "ASCII" -> PredefinedPosixCharSets.classes.get("ASCII"),
-    "Alpha" -> unicodeBinaryProperties("ALPHABETIC"),
-    "Digit" -> unicodeDigit,
-    "Alnum" -> CharSet.fromCharSets(unicodeBinaryProperties("ALPHABETIC"), unicodeDigit),
-    "Punct" -> unicodeBinaryProperties("PUNCTUATION"),
-    "Graph" -> unicodeGraph,
-    "Print" -> new CharSet(
-      RangeOps.diff(CharSet.fromCharSets(unicodeGraph, unicodeBlank).ranges,
-        UnicodeGeneralCategories.unicodeGeneralCategories.get("Cc").ranges).asJava),
-    "Blank" -> unicodeBlank,
-    "Cntrl" -> UnicodeGeneralCategories.unicodeGeneralCategories.get("Cc"),
-    "XDigit" -> CharSet.fromCharSets(UnicodeGeneralCategories.unicodeGeneralCategories.get("Nd"), unicodeBinaryProperties("HEX_DIGIT")),
-    "Space" -> unicodeSpace
-  )
-
   /*
    * The following members are lazy val because collecting the categories and the properties
    * takes some time: only do it if used. This is because
@@ -70,7 +18,7 @@ object PredefinedCharSets {
    * and evaluate every property and the category.
    */
 
-  lazy val allUnicodeLit: Seq[Lit] = {
+  private val allUnicodeLit: Seq[Lit] = {
     val start = System.nanoTime()
     val ret = for (codePoint <- Character.MIN_CODE_POINT to Character.MAX_CODE_POINT) yield {
       new Lit(codePoint)
@@ -97,7 +45,7 @@ object PredefinedCharSets {
     ret
   }
 
-  lazy val javaClasses: Map[String, CharSet] = {
+  val javaClasses: Map[String, CharSet] = {
     val start = System.nanoTime()
     val builder = collection.mutable.Map[String, ArrayBuffer[AbstractRange]]()
     for (lit <- allUnicodeLit) {
