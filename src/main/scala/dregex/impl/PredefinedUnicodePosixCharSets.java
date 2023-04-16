@@ -13,7 +13,7 @@ public class PredefinedUnicodePosixCharSets {
 
     private static final CharSet unicodeGraph = CharSet
             .fromCharSets(
-                    PredefinedCharSets.unicodeBinaryProperties().apply("WHITE_SPACE"),
+                    UnicodeBinaryProperties.unicodeBinaryProperties.get("WHITE_SPACE"),
                     UnicodeGeneralCategories.unicodeGeneralCategories.get("Cc"),
                     UnicodeGeneralCategories.unicodeGeneralCategories.get("Cs"),
                     UnicodeGeneralCategories.unicodeGeneralCategories.get("Cn")
@@ -28,19 +28,19 @@ public class PredefinedUnicodePosixCharSets {
         exceptions.add(new CharRange(0xA, 0xD));
         exceptions.add(new Lit('\u0085'));
         unicodeBlank = new CharSet(
-                RangeOps.diff(PredefinedCharSets.unicodeBinaryProperties().apply("WHITE_SPACE").ranges, exceptions));
+                RangeOps.diff(UnicodeBinaryProperties.unicodeBinaryProperties.get("WHITE_SPACE").ranges, exceptions));
     }
 
     public static final Map<String, CharSet> unicodePosixClasses = Map.ofEntries(
-            Map.entry("Lower", PredefinedCharSets.unicodeBinaryProperties().apply("LOWERCASE")),
-            Map.entry("Upper", PredefinedCharSets.unicodeBinaryProperties().apply("UPPERCASE")),
+            Map.entry("Lower", UnicodeBinaryProperties.unicodeBinaryProperties.get("LOWERCASE")),
+            Map.entry("Upper", UnicodeBinaryProperties.unicodeBinaryProperties.get("UPPERCASE")),
             Map.entry("ASCII", PredefinedPosixCharSets.classes.get("ASCII")),
-            Map.entry("Alpha", PredefinedCharSets.unicodeBinaryProperties().apply("ALPHABETIC")),
-            Map.entry("Digit", PredefinedCharSets.unicodeBinaryProperties().apply("DIGIT")),
+            Map.entry("Alpha", UnicodeBinaryProperties.unicodeBinaryProperties.get("ALPHABETIC")),
+            Map.entry("Digit", UnicodeBinaryProperties.unicodeBinaryProperties.get("DIGIT")),
             Map.entry("Alnum", CharSet.fromCharSets(
-                    PredefinedCharSets.unicodeBinaryProperties().apply("ALPHABETIC"),
-                    PredefinedCharSets.unicodeBinaryProperties().apply("DIGIT"))),
-            Map.entry("Punct", PredefinedCharSets.unicodeBinaryProperties().apply("PUNCTUATION")),
+                    UnicodeBinaryProperties.unicodeBinaryProperties.get("ALPHABETIC"),
+                    UnicodeBinaryProperties.unicodeBinaryProperties.get("DIGIT"))),
+            Map.entry("Punct", UnicodeBinaryProperties.unicodeBinaryProperties.get("PUNCTUATION")),
             Map.entry("Graph", unicodeGraph),
             Map.entry("Print", new CharSet(
                     RangeOps.diff(
@@ -50,16 +50,16 @@ public class PredefinedUnicodePosixCharSets {
             Map.entry("Cntrl", UnicodeGeneralCategories.unicodeGeneralCategories.get("Cc")),
             Map.entry("XDigit", CharSet.fromCharSets(
                     UnicodeGeneralCategories.unicodeGeneralCategories.get("Nd"),
-                    PredefinedCharSets.unicodeBinaryProperties().apply("HEX_DIGIT"))),
-            Map.entry("Space", PredefinedCharSets.unicodeBinaryProperties().apply("WHITE_SPACE")));
+                    UnicodeBinaryProperties.unicodeBinaryProperties.get("HEX_DIGIT"))),
+            Map.entry("Space", UnicodeBinaryProperties.unicodeBinaryProperties.get("WHITE_SPACE")));
 
     public static final CharSet unicodeWordChar = CharSet.fromCharSets(
-            PredefinedCharSets.unicodeBinaryProperties().apply("ALPHABETIC"),
+            UnicodeBinaryProperties.unicodeBinaryProperties.get("ALPHABETIC"),
             UnicodeGeneralCategories.unicodeGeneralCategories.get("Mn"),
             UnicodeGeneralCategories.unicodeGeneralCategories.get("Me"),
             UnicodeGeneralCategories.unicodeGeneralCategories.get("Mc"),
             UnicodeGeneralCategories.unicodeGeneralCategories.get("Mn"),
-            PredefinedCharSets.unicodeBinaryProperties().apply("DIGIT"),
+            UnicodeBinaryProperties.unicodeBinaryProperties.get("DIGIT"),
             UnicodeGeneralCategories.unicodeGeneralCategories.get("Pc"),
-            PredefinedCharSets.unicodeBinaryProperties().apply("JOIN_CONTROL"));
+            UnicodeBinaryProperties.unicodeBinaryProperties.get("JOIN_CONTROL"));
 }

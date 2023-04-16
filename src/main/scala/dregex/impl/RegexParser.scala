@@ -168,7 +168,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
     UnicodeScripts.unicodeScripts.asScala
       .get(name.toUpperCase())
       .orElse(Option(UnicodeGeneralCategories.unicodeGeneralCategories.get(name)))
-      .orElse(PredefinedCharSets.unicodeBinaryProperties.get(name.toUpperCase()))
+      .orElse(Option(UnicodeBinaryProperties.unicodeBinaryProperties.get(name.toUpperCase())))
       .getOrElse {
         throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + name)
       }
@@ -239,28 +239,28 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
 
   def shorthandCharSetDigit = backslash ~ "d" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeBinaryProperties("DIGIT")
+      UnicodeBinaryProperties.unicodeBinaryProperties.get("DIGIT")
     else
       PredefinedPosixCharSets.digit
   }
 
   def shorthandCharSetDigitCompl = backslash ~ "D" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeBinaryProperties("DIGIT").complement
+      UnicodeBinaryProperties.unicodeBinaryProperties.get("DIGIT").complement
     else
       PredefinedPosixCharSets.digit.complement
   }
 
   def shorthandCharSetSpace = backslash ~ "s" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeBinaryProperties("WHITE_SPACE")
+      UnicodeBinaryProperties.unicodeBinaryProperties.get("WHITE_SPACE")
     else
       PredefinedPosixCharSets.space
   }
 
   def shorthandCharSetSpaceCompl = backslash ~ "S" ^^^ {
     if (unicodeClasses)
-      PredefinedCharSets.unicodeBinaryProperties("WHITE_SPACE").complement
+      UnicodeBinaryProperties.unicodeBinaryProperties.get("WHITE_SPACE").complement
     else
       PredefinedPosixCharSets.space.complement
   }
