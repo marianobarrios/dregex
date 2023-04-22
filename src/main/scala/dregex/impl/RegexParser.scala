@@ -183,13 +183,14 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   }
 
   def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~> unicodeSubsetName <~ "}" ^^ { charClass =>
-    PredefinedCharSets.javaClasses.getOrElse(
-      charClass,
+    val ret = PredefinedJavaProperties.javaClasses.get(charClass);
+    if (ret == null) {
       throw new InvalidRegexException(
         s"invalid Java character class: $charClass " +
           s"(note: for such a class to be valid, a method java.lang.Character.is$charClass() must exist) " +
-          s"(valid options: ${PredefinedCharSets.javaClasses.keys.toSeq.sorted.mkString(",")})")
-    )
+          s"(valid options: ${PredefinedJavaProperties.javaClasses.keySet().asScala.toSeq.sorted.mkString(",")})")
+    }
+    ret
   }
 
   def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> unicodeSubsetName <~ "}" ^^ { name =>
