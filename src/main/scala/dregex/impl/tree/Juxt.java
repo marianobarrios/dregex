@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -8,10 +8,14 @@ import java.util.stream.Stream;
 
 public class Juxt implements Node {
 
-    public final List<Node> values;
+    public final List<? extends Node> values;
 
-    public <A extends Node> Juxt(List<A> values) {
-        this.values = new ArrayList<>(values);
+    public Juxt(List<? extends Node> values) {
+        this.values = values;
+    }
+
+    public Juxt(Node... values) {
+        this.values = Arrays.asList(values);
     }
 
     @Override public String toString() {
@@ -22,7 +26,7 @@ public class Juxt implements Node {
       return new Juxt(flattenValues(values).map(v -> v.canonical()).collect(Collectors.toList()));
     }
 
-    private Stream<Node> flattenValues(List<Node> values) {
+    private Stream<Node> flattenValues(List<? extends Node> values) {
         return values.stream().flatMap(value -> {
             if (value instanceof Juxt) {
                 return flattenValues(((Juxt) value).values);

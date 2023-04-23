@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public class Disj implements Node {
 
-    public final List<Node> values;
+    public final List<? extends Node> values;
 
     @Override
     public boolean equals(Object o) {
@@ -23,8 +23,12 @@ public class Disj implements Node {
         return Objects.hash(values);
     }
 
-    public <A extends Node> Disj(List<A> values) {
-        this.values = new ArrayList<>(values);
+    public Disj(List<? extends Node> values) {
+        this.values = values;
+    }
+
+    public Disj(Node... values) {
+        this.values = Arrays.asList(values);
     }
 
     @Override
@@ -43,7 +47,7 @@ public class Disj implements Node {
         return new Disj(flattenValues(values).map(v -> v.canonical()).collect(Collectors.toList()));
     }
 
-    private Stream<Node> flattenValues(List<Node> values) {
+    private Stream<Node> flattenValues(List<? extends Node> values) {
         return values.stream().flatMap(value -> {
             if (value instanceof Disj) {
                 return flattenValues(((Disj) value).values);
