@@ -30,4 +30,13 @@ public class CompilerHelper {
         return new Juxt(newValues);
     }
 
+    public static int findLookaround(List<? extends Node> nodes) {
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes.get(i) instanceof Lookaround) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
 }
