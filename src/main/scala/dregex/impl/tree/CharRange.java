@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-public class CharRange extends AbstractRange {
+public final class CharRange extends AbstractRange {
 
     public final int from;
     public final int to;
