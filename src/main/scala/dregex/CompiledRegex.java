@@ -1,8 +1,7 @@
 package dregex;
 
-import dregex.impl.Compiler;
 import dregex.impl.Dfa;
-import dregex.impl.SimpleState;
+import dregex.impl.Compiler;
 import lombok.NonNull;
 import dregex.impl.tree.Node;
 

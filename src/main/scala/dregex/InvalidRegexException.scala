@@ -1,3 +1,3 @@
 package dregex
 
-class InvalidRegexException(msg: String) extends Exception(msg)
+class InvalidRegexException(msg: String) extends RuntimeException(msg)
