@@ -1,6 +1,6 @@
 package dregex.impl.database;
 
-import dregex.impl.tree.CharRange;
+import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ public class UnicodeBlocks {
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var range = entry.getValue();
-            var charSet = new CharSet(new CharRange(range.from, range.to));
+            var charSet = new CharSet(AbstractRange.of(range.from, range.to));
             charSets.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet);
         }
         for (var entry : synonyms.entrySet()) {

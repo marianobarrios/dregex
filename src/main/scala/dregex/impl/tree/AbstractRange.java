@@ -31,12 +31,21 @@ public abstract class AbstractRange implements Node {
         if (this instanceof Lit) {
             return this;
         }
-        return create(from(), to());
+        if (this instanceof Wildcard) {
+            return this;
+        }
+        if (from() == to()) {
+            return new Lit(from());
+        } else if (from() == Character.MIN_CODE_POINT && to() == Character.MAX_CODE_POINT) {
+            return Wildcard.instance;
+        } else {
+            return this;
+        }
     }
 
     public abstract String toCharClassLit();
 
-    public static AbstractRange create(int from, int to) {
+    public static AbstractRange of(int from, int to) {
         if (from == to) {
             return new Lit(from);
         } else if (from == Character.MIN_CODE_POINT && to == Character.MAX_CODE_POINT) {

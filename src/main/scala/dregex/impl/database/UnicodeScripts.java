@@ -1,6 +1,6 @@
 package dregex.impl.database;
 
-import dregex.impl.tree.CharRange;
+import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
 
 import java.io.IOException;
@@ -188,7 +188,7 @@ public class UnicodeScripts {
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var ranges = entry.getValue();
-            var chatSet = new CharSet(ranges.stream().map(range -> new CharRange(range.from, range.to)).collect(Collectors.toList()));
+            var chatSet = new CharSet(ranges.stream().map(range -> AbstractRange.of(range.from, range.to)).collect(Collectors.toList()));
             chatSets.put(block.toUpperCase(), chatSet);
         }
         for (var entry : synomyms.entrySet()) {
