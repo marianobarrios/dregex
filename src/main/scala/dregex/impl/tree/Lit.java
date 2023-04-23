@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-public class Lit extends AbstractRange {
+public final class Lit extends AbstractRange {
 
     public final int codePoint;
 

@@ -1,4 +1,4 @@
-package dregex.impl;
+package dregex.impl.database;
 
 import dregex.impl.tree.CharRange;
 import dregex.impl.tree.CharSet;
@@ -181,20 +181,20 @@ public class UnicodeScripts {
             Map.entry("KHITAN_SMALL_SCRIPT", "KITS"));
 
 
-    public static final Map<String, CharSet> unicodeScripts;
+    public static final Map<String, CharSet> chatSets;
 
     static {
-        unicodeScripts = new HashMap<>();
+        chatSets = new HashMap<>();
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var ranges = entry.getValue();
             var chatSet = new CharSet(ranges.stream().map(range -> new CharRange(range.from, range.to)).collect(Collectors.toList()));
-            unicodeScripts.put(block.toUpperCase(), chatSet);
+            chatSets.put(block.toUpperCase(), chatSet);
         }
         for (var entry : synomyms.entrySet()) {
             var script = entry.getKey();
             var alias = entry.getValue();
-            unicodeScripts.put(alias.toUpperCase(), unicodeScripts.get(script.toUpperCase()));
+            chatSets.put(alias.toUpperCase(), chatSets.get(script.toUpperCase()));
         }
     }
 

@@ -28,6 +28,10 @@ public class CharSet implements Node {
         this.ranges = ranges;
     }
 
+    public CharSet(AbstractRange... ranges) {
+        this.ranges = Arrays.asList(ranges);
+    }
+
     public CharSet complement() {
         return new CharSet(RangeOps.diff(Wildcard.instance, this.ranges));
     }
@@ -56,7 +60,4 @@ public class CharSet implements Node {
         return new CharSet(Arrays.stream(charSets).flatMap(x -> x.ranges.stream()).collect(Collectors.toList()));
     }
 
-    public static CharSet fromRange(AbstractRange interval) {
-        return new CharSet(List.of(interval));
-    }
 }

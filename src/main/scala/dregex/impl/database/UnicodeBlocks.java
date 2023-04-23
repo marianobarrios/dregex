@@ -1,4 +1,4 @@
-package dregex.impl;
+package dregex.impl.database;
 
 import dregex.impl.tree.CharRange;
 import dregex.impl.tree.CharSet;
@@ -24,21 +24,21 @@ public class UnicodeBlocks {
             "Greek and Coptic", "Greek"
     );
 
-    public static final Map<String, CharSet> unicodeBlocks;
+    public static final Map<String, CharSet> charSets;
 
     static {
-        unicodeBlocks = new HashMap<>();
+        charSets = new HashMap<>();
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var range = entry.getValue();
-            var charSet = CharSet.fromRange(new CharRange(range.from, range.to));
-            unicodeBlocks.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet);
+            var charSet = new CharSet(new CharRange(range.from, range.to));
+            charSets.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet);
         }
         for (var entry : synonyms.entrySet()) {
             var block = entry.getKey();
             var alias = entry.getValue();
-            unicodeBlocks.put(UnicodeDatabaseReader.canonicalizeBlockName(alias),
-                    unicodeBlocks.get(UnicodeDatabaseReader.canonicalizeBlockName(block)));
+            charSets.put(UnicodeDatabaseReader.canonicalizeBlockName(alias),
+                    charSets.get(UnicodeDatabaseReader.canonicalizeBlockName(block)));
         }
     }
 

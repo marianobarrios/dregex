@@ -1,8 +1,7 @@
 package dregex
 
 import TestUtil.using
-import dregex.impl.UnicodeBlocks
-import dregex.impl.UnicodeScripts
+import dregex.impl.database.{UnicodeBlocks, UnicodeScripts}
 import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
@@ -100,7 +99,7 @@ class UnicodeTest extends AnyFunSuite {
      * Exhaustively test all combinations of Unicode blocks and code points against
      * the java.util.regex implementation.
      */
-    for (block <- UnicodeBlocks.unicodeBlocks.keySet().asScala.toSeq.sorted) {
+    for (block <- UnicodeBlocks.charSets.keySet().asScala.toSeq.sorted) {
       val blockExistsInJava = try {
         Character.UnicodeBlock.forName(block); true
       } catch {
@@ -171,7 +170,7 @@ class UnicodeTest extends AnyFunSuite {
      * Exhaustively test all combinations of Unicode scripts and code points against
      * the java.util.regex implementation.
      */
-    for (script <- UnicodeScripts.unicodeScripts.asScala.keys.toSeq.sorted) {
+    for (script <- UnicodeScripts.chatSets.asScala.keys.toSeq.sorted) {
       val scriptExistsInJava = try {
         Character.UnicodeScript.forName(script); true
       } catch {

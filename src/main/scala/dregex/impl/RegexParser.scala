@@ -3,10 +3,11 @@ package dregex.impl
 import java.util.regex.Pattern
 import dregex.{InvalidRegexException, ParsedRegex}
 import dregex.impl.RegexParser.DotMatch
+import dregex.impl.database.{JavaProperties, PosixCharSets, UnicodePosixCharSets, UnicodeBinaryProperties, UnicodeBlocks, UnicodeDatabaseReader, UnicodeGeneralCategories, UnicodeScripts}
 
 import scala.util.parsing.combinator.RegexParsers
 import scala.jdk.CollectionConverters._
-import dregex.impl.tree.{CharRange, CharSet, Condition, Direction, Disj, Lit, Lookaround, NamedCaptureGroup, Node, PositionalCaptureGroup, Rep, Juxt, Wildcard}
+import dregex.impl.tree.{CharRange, CharSet, Condition, Direction, Disj, Juxt, Lit, Lookaround, NamedCaptureGroup, Node, PositionalCaptureGroup, Rep, Wildcard}
 
 import java.util.Optional
 
@@ -75,9 +76,9 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
     case "t" => new Lit('\t')
     case "f" => new Lit('\f')
     case "b" => new Lit('\b')
-    case "v" => new Lit('\u000B') // vertical tab
-    case "a" => new Lit('\u0007') // bell
-    case "e" => new Lit('\u001B') // escape
+    case "v" => new Lit(0xB) // vertical tab
+    case "a" => new Lit(0x7) // bell
+    case "e" => new Lit(0x1B) // escape
     case "B" => new Lit('\\')
     case c   => Lit.fromSingletonString(c) // remaining escaped characters stand for themselves
   }
@@ -126,10 +127,10 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
 
   // Parsers that return a character class Node
 
-  def singleCharacterClassLit = characterClassLit ^^ (lit => new CharSet(java.util.List.of(lit)))
+  def singleCharacterClassLit = characterClassLit ^^ (lit => new CharSet(lit))
 
   def charClassRange = characterClassLit ~ "-" ~ characterClassLit ^^ {
-    case start ~ _ ~ end => CharSet.fromRange(new CharRange(start.codePoint, end.codePoint))
+    case start ~ _ ~ end => new CharSet(new CharRange(start.codePoint, end.codePoint))
   }
 
   private val unicodeSubsetName = "[0-9a-zA-Z_ -]+".r
@@ -138,19 +139,19 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
     case propName ~ _ ~ propValue =>
       if (propName == "block" || propName == "blk") {
         val canonicalBlockName = UnicodeDatabaseReader.canonicalizeBlockName(propValue)
-        val block = UnicodeBlocks.unicodeBlocks.get(canonicalBlockName)
+        val block = UnicodeBlocks.charSets.get(canonicalBlockName)
         if (block == null) {
           throw new InvalidRegexException("Invalid Unicode block: " + propValue)
         }
         block
       } else if (propName == "script" || propName == "sc") {
-        val script = UnicodeScripts.unicodeScripts.get(propValue.toUpperCase())
+        val script = UnicodeScripts.chatSets.get(propValue.toUpperCase())
         if (script == null) {
           throw new InvalidRegexException("Invalid Unicode script: " + propValue)
         }
         script
       } else if (propName == "general_category" || propName == "gc") {
-        val gc = UnicodeGeneralCategories.unicodeGeneralCategories.get(propValue)
+        val gc = UnicodeGeneralCategories.charSets.get(propValue)
         if (gc == null) {
           throw new InvalidRegexException("Invalid Unicode general category: " + propValue)
         }
@@ -165,17 +166,17 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
      * If the property starts with "Is" it could be either a script,
      * general category or a binary property. Look for all.
      */
-    UnicodeScripts.unicodeScripts.asScala
+    UnicodeScripts.chatSets.asScala
       .get(name.toUpperCase())
-      .orElse(Option(UnicodeGeneralCategories.unicodeGeneralCategories.get(name)))
-      .orElse(Option(UnicodeBinaryProperties.unicodeBinaryProperties.get(name.toUpperCase())))
+      .orElse(Option(UnicodeGeneralCategories.charSets.get(name)))
+      .orElse(Option(UnicodeBinaryProperties.charSets.get(name.toUpperCase())))
       .getOrElse {
         throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + name)
       }
   }
 
   def specialCharSetWithIn = backslash ~ "p" ~ "{" ~ "In" ~> unicodeSubsetName <~ "}" ^^ { blockName =>
-    val block = UnicodeBlocks.unicodeBlocks.get(UnicodeDatabaseReader.canonicalizeBlockName(blockName))
+    val block = UnicodeBlocks.charSets.get(UnicodeDatabaseReader.canonicalizeBlockName(blockName))
     if (block == null) {
       throw new InvalidRegexException("Invalid Unicode block: " + blockName)
     }
@@ -183,12 +184,12 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   }
 
   def specialCharSetWithJava = backslash ~ "p" ~ "{" ~ "java" ~> unicodeSubsetName <~ "}" ^^ { charClass =>
-    val ret = PredefinedJavaProperties.javaClasses.get(charClass);
+    val ret = JavaProperties.charSets.get("java" + charClass);
     if (ret == null) {
       throw new InvalidRegexException(
         s"invalid Java character class: $charClass " +
           s"(note: for such a class to be valid, a method java.lang.Character.is$charClass() must exist) " +
-          s"(valid options: ${PredefinedJavaProperties.javaClasses.keySet().asScala.toSeq.sorted.mkString(",")})")
+          s"(valid options: ${JavaProperties.charSets.keySet().asScala.toSeq.sorted.mkString(",")})")
     }
     ret
   }
@@ -196,12 +197,12 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   def specialCharSetImplicit = backslash ~ "p" ~ "{" ~> unicodeSubsetName <~ "}" ^^ { name =>
     val effPosixClasses = {
       if (unicodeClasses) {
-        PredefinedUnicodePosixCharSets.unicodePosixClasses.asScala
+        UnicodePosixCharSets.charSets.asScala
       } else {
-        PredefinedPosixCharSets.classes.asScala
+        PosixCharSets.charSets.asScala
       }
     }
-    effPosixClasses.get(name).orElse(Option(UnicodeGeneralCategories.unicodeGeneralCategories.get(name))).getOrElse {
+    effPosixClasses.get(name).orElse(Option(UnicodeGeneralCategories.charSets.get(name))).getOrElse {
       throw new InvalidRegexException("Invalid POSIX character class: " + name)
     }
   }
@@ -222,7 +223,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   // There is the special case of a character class with only one character: the dash. This is valid, but
   // not easily parsed by the general constructs.
   def dashClass = "[" ~> "^".? <~ "-" ~ "]" ^^ { negated =>
-    val set = CharSet.fromRange(new Lit('-'))
+    val set = new CharSet(new Lit('-'))
     if (negated.isDefined) {
       set.complement
     } else {
@@ -240,51 +241,51 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
 
   def shorthandCharSetDigit = backslash ~ "d" ^^^ {
     if (unicodeClasses)
-      UnicodeBinaryProperties.unicodeBinaryProperties.get("DIGIT")
+      UnicodeBinaryProperties.charSets.get("DIGIT")
     else
-      PredefinedPosixCharSets.digit
+      PosixCharSets.digit
   }
 
   def shorthandCharSetDigitCompl = backslash ~ "D" ^^^ {
     if (unicodeClasses)
-      UnicodeBinaryProperties.unicodeBinaryProperties.get("DIGIT").complement
+      UnicodeBinaryProperties.charSets.get("DIGIT").complement
     else
-      PredefinedPosixCharSets.digit.complement
+      PosixCharSets.digit.complement
   }
 
   def shorthandCharSetSpace = backslash ~ "s" ^^^ {
     if (unicodeClasses)
-      UnicodeBinaryProperties.unicodeBinaryProperties.get("WHITE_SPACE")
+      UnicodeBinaryProperties.charSets.get("WHITE_SPACE")
     else
-      PredefinedPosixCharSets.space
+      PosixCharSets.space
   }
 
   def shorthandCharSetSpaceCompl = backslash ~ "S" ^^^ {
     if (unicodeClasses)
-      UnicodeBinaryProperties.unicodeBinaryProperties.get("WHITE_SPACE").complement
+      UnicodeBinaryProperties.charSets.get("WHITE_SPACE").complement
     else
-      PredefinedPosixCharSets.space.complement
+      PosixCharSets.space.complement
   }
 
   def shorthandCharSetWord = backslash ~ "w" ^^^ {
     if (unicodeClasses)
-      PredefinedUnicodePosixCharSets.unicodeWordChar
+      UnicodePosixCharSets.wordCharSet
     else
-      PredefinedPosixCharSets.wordChar
+      PosixCharSets.wordChar
   }
 
   def shorthandCharSetWordCompl = backslash ~ "W" ^^^ {
     if (unicodeClasses)
-      PredefinedUnicodePosixCharSets.unicodeWordChar.complement
+      UnicodePosixCharSets.wordCharSet.complement
     else
-      PredefinedPosixCharSets.wordChar.complement
+      PosixCharSets.wordChar.complement
   }
 
   def charClass = "[" ~> "^".? ~ "-".? ~ charClassAtom.+ ~ "-".? <~ "]" ^^ {
     case negated ~ leftDash ~ charClass ~ rightDash =>
       val chars =
         if (leftDash.isDefined || rightDash.isDefined)
-          charClass :+ CharSet.fromRange(new Lit('-'))
+          charClass :+ new CharSet(new Lit('-'))
         else
           charClass
       val set = CharSet.fromCharSets(chars: _*)
@@ -302,10 +303,10 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   }
 
   def unicodeLineBreak = backslash ~ "R" ^^^ {
-    new Disj(java.util.List.of(new Juxt(java.util.List.of(
-      new Lit('\u000D'), new Lit('\u000A'))), new Lit('\u000A'),
-      new Lit('\u000B'), new Lit('\u000C'), new Lit('\u000D'), new Lit('\u0085'),
-      new Lit('\u2028'), new Lit('\u2029')))
+    new Disj(java.util.List.of(
+      new Juxt(java.util.List.of(new Lit(0xD), new Lit(0xA))),
+      new Lit(0xA), new Lit(0xB), new Lit(0xC), new Lit(0xD),
+      new Lit(0x85), new Lit(0x2028), new Lit(0x2029)))
   }
 
   def group = "(" ~> ("?" ~ "<".? ~ "[:=!]".r).? ~ sp ~ regex <~ sp ~ ")" ^^ {
@@ -333,10 +334,10 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
       case DotMatch.All =>
         Wildcard.instance
       case DotMatch.JavaLines =>
-        new CharSet(java.util.List.of(new Lit('\n'), new Lit('\r'), new Lit('\u0085'), new Lit('\u2028'),
-          new Lit('\u2829'))).complement
+        new CharSet(new Lit('\n'), new Lit('\r'), new Lit(0x85), new Lit(0x2028),
+          new Lit(0x2829)).complement
       case DotMatch.UnixLines =>
-        CharSet.fromRange(new Lit('\n')).complement
+        new CharSet(new Lit('\n')).complement
     }
   }
 

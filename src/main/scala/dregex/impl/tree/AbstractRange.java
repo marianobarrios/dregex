@@ -28,14 +28,21 @@ public abstract class AbstractRange implements Node {
     }
 
     public AbstractRange canonical() {
-        if (from() == to()) {
-            return new Lit(from());
-        } else if (from() == Character.MIN_CODE_POINT && to() == Character.MAX_CODE_POINT) {
-            return Wildcard.instance;
-        } else {
-            return new CharRange(from(), to());
+        if (this instanceof Lit) {
+            return this;
         }
+        return create(from(), to());
     }
 
     public abstract String toCharClassLit();
+
+    public static AbstractRange create(int from, int to) {
+        if (from == to) {
+            return new Lit(from);
+        } else if (from == Character.MIN_CODE_POINT && to == Character.MAX_CODE_POINT) {
+            return Wildcard.instance;
+        } else {
+            return new CharRange(from, to);
+        }
+    }
 }

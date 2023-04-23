@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-public class Wildcard extends AbstractRange {
+public final class Wildcard extends AbstractRange {
 
     public static final Wildcard instance = new Wildcard();
 

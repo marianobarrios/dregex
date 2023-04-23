@@ -1,6 +1,6 @@
 package dregex
 
-import dregex.impl.PredefinedPosixCharSets
+import dregex.impl.database.PosixCharSets
 import dregex.impl.tree.Node
 import dregex.impl.tree.Lit
 import dregex.impl.tree.CharRange
@@ -20,9 +20,9 @@ class TreeGenerator {
       Iterator(
         new Lit('a'),
         Wildcard.instance,
-        CharSet.fromRange(new CharRange('d', 'f')),
-        CharSet.fromRange(new CharRange('d', 'f')).complement,
-        PredefinedPosixCharSets.digit)
+        new CharSet(new CharRange('d', 'f')),
+        new CharSet(new CharRange('d', 'f')).complement,
+        PosixCharSets.digit)
     } else {
       generateFixedDepth(levels - 1).flatMap { node =>
         val simple = Iterator(

@@ -1,4 +1,4 @@
-package dregex.impl;
+package dregex.impl.database;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class UnicodeDatabaseReader {
         }
     }
 
-    public static SortedMap<Range, String> parseDatabase(Reader database) throws IOException {
+    private static SortedMap<Range, String> parseDatabase(Reader database) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(database);
 
         SortedMap<Range, String> ret = new TreeMap<>();
