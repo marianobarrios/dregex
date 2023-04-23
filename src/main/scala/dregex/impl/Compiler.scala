@@ -42,7 +42,8 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
         fromTreeImpl(new Disj(set.ranges), from, to)
 
       case juxt: Juxt =>
-        processJuxt(combineNegLookaheads(juxt), from, to)
+        // this optimization should be applied before the lookarounds are expanded to intersections and differences
+        processJuxt(CompilerHelper.combineNegLookaheads(juxt), from, to)
 
       case la: Lookaround =>
         fromTreeImpl(new Juxt(la), from, to)
@@ -120,34 +121,6 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
   def findLookaround(args: Seq[Node]): Option[Int] = {
     val found = args.zipWithIndex.find { case (x, i) => x.isInstanceOf[Lookaround] }
     found.map { case (_, idx) => idx }
-  }
-
-  /**
-    * Optimization: combination of consecutive negative lookahead constructions
-    * (?!a)(?!b)(?!c) gets combined to (?!a|b|c), which is faster to process.
-    * This optimization should be applied before the look-around's are expanded to intersections and differences.
-    */
-  def combineNegLookaheads(juxt: Juxt): Juxt = {
-    import Direction._
-    import Condition._
-    val newValues = juxt.values.asScala.foldLeft(Seq[Node]()) { (acc, x) =>
-      if (!acc.isEmpty && acc.last.isInstanceOf[Lookaround] && x.isInstanceOf[Lookaround]) {
-        val la1 = acc.last.asInstanceOf[Lookaround]
-        val la2 = x.asInstanceOf[Lookaround]
-        if (la1.dir == Ahead && la2.dir == Ahead) {
-          if (la1.cond == Negative && la2.cond == Negative) {
-            acc.init :+ new Lookaround(Ahead, Negative, new Disj(la1.value, la2.value))
-          } else {
-            acc :+ x
-          }
-        } else {
-          acc :+ x
-        }
-      } else {
-        acc :+ x
-      }
-    }
-    new Juxt(newValues.asJava)
   }
 
   private def processJuxtNoLookaround(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
