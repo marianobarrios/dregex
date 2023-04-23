@@ -47,13 +47,13 @@ public class JavaProperties {
                     }
                 } else {
                     if (rangeStart != -1) {
-                        ranges.add(AbstractRange.create(rangeStart, codePoint - 1));
+                        ranges.add(AbstractRange.of(rangeStart, codePoint - 1));
                         rangeStart = -1;
                     }
                 }
             }
             if (rangeStart != -1) {
-                ranges.add(AbstractRange.create(rangeStart, Character.MAX_CODE_POINT));
+                ranges.add(AbstractRange.of(rangeStart, Character.MAX_CODE_POINT));
             }
             charSets.put(prop, new CharSet(ranges));
         }

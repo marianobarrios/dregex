@@ -27,11 +27,11 @@ object RangeOps {
     } else if (left.to < right.from) {
       Seq(left)
     } else if (left.from < right.from && left.to > right.to) {
-      Seq(new CharRange(left.from, right.from - 1), new CharRange(right.to + 1, left.to))
+      Seq(AbstractRange.of(left.from, right.from - 1), AbstractRange.of(right.to + 1, left.to))
     } else if (left.from < right.from && left.to <= right.to) {
-      Seq(new CharRange(left.from, right.from - 1))
+      Seq(AbstractRange.of(left.from, right.from - 1))
     } else if (left.from >= right.from && left.to > right.to) {
-      Seq(new CharRange(right.to + 1, left.to))
+      Seq(AbstractRange.of(right.to + 1, left.to))
     } else {
       throw new AssertionError
     }
@@ -55,20 +55,20 @@ object RangeOps {
       Seq(right)
     } else if (left.from > right.to) {
       if (right.to + 1 == left.from)
-        Seq(new CharRange(right.from, left.to))
+        Seq(AbstractRange.of(right.from, left.to))
       else
         Seq(right, left)
     } else if (left.to < right.from) {
       if (left.to + 1 == right.from)
-        Seq(new CharRange(left.from, right.to))
+        Seq(AbstractRange.of(left.from, right.to))
       else
         Seq(left, right)
     } else if (left.from < right.from && left.to > right.to) {
       Seq(left)
     } else if (left.from < right.from && left.to <= right.to) {
-      Seq(new CharRange(left.from, right.to))
+      Seq(AbstractRange.of(left.from, right.to))
     } else if (left.from >= right.from && left.to > right.to) {
-      Seq(new CharRange(right.from, left.to))
+      Seq(AbstractRange.of(right.from, left.to))
     } else {
       throw new AssertionError
     }
