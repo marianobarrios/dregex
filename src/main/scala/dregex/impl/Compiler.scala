@@ -88,39 +88,34 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
   private def processJuxt(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
     import Direction._
     import Condition._
-    findLookaround(juxt.values.asScala.toSeq) match {
-      case Some(i) =>
-        val prefix = juxt.values.asScala.slice(0, i)
-        val suffix = juxt.values.asScala.slice(i + 1, juxt.values.asScala.size)
-        val wildcard = new Rep(0, Optional.empty(), Wildcard.instance)
-        juxt.values.asScala(i).asInstanceOf[Lookaround] match {
-          case lookaround if lookaround.dir == Ahead =>
-            val rightSide: Node = lookaround.cond match {
-              case Positive => new Intersection(new Juxt(suffix.asJava), new Juxt(lookaround.value, wildcard))
-              case Negative => new Difference(new Juxt(suffix.asJava), new Juxt(lookaround.value, wildcard))
-            }
-            if (prefix.isEmpty)
-              fromTreeImpl(rightSide, from, to)
-            else
-              fromTreeImpl(new Juxt((prefix :+ rightSide).asJava), from, to)
-          case lookaround if lookaround.dir == Behind =>
-            val leftSide: Node = lookaround.cond match {
-              case Positive => new Intersection(new Juxt(prefix.asJava), new Juxt(lookaround.value, wildcard))
-              case Negative => new Difference(new Juxt(prefix.asJava), new Juxt(lookaround.value, wildcard))
-            }
-            if (suffix.isEmpty)
-              fromTreeImpl(leftSide, from, to)
-            else
-              fromTreeImpl(new Juxt((leftSide +: suffix).asJava), from, to)
-        }
-      case None =>
-        processJuxtNoLookaround(juxt, from, to)
+    val lookaroundIdx = CompilerHelper.findLookaround(juxt.values);
+    if (lookaroundIdx != -1) {
+      val prefix = juxt.values.asScala.slice(0, lookaroundIdx)
+      val suffix = juxt.values.asScala.slice(lookaroundIdx + 1, juxt.values.asScala.size)
+      val wildcard = new Rep(0, Optional.empty(), Wildcard.instance)
+      juxt.values.get(lookaroundIdx).asInstanceOf[Lookaround] match {
+        case lookaround if lookaround.dir == Ahead =>
+          val rightSide: Node = lookaround.cond match {
+            case Positive => new Intersection(new Juxt(suffix.asJava), new Juxt(lookaround.value, wildcard))
+            case Negative => new Difference(new Juxt(suffix.asJava), new Juxt(lookaround.value, wildcard))
+          }
+          if (prefix.isEmpty)
+            fromTreeImpl(rightSide, from, to)
+          else
+            fromTreeImpl(new Juxt((prefix :+ rightSide).asJava), from, to)
+        case lookaround if lookaround.dir == Behind =>
+          val leftSide: Node = lookaround.cond match {
+            case Positive => new Intersection(new Juxt(prefix.asJava), new Juxt(lookaround.value, wildcard))
+            case Negative => new Difference(new Juxt(prefix.asJava), new Juxt(lookaround.value, wildcard))
+          }
+          if (suffix.isEmpty)
+            fromTreeImpl(leftSide, from, to)
+          else
+            fromTreeImpl(new Juxt((leftSide +: suffix).asJava), from, to)
+      }
+    } else {
+      processJuxtNoLookaround(juxt, from, to)
     }
-  }
-
-  def findLookaround(args: Seq[Node]): Option[Int] = {
-    val found = args.zipWithIndex.find { case (x, i) => x.isInstanceOf[Lookaround] }
-    found.map { case (_, idx) => idx }
   }
 
   private def processJuxtNoLookaround(juxt: Juxt, from: SimpleState, to: SimpleState): Seq[Nfa.Transition] = {
