@@ -19,7 +19,7 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
   /**
     * Transform a regular expression abstract syntax tree into a corresponding NFA
     */
-  def fromTree(ast: Node): Dfa[SimpleState] = {
+  def fromTree(ast: Node): Dfa = {
     val initial = new SimpleState
     val accepting = new SimpleState
     val transitions = fromTreeImpl(ast, initial, accepting)
@@ -250,10 +250,8 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
     }
   }
 
-  private type BinaryOp[A <: State] = (Dfa[A], Dfa[A]) => Dfa[BiState[A]]
-
   private def processOp(
-      operation: BinaryOp[SimpleState],
+      operation: (Dfa, Dfa) => Dfa,
       left: Node,
       right: Node,
       from: SimpleState,

@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-class MultiState implements State {
+public final class MultiState implements State {
 
     public final Set<State> states;
 

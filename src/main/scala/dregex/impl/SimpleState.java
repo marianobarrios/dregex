@@ -3,7 +3,7 @@ package dregex.impl;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class SimpleState implements State {
+public final class SimpleState implements State {
 
     public final int id = counter.getAndIncrement();
 

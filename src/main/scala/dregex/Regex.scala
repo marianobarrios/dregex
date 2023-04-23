@@ -1,7 +1,7 @@
 package dregex
 
 import java.util.regex.Pattern
-import dregex.impl.{Dfa, DfaAlgorithms, RegexParser, SimpleState}
+import dregex.impl.{Dfa, DfaAlgorithms, RegexParser}
 import dregex.impl.RegexParser.DotMatch
 import org.slf4j.LoggerFactory
 
@@ -14,7 +14,7 @@ import scala.jdk.CollectionConverters._
   */
 trait Regex {
 
-  private[dregex] def dfa: Dfa[SimpleState]
+  private[dregex] def dfa: Dfa
 
   /**
     * Return this regex's [[Universe]]. Only regexes of the same universe can be operated together.

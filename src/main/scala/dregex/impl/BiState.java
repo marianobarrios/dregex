@@ -2,12 +2,12 @@ package dregex.impl;
 
 import java.util.Objects;
 
-public class BiState<A extends State> implements State {
+public final class BiState implements State {
 
-    public final A first;
-    public final A second;
+    public final State first;
+    public final State second;
 
-    public BiState(A first, A second) {
+    public BiState(State first, State second) {
         this.first = first;
         this.second = second;
     }
@@ -21,7 +21,7 @@ public class BiState<A extends State> implements State {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BiState<?> biState = (BiState<?>) o;
+        BiState biState = (BiState) o;
         return Objects.equals(first, biState.first) && Objects.equals(second, biState.second);
     }
 

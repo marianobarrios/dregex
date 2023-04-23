@@ -1,7 +1,6 @@
 package dregex.impl
 
 import dregex.impl.tree.AbstractRange
-import dregex.impl.tree.CharRange
 import scala.collection.immutable.IndexedSeq
 import scala.jdk.CollectionConverters._
 

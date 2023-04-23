@@ -3,15 +3,15 @@ package dregex.impl;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Dfa<A extends State> {
+public final class Dfa {
 
-    public final A initial;
-    public final Map<A, TreeMap<CharInterval, A>> defTransitions;
-    public final Set<A> accepting;
+    public final State initial;
+    public final Map<State, TreeMap<CharInterval, State>> defTransitions;
+    public final Set<? extends State> accepting;
 
     public final boolean minimal;
 
-    public Dfa(A initial, Map<A, TreeMap<CharInterval, A>> defTransitions, Set<A> accepting, boolean minimal) {
+    public Dfa(State initial, Map<State, TreeMap<CharInterval, State>> defTransitions, Set<? extends State> accepting, boolean minimal) {
         this.initial = initial;
         this.defTransitions = defTransitions;
         this.accepting = accepting;
@@ -23,8 +23,8 @@ public class Dfa<A extends State> {
         return String.format("initial: %s; transitions: %s; accepting: %s", initial, defTransitions, accepting);
     }
 
-    public Set<A> allStates() {
-        var ret = new HashSet<A>();
+    public Set<State> allStates() {
+        Set<State> ret = new HashSet<>();
         ret.add(initial);
         ret.addAll(defTransitions.keySet());
         ret.addAll(defTransitions.values().stream().flatMap(x -> x.values().stream()).collect(Collectors.toList()));
@@ -32,7 +32,7 @@ public class Dfa<A extends State> {
         return ret;
     }
 
-    public Set<A> allButAccepting() {
+    public Set<State> allButAccepting() {
         var ret = new HashSet<>(allStates());
         ret.removeAll(accepting);
         return ret;
@@ -46,7 +46,7 @@ public class Dfa<A extends State> {
         return allStates().size();
     }
 
-    public Map<CharInterval, A> transitionMap(A state) {
+    public Map<CharInterval, State> transitionMap(State state) {
         var ret = defTransitions.get(state);
         return ret == null ? Map.of() : ret;
     }
@@ -55,6 +55,6 @@ public class Dfa<A extends State> {
     /**
      * Match-nothing DFA
      */
-    public static Dfa<SimpleState> nothingDfa = new Dfa<>(new SimpleState(), Map.of(), Set.of(), false);
+    public static Dfa nothingDfa = new Dfa(new SimpleState(), Map.of(), Set.of(), false);
 
 }
