@@ -9,15 +9,15 @@ import java.util.stream.Collectors;
 
 public class DfaAlgorithms {
 
-    public static <A extends State> Dfa<BiState<A>> doIntersect(Dfa<A> left, Dfa<A> right) {
+    public static Dfa doIntersect(Dfa left, Dfa right) {
         return removeUnreachableStates(doIntersection(left, right));
     }
 
-    public static <A extends State> Dfa<BiState<A>> union(Dfa<A> left, Dfa<A> right) {
+    public static Dfa union(Dfa left, Dfa right) {
         return removeUnreachableStates(doUnion(left, right));
     }
 
-    public static <A extends State> Dfa<BiState<A>> diff(Dfa<A> left, Dfa<A> right) {
+    public static Dfa diff(Dfa left, Dfa right) {
         return removeUnreachableStates(doDifference(left, right));
     }
 
@@ -27,73 +27,73 @@ public class DfaAlgorithms {
      * https://stackoverflow.com/q/7780521/4505326
      * https://cs.stackexchange.com/a/7108
      */
-    private static <A extends State> Dfa<BiState<A>> productConstruction(Dfa<A> left, Dfa<A> right, BiPredicate<A, A> acceptingStateFilter) {
+    private static Dfa productConstruction(Dfa left, Dfa right, BiPredicate<State, State> acceptingStateFilter) {
         Set<CharInterval> allChars = setUnion(left.allChars(), right.allChars());
 
-        BiState<A> newInitial = new BiState<>(left.initial, right.initial);
+        BiState newInitial = new BiState(left.initial, right.initial);
 
-        Collection<A> allLeftStates = getAllStatesWithNullState(left);
-        Collection<A> allRightStates = getAllStatesWithNullState(right);
+        Collection<State> allLeftStates = getAllStatesWithNullState(left);
+        Collection<State> allRightStates = getAllStatesWithNullState(right);
 
-        Map<BiState<A>, TreeMap<CharInterval, BiState<A>>> newTransitions = new HashMap<>(allLeftStates.size() * allRightStates.size());
-        for (A leftState : allLeftStates) {
-            Map<CharInterval, A> leftCharMap = left.transitionMap(leftState);
+        Map<State, TreeMap<CharInterval, State>> newTransitions = new HashMap<>(allLeftStates.size() * allRightStates.size());
+        for (var leftState : allLeftStates) {
+            Map<CharInterval, State> leftCharMap = left.transitionMap(leftState);
 
-            for (A rightState : allRightStates) {
-                Map<CharInterval, A> rightCharMap = right.transitionMap(rightState);
+            for (var rightState : allRightStates) {
+                Map<CharInterval, State> rightCharMap = right.transitionMap(rightState);
 
-                TreeMap<CharInterval, BiState<A>> charMap = new TreeMap<>();
+                TreeMap<CharInterval, State> charMap = new TreeMap<>();
                 for (var ch : allChars) {
-                    A leftDestState = leftCharMap.get(ch);
-                    A rightDestState = rightCharMap.get(ch);
-                    charMap.put(ch, new BiState<>(leftDestState, rightDestState));
+                    State leftDestState = leftCharMap.get(ch);
+                    State rightDestState = rightCharMap.get(ch);
+                    charMap.put(ch, new BiState(leftDestState, rightDestState));
                 }
 
-                newTransitions.put(new BiState<>(leftState, rightState), charMap);
+                newTransitions.put(new BiState(leftState, rightState), charMap);
             }
         }
 
-        Set<BiState<A>> newAccepting = new HashSet<>();
-        for (A leftState : allLeftStates) {
-            for (A rightState : allRightStates) {
+        Set<State> newAccepting = new HashSet<>();
+        for (var leftState : allLeftStates) {
+            for (var rightState : allRightStates) {
                 if (acceptingStateFilter.test(leftState, rightState)) {
-                    newAccepting.add(new BiState<>(leftState, rightState));
+                    newAccepting.add(new BiState(leftState, rightState));
                 }
             }
         }
 
-        return new Dfa<>(newInitial, newTransitions, newAccepting, false);
+        return new Dfa(newInitial, newTransitions, newAccepting, false);
     }
 
-    private static <A extends State> Dfa<BiState<A>> doIntersection(Dfa<A> left, Dfa<A> right) {
+    private static Dfa doIntersection(Dfa left, Dfa right) {
         return productConstruction(left, right, (l, r) -> left.accepting.contains(l) && right.accepting.contains(r));
     }
 
-    public static <A extends State> Dfa<BiState<A>> doDifference(Dfa<A> left, Dfa<A> right) {
+    public static Dfa doDifference(Dfa left, Dfa right) {
         return productConstruction(left, right, (l, r) -> left.accepting.contains(l) && !right.accepting.contains(r));
     }
 
-    public static <A extends State> Dfa<BiState<A>> doUnion(Dfa<A> left, Dfa<A> right) {
+    public static Dfa doUnion(Dfa left, Dfa right) {
         return productConstruction(left, right, (l, r) -> left.accepting.contains(l) || right.accepting.contains(r));
     }
 
-    private static <A extends State> Collection<A> getAllStatesWithNullState(Dfa<A> dfa) {
+    private static Collection<State> getAllStatesWithNullState(Dfa dfa) {
         var allStates = dfa.allStates();
-        Collection<A> ret = new ArrayList<>(allStates.size() + 1);
+        Collection<State> ret = new ArrayList<>(allStates.size() + 1);
         ret.addAll(allStates);
         ret.add(null);
         return ret;
     }
 
-    public static <A extends State> Dfa<A> removeUnreachableStates(Dfa<A> dfa) {
-        Set<A> visited = new HashSet<>();
-        Queue<A> pending = new ArrayDeque<>();
+    public static Dfa removeUnreachableStates(Dfa dfa) {
+        Set<State> visited = new HashSet<>();
+        Queue<State> pending = new ArrayDeque<>();
         pending.add(dfa.initial);
         while (!pending.isEmpty()) {
-            A currentState = pending.remove();
+            var currentState = pending.remove();
             visited.add(currentState);
-            Collection<A> currentPossibleTargets = new HashSet<>(dfa.transitionMap(currentState).values());
-            for (A targetState : currentPossibleTargets) {
+            Collection<State> currentPossibleTargets = new HashSet<>(dfa.transitionMap(currentState).values());
+            for (var targetState : currentPossibleTargets) {
                 if (!visited.contains(targetState)) {
                     pending.add(targetState);
                 }
@@ -101,10 +101,10 @@ public class DfaAlgorithms {
         }
         var filteredTransitions = dfa.defTransitions.entrySet().stream().filter(s -> visited.contains(s.getKey())).collect(toMapCollector());
         var filteredAccepting = dfa.accepting.stream().filter(s -> visited.contains(s)).collect(Collectors.toSet());
-        return new Dfa<>(dfa.initial, filteredTransitions, filteredAccepting, false);
+        return new Dfa(dfa.initial, filteredTransitions, filteredAccepting, false);
     }
 
-    public static <A extends State> boolean isIntersectionNotEmpty(Dfa<A> left, Dfa<A> right) {
+    public static boolean isIntersectionNotEmpty(Dfa left, Dfa right) {
         return matchesAtLeastOne(doIntersection(left, right));
     }
 
@@ -112,11 +112,11 @@ public class DfaAlgorithms {
      * Return whether a DFA matches anything. A DFA matches at least some language if there is a path from the initial
      * state to any of the accepting states
      */
-    public static <A extends State> boolean matchesAtLeastOne(Dfa<A> dfa) {
+    public static boolean matchesAtLeastOne(Dfa dfa) {
         return hasPathToAccepting(new HashSet<>(), dfa, dfa.initial);
     }
 
-    private static <A extends State> boolean hasPathToAccepting(Set<A> visited, Dfa<A> dfa, A current) {
+    private static boolean hasPathToAccepting(Set<State> visited, Dfa dfa, State current) {
         if (dfa.accepting.contains(current)) {
             return true;
         } else {
@@ -129,15 +129,15 @@ public class DfaAlgorithms {
         }
     }
 
-    public static <A extends State> boolean equivalent(Dfa<A> left, Dfa<A> right) {
+    public static boolean equivalent(Dfa left, Dfa right) {
         return !matchesAtLeastOne(doDifference(left, right)) && !matchesAtLeastOne(doDifference(right, left));
     }
 
-    public static <A extends State> boolean isProperSubset(Dfa<A> left, Dfa<A> right) {
+    public static boolean isProperSubset(Dfa left, Dfa right) {
         return !matchesAtLeastOne(doDifference(left, right)) && matchesAtLeastOne(doDifference(right, left));
     }
 
-    public static <A extends State> boolean isSubsetOf(Dfa<A> left, Dfa<A> right) {
+    public static boolean isSubsetOf(Dfa left, Dfa right) {
         return !matchesAtLeastOne(doDifference(left, right));
     }
 
@@ -152,7 +152,7 @@ public class DfaAlgorithms {
         return Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 
-    public static <A extends State> Dfa<SimpleState> rewriteWithSimpleStates(Dfa<A> genericDfa) {
+    public static Dfa rewriteWithSimpleStates(Dfa genericDfa) {
         return rewrite(genericDfa, () -> new SimpleState());
     }
 
@@ -161,18 +161,18 @@ public class DfaAlgorithms {
      * Useful for simplifying the DFA product of intersections or NFA conversions.
      * This function does not change the language matched by the DFA
      */
-    public static <A extends State, B extends State> Dfa<B> rewrite(Dfa<A> dfa, Supplier<B> stateFactory) {
-        Map<A, B> mapping = dfa.allStates().stream().collect(Collectors.toMap(s -> s, s -> stateFactory.get()));
-        Map<B, TreeMap<CharInterval, B>> newTransitions = new HashMap<>();
+    public static Dfa rewrite(Dfa dfa, Supplier<State> stateFactory) {
+        Map<State, State> mapping = dfa.allStates().stream().collect(Collectors.toMap(s -> s, s -> stateFactory.get()));
+        Map<State, TreeMap<CharInterval, State>> newTransitions = new HashMap<>();
         for (var entry : dfa.defTransitions.entrySet()) {
-            A s = entry.getKey();
-            TreeMap<CharInterval, A> charMap = entry.getValue();
+            State s = entry.getKey();
+            TreeMap<CharInterval, State> charMap = entry.getValue();
             var newCharMap = new TreeMap<>(charMap.entrySet().stream().collect(
                     Collectors.toMap(e -> e.getKey(), e -> mapping.get(e.getValue()))));
             newTransitions.put(mapping.get(s), newCharMap);
         }
-        Set<B> newAccepting = dfa.accepting.stream().map(s -> mapping.get(s)).collect(Collectors.toSet());
-        return new Dfa<B>(mapping.get(dfa.initial), newTransitions, newAccepting, false);
+        Set<State> newAccepting = dfa.accepting.stream().map(s -> mapping.get(s)).collect(Collectors.toSet());
+        return new Dfa(mapping.get(dfa.initial), newTransitions, newAccepting, false);
     }
 
     public static class MatchResult {
@@ -184,14 +184,14 @@ public class DfaAlgorithms {
             this.i = i;
         }
     }
-    public static <A extends State> MatchResult matchString(Dfa<A> dfa, CharSequence string) {
+    public static MatchResult matchString(Dfa dfa, CharSequence string) {
         var current = dfa.initial;
         int i = 0;
         var it = string.codePoints().iterator();
         while (it.hasNext()) {
             int codePoint = it.next();
-            TreeMap<CharInterval, A> currentTrans = dfa.defTransitions.get(current);
-            A newState = null;
+            TreeMap<CharInterval, State> currentTrans = dfa.defTransitions.get(current);
+            State newState = null;
             if (currentTrans != null) {
                 // O(log transitions) search in the range tree
                 var entry = currentTrans.floorEntry(new CharInterval(codePoint, codePoint));
@@ -214,7 +214,7 @@ public class DfaAlgorithms {
     /**
      * Each DFA is also trivially a NFA, return it.
      */
-    public static <A extends State> Nfa toNfa(Dfa<A> dfa) {
+    public static Nfa toNfa(Dfa dfa) {
         Collection<Nfa.Transition> nfaTransitions = new ArrayList<>();
         for (var entry1 : dfa.defTransitions.entrySet()) {
             var state = entry1.getKey();
@@ -228,7 +228,7 @@ public class DfaAlgorithms {
         return new Nfa(dfa.initial, nfaTransitions, new HashSet<>(dfa.accepting));
     }
 
-    public static <A extends State> Dfa<MultiState> reverseAsDfa(Dfa<A> dfa) {
+    public static Dfa reverseAsDfa(Dfa dfa) {
         return DfaAlgorithms.fromNfa(DfaAlgorithms.reverse(dfa));
     }
 
@@ -236,26 +236,26 @@ public class DfaAlgorithms {
      * DFA minimization, using
      * <a href="http://cs.stackexchange.com/questions/1872/brzozowskis-algorithm-for-dfa-minimization">Brzozowski's algorithm</a>
      */
-    public static Dfa<SimpleState> minimize(Dfa<SimpleState> dfa) {
+    public static Dfa minimize(Dfa dfa) {
         if (dfa.minimal) {
             return dfa;
         } else {
             var reversedDfa = reverseAsDfa(dfa);
             var doubleReversedDfa = reverseAsDfa(reversedDfa);
-            var minimalDfa = new Dfa<>(doubleReversedDfa.initial, doubleReversedDfa.defTransitions, doubleReversedDfa.accepting, true);
+            var minimalDfa = new Dfa(doubleReversedDfa.initial, doubleReversedDfa.defTransitions, doubleReversedDfa.accepting, true);
             return rewriteWithSimpleStates(minimalDfa);
         }
     }
 
-    public static <A extends State> Nfa reverse(Dfa<A> dfa) {
+    public static Nfa reverse(Dfa dfa) {
         var initial = new SimpleState();
         Set<Nfa.Transition> nfaTransitions = dfa.accepting.stream().map(s -> new Nfa.Transition(initial, s, Epsilon.instance)).collect(Collectors.toSet());
         for (var entry1 : dfa.defTransitions.entrySet()) {
-            A from = entry1.getKey();
+            State from = entry1.getKey();
             var map = entry1.getValue();
             for (var entry2 : map.entrySet()) {
                 CharInterval ch = entry2.getKey();
-                A to = entry2.getValue();
+                State to = entry2.getValue();
                 nfaTransitions.add(new Nfa.Transition(to, from, ch));
             }
         }
@@ -266,7 +266,7 @@ public class DfaAlgorithms {
      * Produce a DFA from a NFA using the
      * <a href="https://en.wikipedia.org/w/index.php?title=Powerset_construction&oldid=547783241">'power set construction'</a>
      */
-    public static Dfa<MultiState> fromNfa(Nfa nfa) {
+    public static Dfa fromNfa(Nfa nfa) {
         /*
          * Group the list of transitions of the NFA into a nested map, for easy lookup.
          * The rest of this method will use this map instead of the original list.
@@ -310,7 +310,7 @@ public class DfaAlgorithms {
 
         var dfaInitial = followEpsilon.apply(Set.of(nfa.initial));
 
-        Map<MultiState, TreeMap<CharInterval, MultiState>> dfaTransitions = new HashMap<>();
+        Map<State, TreeMap<CharInterval, State>> dfaTransitions = new HashMap<>();
         Set<MultiState> dfaStates = new HashSet<>();
 
         Queue<MultiState> pending = new ArrayDeque<>();
@@ -353,7 +353,7 @@ public class DfaAlgorithms {
         // a DFA state is accepting if any of its NFA member-states is
         var dfaAccepting = dfaStates.stream().filter(st -> Util.doIntersect(st.states, nfa.accepting)).collect(Collectors.toSet());
 
-        return new Dfa<>(dfaInitial, dfaTransitions, dfaAccepting, false);
+        return new Dfa(dfaInitial, dfaTransitions, dfaAccepting, false);
     }
 
     private static MultiState followEpsilonImpl(Map<State, Map<AtomPart, Set<State>>> transitionMap, Set<State> current) {

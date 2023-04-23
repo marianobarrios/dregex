@@ -9,12 +9,12 @@ import dregex.impl.tree.Node;
 /**
  * A fully-compiled regular expression that was generated from a string literal.
  */
-public class CompiledRegex implements Regex {
+public final class CompiledRegex implements Regex {
 
     private final Universe _universe;
     private final String _originalString;
     private final Node _parsedTree;
-    private final Dfa<SimpleState> _dfa;
+    private final Dfa _dfa;
 
     public CompiledRegex(@NonNull String originalString, @NonNull Node parsedTree, @NonNull Universe universe) {
         this._universe = universe;
@@ -37,7 +37,7 @@ public class CompiledRegex implements Regex {
     }
 
     @Override
-    public Dfa<SimpleState> dfa() {
+    public Dfa dfa() {
         return _dfa;
     }
 

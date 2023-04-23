@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Nfa {
+public final class Nfa {
 
     public static class Transition {
 
