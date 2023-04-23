@@ -6,7 +6,6 @@ import dregex.impl.tree.*;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 /**
  * Take a regex AST and produce a NFA.
@@ -27,45 +26,47 @@ public class Compiler {
     public Dfa fromTree(Node ast) {
         var initial = new SimpleState();
         var accepting = new SimpleState();
-        var transitions = fromTreeImpl(ast, initial, accepting);
+        List<Nfa.Transition> transitions = new ArrayList<>();
+        addTransitionsFromNode(transitions, ast, initial, accepting);
         var nfa = new Nfa(initial, transitions, Set.of(accepting));
         return DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.fromNfa(nfa));
     }
 
-    public List<Nfa.Transition> fromTreeImpl(Node node, SimpleState from, SimpleState to) {
+    private void addTransitionsFromNode(List<Nfa.Transition> transitions, Node node, SimpleState from, SimpleState to) {
         if (node instanceof AbstractRange) {
             // base case
             var range = (AbstractRange) node;
-            var intervals = intervalMapping.get(range);
-            return intervals.stream().map(interval -> new Nfa.Transition(from, to, interval)).collect(Collectors.toList());
+            for (var interval : intervalMapping.get(range)) {
+                transitions.add(new Nfa.Transition(from, to, interval));
+            }
         } else if (node instanceof CharSet) {
             var set = (CharSet) node;
-            return fromTreeImpl(new Disj(set.ranges), from, to);
+            addTransitionsFromNode(transitions, new Disj(set.ranges), from, to);
         } else if (node instanceof Juxt) {
             // this optimization should be applied before the lookarounds are expanded to intersections and differences
             var juxt = (Juxt) node;
-            return processJuxt(CompilerHelper.combineNegLookaheads(juxt), from, to);
+            addTransitionsFromJuxt(transitions, CompilerHelper.combineNegLookaheads(juxt), from, to);
         } else if (node instanceof Lookaround) {
             var la = (Lookaround) node;
-            return fromTreeImpl(new Juxt(la), from, to);
+            addTransitionsFromNode(transitions, new Juxt(la), from, to);
         } else if (node instanceof Disj) {
             var disj = (Disj) node;
-            return processDisj(disj, from, to);
+            addTransitionsFromDisj(transitions, disj, from, to);
         } else if (node instanceof Rep) {
             var rep = (Rep) node;
-            return processRep(rep, from, to);
+            addTransitionsFromRep(transitions, rep, from, to);
         } else if (node instanceof Intersection) {
             var intersection = (Intersection) node;
-            return processOp(DfaAlgorithms::doIntersect, intersection.left, intersection.right, from, to);
+            addTransitionsFromOperation(transitions, DfaAlgorithms::doIntersect, intersection.left, intersection.right, from, to);
         } else if (node instanceof Union) {
             var union = (Union) node;
-            return processOp(DfaAlgorithms::union, union.left, union.right, from, to);
+            addTransitionsFromOperation(transitions, DfaAlgorithms::union, union.left, union.right, from, to);
         } else if (node instanceof Difference) {
             var difference = (Difference) node;
-            return processOp(DfaAlgorithms::diff, difference.left, difference.right, from, to);
+            addTransitionsFromOperation(transitions, DfaAlgorithms::diff, difference.left, difference.right, from, to);
         } else if (node instanceof PositionalCaptureGroup) {
             var cg = (PositionalCaptureGroup) node;
-            return processCaptureGroup(cg.value, from, to);
+            addTransitionsFromCaptureGroup(transitions, cg.value, from, to);
         } else if (node instanceof NamedCaptureGroup) {
             throw new InvalidRegexException("named capture groups are not supported");
         } else {
@@ -87,7 +88,7 @@ public class Compiler {
      * *
      * NOTE: Only lookahead is currently implemented
      */
-    List<Nfa.Transition> processJuxt(Juxt juxt, SimpleState from, SimpleState to) {
+    void addTransitionsFromJuxt(List<Nfa.Transition> transitions, Juxt juxt, SimpleState from, SimpleState to) {
         var lookaroundIdx = CompilerHelper.findLookaround(juxt.values);
         if (lookaroundIdx != -1) {
             var prefix = juxt.values.subList(0, lookaroundIdx);
@@ -108,13 +109,14 @@ public class Compiler {
                             throw new IllegalStateException();
                     }
                     if (prefix.isEmpty()) {
-                        return fromTreeImpl(rightSide, from, to);
+                        addTransitionsFromNode(transitions, rightSide, from, to);
                     } else {
                         List<Node> nodes = new ArrayList<>(prefix.size() + 1);
                         nodes.addAll(prefix);
                         nodes.add(rightSide);
-                        return fromTreeImpl(new Juxt(nodes), from, to);
+                        addTransitionsFromNode(transitions, new Juxt(nodes), from, to);
                     }
+                    break;
                 case Behind:
                     Operation leftSide;
                     switch (lookaround.cond) {
@@ -128,100 +130,92 @@ public class Compiler {
                             throw new IllegalStateException();
                     }
                     if (suffix.isEmpty()) {
-                        return fromTreeImpl(leftSide, from, to);
+                        addTransitionsFromNode(transitions, leftSide, from, to);
                     } else {
                         List<Node> nodes = new ArrayList<>(suffix.size() + 1);
                         nodes.add(leftSide);
                         nodes.addAll(suffix);
-                        return fromTreeImpl(new Juxt(nodes), from, to);
+                        addTransitionsFromNode(transitions, new Juxt(nodes), from, to);
                     }
+                    break;
                 default:
                     throw new IllegalStateException();
             }
         } else {
-            return processJuxtNoLookaround(juxt, from, to);
+            addTransitionsFromJuxtNoLookaround(transitions, juxt, from, to);
         }
     }
 
-    public List<Nfa.Transition> processJuxtNoLookaround(Juxt juxt, SimpleState from, SimpleState to) {
+    public void addTransitionsFromJuxtNoLookaround(List<Nfa.Transition> transitions, Juxt juxt, SimpleState from, SimpleState to) {
         if (juxt.values.isEmpty()) {
-            return List.of(new Nfa.Transition(from, to, Epsilon.instance));
+            transitions.add(new Nfa.Transition(from, to, Epsilon.instance));
         } else if (juxt.values.size() == 1) {
-            return fromTreeImpl(juxt.values.get(0), from, to);
+            addTransitionsFromNode(transitions, juxt.values.get(0), from, to);
         } else {
             // doing this iteratively prevents stack overflows in the case of long literal strings
-            List<Nfa.Transition> transitions = new ArrayList<>();
             var prev = from;
             for (var part : juxt.values.subList(0, juxt.values.size() - 1)) {
                 var intermediate = new SimpleState();
-                transitions.addAll(fromTreeImpl(part, prev, intermediate));
+                addTransitionsFromNode(transitions, part, prev, intermediate);
                 prev = intermediate;
             }
-            transitions.addAll(fromTreeImpl(juxt.values.get(juxt.values.size() - 1), prev, to));
-            return transitions;
+            addTransitionsFromNode(transitions, juxt.values.get(juxt.values.size() - 1), prev, to);
         }
     }
 
-    private List<Nfa.Transition> processOp(BiFunction<Dfa, Dfa, Dfa> operation, Node left, Node right, SimpleState from, SimpleState to) {
+    private void addTransitionsFromOperation(List<Nfa.Transition> transitions, BiFunction<Dfa, Dfa, Dfa> operation, Node left, Node right, SimpleState from, SimpleState to) {
         var leftDfa = fromTree(left);
         var rightDfa = fromTree(right);
         var result = DfaAlgorithms.toNfa(operation.apply(leftDfa, rightDfa));
-        List<Nfa.Transition> ret = new ArrayList<>();
-        ret.addAll(result.transitions);
-        ret.addAll(result.accepting.stream().map(acc -> new Nfa.Transition(acc, to, Epsilon.instance)).collect(Collectors.toList()));
-        ret.add(new Nfa.Transition(from, result.initial, Epsilon.instance));
-        return ret;
+        transitions.addAll(result.transitions);
+        for (var acc : result.accepting) {
+            transitions.add(new Nfa.Transition(acc, to, Epsilon.instance));
+        }
+        transitions.add(new Nfa.Transition(from, result.initial, Epsilon.instance));
     }
 
-    private List<Nfa.Transition> processCaptureGroup(Node value, SimpleState from, SimpleState to) {
+    private void addTransitionsFromCaptureGroup(List<Nfa.Transition> transitions, Node value, SimpleState from, SimpleState to) {
         var int1 = new SimpleState();
         var int2 = new SimpleState();
-        List<Nfa.Transition> ret = new ArrayList<>();
-        ret.addAll(fromTreeImpl(value, int1, int2));
-        ret.add(new Nfa.Transition(from, int1, Epsilon.instance));
-        ret.add(new Nfa.Transition(int2, to, Epsilon.instance));
-        return ret;
+        transitions.add(new Nfa.Transition(from, int1, Epsilon.instance));
+        transitions.add(new Nfa.Transition(int2, to, Epsilon.instance));
+        addTransitionsFromNode(transitions, value, int1, int2);
     }
 
-
-    private List<Nfa.Transition> processRep(Rep rep, SimpleState from, SimpleState to) {
+    private void addTransitionsFromRep(List<Nfa.Transition> transitions, Rep rep, SimpleState from, SimpleState to) {
         if (rep.min == 1 && rep.max.isPresent() && rep.max.get() == 1) {
 
-            return fromTreeImpl(rep.value, from, to);
+            addTransitionsFromNode(transitions, rep.value, from, to);
 
         } else if (rep.min == 0 && rep.max.isPresent() && rep.max.get() == 0) {
 
-            return List.of(new Nfa.Transition(from, to, Epsilon.instance));
+            transitions.add(new Nfa.Transition(from, to, Epsilon.instance));
 
         } else if (rep.min > 1 && rep.max.isEmpty()) {
 
             List<Node> juxtValues = new ArrayList<>(rep.min + 1);
             juxtValues.addAll(Collections.nCopies(rep.min, rep.value));
             juxtValues.add(new Rep(0, Optional.empty(), rep.value));
-            return fromTreeImpl(new Juxt(juxtValues), from, to);
+            addTransitionsFromNode(transitions, new Juxt(juxtValues), from, to);
 
         } else if (rep.min == 1 && rep.max.isEmpty()) {
 
             var int1 = new SimpleState();
             var int2 = new SimpleState();
-            List<Nfa.Transition> ret = new ArrayList<>();
-            ret.addAll(fromTreeImpl(rep.value, int1, int2));
-            ret.add(new Nfa.Transition(from, int1, Epsilon.instance));
-            ret.add(new Nfa.Transition(int2, to, Epsilon.instance));
-            ret.add(new Nfa.Transition(int2, int1, Epsilon.instance));
-            return ret;
+            transitions.add(new Nfa.Transition(from, int1, Epsilon.instance));
+            transitions.add(new Nfa.Transition(int2, to, Epsilon.instance));
+            transitions.add(new Nfa.Transition(int2, int1, Epsilon.instance));
+            addTransitionsFromNode(transitions, rep.value, int1, int2);
 
         } else if (rep.min == 0 && rep.max.isEmpty()) {
 
             var int1 = new SimpleState();
             var int2 = new SimpleState();
-            List<Nfa.Transition> ret = new ArrayList<>();
-            ret.addAll(fromTreeImpl(rep.value, int1, int2));
-            ret.add(new Nfa.Transition(from, int1, Epsilon.instance));
-            ret.add(new Nfa.Transition(int2, to, Epsilon.instance));
-            ret.add(new Nfa.Transition(from, to, Epsilon.instance));
-            ret.add(new Nfa.Transition(int2, int1, Epsilon.instance));
-            return ret;
+            transitions.add(new Nfa.Transition(from, int1, Epsilon.instance));
+            transitions.add(new Nfa.Transition(int2, to, Epsilon.instance));
+            transitions.add(new Nfa.Transition(from, to, Epsilon.instance));
+            transitions.add(new Nfa.Transition(int2, int1, Epsilon.instance));
+            addTransitionsFromNode(transitions, rep.value, int1, int2);
 
         } else if (rep.min > 1 && rep.max.isPresent()) {
 
@@ -229,48 +223,46 @@ public class Compiler {
             List<Node> juxtValues = new ArrayList<>(x + 1);
             juxtValues.addAll(Collections.nCopies(x, rep.value));
             juxtValues.add(new Rep(1, Optional.of(rep.max.get() - x), rep.value));
-            return fromTreeImpl(new Juxt(juxtValues), from, to);
+            addTransitionsFromNode(transitions, new Juxt(juxtValues), from, to);
 
         } else if (rep.min == 1 && rep.max.isPresent() && rep.max.get() > 0) {
 
             // doing this iteratively prevents stack overflows in the case of long repetitions
             var int1 = new SimpleState();
-            List<Nfa.Transition> ret = new ArrayList<>();
-            ret.addAll(fromTreeImpl(rep.value, from, int1));
+            addTransitionsFromNode(transitions, rep.value, from, int1);
             var prev = int1;
             for (int i = 1; i < rep.max.get() - 1; i++) {
                 var intermediate = new SimpleState();
-                ret.addAll(fromTreeImpl(rep.value, prev, intermediate));
-                ret.add(new Nfa.Transition(prev, to, Epsilon.instance));
+                transitions.add(new Nfa.Transition(prev, to, Epsilon.instance));
+                addTransitionsFromNode(transitions, rep.value, prev, intermediate);
                 prev = intermediate;
             }
-            ret.addAll(fromTreeImpl(rep.value, prev, to));
-            ret.add(new Nfa.Transition(prev, to, Epsilon.instance));
-            return ret;
+            transitions.add(new Nfa.Transition(prev, to, Epsilon.instance));
+            addTransitionsFromNode(transitions, rep.value, prev, to);
 
         } else if (rep.min == 0 && rep.max.isPresent() && rep.max.get() > 0) {
 
             // doing this iteratively prevents stack overflows in the case of long repetitions
-            List<Nfa.Transition> ret = new ArrayList<>();
             var prev = from;
             for (int i = 0; i < rep.max.get() - 1; i++) {
                 var intermediate = new SimpleState();
-                ret.addAll(fromTreeImpl(rep.value, prev, intermediate));
-                ret.add(new Nfa.Transition(prev, to, Epsilon.instance));
+                transitions.add(new Nfa.Transition(prev, to, Epsilon.instance));
+                addTransitionsFromNode(transitions, rep.value, prev, intermediate);
                 prev = intermediate;
             }
-            ret.addAll(fromTreeImpl(rep.value, prev, to));
-            ret.add(new Nfa.Transition(prev, to, Epsilon.instance));
-            return ret;
+            transitions.add(new Nfa.Transition(prev, to, Epsilon.instance));
+            addTransitionsFromNode(transitions, rep.value, prev, to);
 
         } else {
             throw new IllegalArgumentException();
         }
 
     }
-    
-    private List<Nfa.Transition> processDisj(Disj disj, SimpleState from, SimpleState to) {
-        return disj.values.stream().flatMap(part -> fromTreeImpl(part, from, to).stream()).collect(Collectors.toList());
+
+    private void addTransitionsFromDisj(List<Nfa.Transition> transitions, Disj disj, SimpleState from, SimpleState to) {
+        for (Node part : disj.values) {
+            addTransitionsFromNode(transitions, part, from, to);
+        }
     }
 
 }
