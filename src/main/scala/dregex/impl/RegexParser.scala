@@ -303,10 +303,10 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   }
 
   def unicodeLineBreak = backslash ~ "R" ^^^ {
-    new Disj(java.util.List.of(
-      new Juxt(java.util.List.of(new Lit(0xD), new Lit(0xA))),
+    new Disj(
+      new Juxt(new Lit(0xD), new Lit(0xA)),
       new Lit(0xA), new Lit(0xB), new Lit(0xC), new Lit(0xD),
-      new Lit(0x85), new Lit(0x2028), new Lit(0x2029)))
+      new Lit(0x85), new Lit(0x2028), new Lit(0x2029))
   }
 
   def group = "(" ~> ("?" ~ "<".? ~ "[:=!]".r).? ~ sp ~ regex <~ sp ~ ")" ^^ {
@@ -395,7 +395,7 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
   def emptyRegex = "" ^^^ new Juxt(java.util.List.of())
 
   def nonEmptyRegex: Parser[Node] = sp ~> branch ~ (sp ~ "|" ~ sp ~> regex).? ^^ {
-    case left ~ Some(right) => new Disj(java.util.List.of(left, right))
+    case left ~ Some(right) => new Disj(left, right)
     case left ~ None        => left
   }
 

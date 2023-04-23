@@ -45,7 +45,7 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
         processJuxt(combineNegLookaheads(juxt), from, to)
 
       case la: Lookaround =>
-        fromTreeImpl(new Juxt(java.util.List.of(la)), from, to)
+        fromTreeImpl(new Juxt(la), from, to)
 
       case disj: Disj =>
         processDisj(disj, from, to)
@@ -95,8 +95,8 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
         juxt.values.asScala(i).asInstanceOf[Lookaround] match {
           case lookaround if lookaround.dir == Ahead =>
             val rightSide: Node = lookaround.cond match {
-              case Positive => new Intersection(new Juxt(suffix.asJava), new Juxt(java.util.List.of(lookaround.value, wildcard)))
-              case Negative => new Difference(new Juxt(suffix.asJava), new Juxt(java.util.List.of(lookaround.value, wildcard)))
+              case Positive => new Intersection(new Juxt(suffix.asJava), new Juxt(lookaround.value, wildcard))
+              case Negative => new Difference(new Juxt(suffix.asJava), new Juxt(lookaround.value, wildcard))
             }
             if (prefix.isEmpty)
               fromTreeImpl(rightSide, from, to)
@@ -104,8 +104,8 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
               fromTreeImpl(new Juxt((prefix :+ rightSide).asJava), from, to)
           case lookaround if lookaround.dir == Behind =>
             val leftSide: Node = lookaround.cond match {
-              case Positive => new Intersection(new Juxt(prefix.asJava), new Juxt(java.util.List.of(lookaround.value, wildcard)))
-              case Negative => new Difference(new Juxt(prefix.asJava), new Juxt(java.util.List.of(lookaround.value, wildcard)))
+              case Positive => new Intersection(new Juxt(prefix.asJava), new Juxt(lookaround.value, wildcard))
+              case Negative => new Difference(new Juxt(prefix.asJava), new Juxt(lookaround.value, wildcard))
             }
             if (suffix.isEmpty)
               fromTreeImpl(leftSide, from, to)
@@ -136,7 +136,7 @@ class Compiler(intervalMapping: java.util.Map[AbstractRange, java.util.List[Char
         val la2 = x.asInstanceOf[Lookaround]
         if (la1.dir == Ahead && la2.dir == Ahead) {
           if (la1.cond == Negative && la2.cond == Negative) {
-            acc.init :+ new Lookaround(Ahead, Negative, new Disj(java.util.List.of(la1.value, la2.value)))
+            acc.init :+ new Lookaround(Ahead, Negative, new Disj(la1.value, la2.value))
           } else {
             acc :+ x
           }

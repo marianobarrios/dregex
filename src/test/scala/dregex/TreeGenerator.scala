@@ -32,9 +32,7 @@ class TreeGenerator {
           new Rep(2, Optional.of(3), node),
           new Rep(0, Optional.of(1), node))
         val double = generateFixedDepth(levels - 1).flatMap { secondNode =>
-          Iterator(new Disj(java.util.List.of(node, secondNode)), new Juxt(java.util.List.of(node, secondNode)))
-        //Juxt(Seq(Lit('x'.u), Lookaround(Direction.Ahead, Condition.Negative, node), secondNode)),
-        //Juxt(Seq(Lit('x'.u), Lookaround(Direction.Ahead, Condition.Positive, node), secondNode)))
+          Iterator(new Disj(node, secondNode), new Juxt(node, secondNode))
         }
         simple ++ double
       }
