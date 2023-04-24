@@ -208,9 +208,9 @@ public abstract class Regex {
      */
     public static CompiledRegex compileParsed(ParsedRegex parsedRegex, Universe universe) {
         var start = System.nanoTime();
-        var res = new CompiledRegex(parsedRegex.literal(), parsedRegex.tree(), universe);
+        var res = new CompiledRegex(parsedRegex.getLiteral(), parsedRegex.getTree(), universe);
         var time = Duration.ofNanos(System.nanoTime() - start);
-        logger.trace("{} compiled in {}", parsedRegex.literal(), time);
+        logger.trace("{} compiled in {}", parsedRegex.getLiteral(), time);
         return res;
     }
 
@@ -222,7 +222,7 @@ public abstract class Regex {
     public static CompiledRegex compile(String regex, int flags) {
         var parsedRegex = parse(regex, flags);
         var start = System.nanoTime();
-        var compiled = new CompiledRegex(regex, parsedRegex.tree(), new Universe(List.of(parsedRegex.tree()), parsedRegex.norm()));
+        var compiled = new CompiledRegex(regex, parsedRegex.getTree(), new Universe(List.of(parsedRegex.getTree()), parsedRegex.getNorm()));
         var time = Duration.ofNanos(System.nanoTime() - start);
         logger.trace("{} compiled in {}", compiled, time);
         return compiled;
@@ -254,7 +254,7 @@ public abstract class Regex {
      */
     public static List<CompiledRegex> compile(List<String> regexes, int flags) {
         var parsedRegexes = parse(regexes, flags);
-        var universe = new Universe(parsedRegexes.stream().map(r -> r.tree()).collect(Collectors.toList()), parsedRegexes.get(0).norm());
+        var universe = new Universe(parsedRegexes.stream().map(r -> r.getTree()).collect(Collectors.toList()), parsedRegexes.get(0).getNorm());
         return parsedRegexes.stream().map(r -> compileParsed(r, universe)).collect(Collectors.toList());
     }
 

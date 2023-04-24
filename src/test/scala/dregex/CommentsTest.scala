@@ -9,9 +9,9 @@ class CommentsTest extends AnyFunSuite {
     def equiv(withComments: String, withoutComments: String): Boolean = {
       val normal = RegexParser.parse(withoutComments)
       val comments = RegexParser.parse(withComments, RegexParser.Flags(comments = true))
-      val universe = new Universe(java.util.List.of(normal.tree, comments.tree), normal.norm)
-      val cNormal = new CompiledRegex(withoutComments, normal.tree, universe)
-      val cComments = new CompiledRegex(withComments, comments.tree, universe)
+      val universe = new Universe(java.util.List.of(normal.getTree, comments.getTree), normal.getNorm)
+      val cNormal = new CompiledRegex(withoutComments, normal.getTree, universe)
+      val cComments = new CompiledRegex(withComments, comments.getTree, universe)
       cNormal equiv cComments
     }
     assert(equiv("a b # comment\nc ", "abc"))
