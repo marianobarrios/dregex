@@ -2,7 +2,6 @@ package dregex.impl
 
 import java.util.regex.Pattern
 import dregex.{InvalidRegexException, ParsedRegex}
-import dregex.impl.RegexParser.DotMatch
 import dregex.impl.database.{JavaProperties, PosixCharSets, UnicodePosixCharSets, UnicodeBinaryProperties, UnicodeBlocks, UnicodeDatabaseReader, UnicodeGeneralCategories, UnicodeScripts}
 
 import scala.util.parsing.combinator.RegexParsers
@@ -409,12 +408,12 @@ object RegexParser {
 
   private val embeddedFlagPattern = Pattern.compile("""\(\?([a-z]*)\)""")
 
-  sealed trait DotMatch
-  object DotMatch {
-    case object All extends DotMatch
-    case object JavaLines extends DotMatch
-    case object UnixLines extends DotMatch
-  }
+//  sealed trait DotMatch
+//  object DotMatch {
+//    case object All extends DotMatch
+//    case object JavaLines extends DotMatch
+//    case object UnixLines extends DotMatch
+//  }
 
   case class Flags(
       var dotMatch: DotMatch = DotMatch.All,

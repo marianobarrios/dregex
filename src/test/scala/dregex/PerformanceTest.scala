@@ -3,13 +3,14 @@ package dregex
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.time.Duration
+import scala.jdk.CollectionConverters._
 
 class PerformanceTest extends AnyFunSuite {
 
   test("slow regexs") {
     val start1 = System.nanoTime()
     val regexes = Regex.compile(
-      Seq(
+      java.util.List.of(
         "qwertyuiopasd",
         "/aaaaaa/(?!xxc)(?!xxd)(?!xxe)(?!xxf)(?!xxg)(?!xxh)[a-zA-Z0-9]{7}.*",
         "/aaaaaa/(?!x+c)(?!x+d)(?!x+e)(?!x+f)(?!x+g)(?!x+h)[a-zA-Z0-9]{7}.*",
@@ -21,7 +22,7 @@ class PerformanceTest extends AnyFunSuite {
     val elapsed1 = Duration.ofNanos(System.nanoTime() - start1)
     info(s"compilation time: $elapsed1")
     val start2 = System.nanoTime()
-    regexes.tail.foreach(_ doIntersect regexes.head)
+    regexes.asScala.tail.foreach(_ doIntersect regexes.asScala.head)
     val elapsed2 = Duration.ofNanos(System.nanoTime() - start2)
     info(s"intersection time: $elapsed2")
   }

@@ -9,7 +9,7 @@ class CommentsTest extends AnyFunSuite {
     def equiv(withComments: String, withoutComments: String): Boolean = {
       val normal = RegexParser.parse(withoutComments)
       val comments = RegexParser.parse(withComments, RegexParser.Flags(comments = true))
-      val universe = new Universe(Seq(normal.tree, comments.tree), normal.norm)
+      val universe = new Universe(java.util.List.of(normal.tree, comments.tree), normal.norm)
       val cNormal = new CompiledRegex(withoutComments, normal.tree, universe)
       val cComments = new CompiledRegex(withComments, comments.tree, universe)
       cNormal equiv cComments
@@ -22,8 +22,8 @@ class CommentsTest extends AnyFunSuite {
 
   test("comments with embedded flag") {
     def equiv(a: String, b: String): Boolean = {
-      val Seq(cA, cB) = Regex.compile(Seq(a, b))
-      cA equiv cB
+      val c = Regex.compile(java.util.List.of(a, b))
+      c.get(0) equiv c.get(1)
     }
     assert(equiv("(?x) a  b c", "abc"))
     assert(equiv("(?x) a  b c", "abc"))

@@ -25,7 +25,7 @@ class AutoTest extends AnyFunSuite {
     for (tree <- generator.generate(maxDepth = 3)) {
       totalTrees += 1
       val regexString = tree.toRegex
-      val regex = new CompiledRegex(regexString, tree, new Universe(Seq(tree), Normalization.NoNormalization))
+      val regex = new CompiledRegex(regexString, tree, new Universe(java.util.List.of(tree), Normalization.NoNormalization))
       val strings = StringGenerator.generate(tree, maxAlternatives = 3, maxRepeat = 3)
       totalStrings += strings.size
       logger.debug("Testing: {}, generated: {}", regexString, strings.size)

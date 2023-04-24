@@ -19,10 +19,10 @@ import scala.jdk.CollectionConverters._
   * methods is simpler and more direct. However, there are cases in which the intermediate [[ParsedRegex]]s are
   * needed. Most notably, when caching [[CompiledRegex]] instances (which are in general more expensive to create).
   */
-class Universe(parsedTrees: Seq[Node], val normalization: Normalizer) {
+class Universe(parsedTrees: java.util.List[Node], val normalization: Normalizer) {
 
   private[dregex] val alphabet: java.util.Map[AbstractRange, java.util.List[CharInterval]] = {
-    CharInterval.calculateNonOverlapping(parsedTrees.flatMap(t => collect(t)).asJava)
+    CharInterval.calculateNonOverlapping(parsedTrees.asScala.flatMap(t => collect(t)).asJava)
   }
 
   /**
@@ -59,5 +59,5 @@ class Universe(parsedTrees: Seq[Node], val normalization: Normalizer) {
 }
 
 object Universe {
-  val Empty = new Universe(Seq(), Normalization.NoNormalization)
+  val Empty = new Universe(java.util.List.of(), Normalization.NoNormalization)
 }

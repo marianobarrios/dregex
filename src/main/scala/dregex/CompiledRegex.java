@@ -1,6 +1,5 @@
 package dregex;
 
-import dregex.impl.Dfa;
 import dregex.impl.Compiler;
 import lombok.NonNull;
 import dregex.impl.tree.Node;
@@ -8,40 +7,27 @@ import dregex.impl.tree.Node;
 /**
  * A fully-compiled regular expression that was generated from a string literal.
  */
-public final class CompiledRegex implements Regex {
+public final class CompiledRegex extends Regex {
 
-    private final Universe _universe;
-    private final String _originalString;
-    private final Node _parsedTree;
-    private final Dfa _dfa;
+    private final String originalString;
+    private final Node parsedTree;
 
-    public CompiledRegex(@NonNull String originalString, @NonNull Node parsedTree, @NonNull Universe universe) {
-        this._universe = universe;
-        this._originalString = originalString;
-        this._parsedTree = parsedTree;
-        this._dfa = new Compiler(_universe.alphabet()).fromTree(_parsedTree);
-    }
-
-    @Override
-    public Universe universe() {
-        return _universe;
+    CompiledRegex(@NonNull String originalString, @NonNull Node parsedTree, @NonNull Universe universe) {
+        super(new Compiler(universe.alphabet()).fromTree(parsedTree), universe);
+        this.originalString = originalString;
+        this.parsedTree = parsedTree;
     }
 
     public String originalString() {
-        return _originalString;
+        return originalString;
     }
 
     public Node parsedTree() {
-        return _parsedTree;
-    }
-
-    @Override
-    public Dfa dfa() {
-        return _dfa;
+        return parsedTree;
     }
 
     @Override
     public String toString() {
-        return String.format("⟪%s⟫ (DFA states: %s)", _originalString, _dfa.stateCount());
+        return String.format("⟪%s⟫ (DFA states: %s)", originalString, getDfa().stateCount());
     }
 }
