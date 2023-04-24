@@ -227,47 +227,47 @@ class MatchTest extends AnyFunSuite {
     }
 
     {
-      val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\S""", """[\S]""", """[^\s]""", """\s""", """[\s]""", """[^\S]""", "."), Pattern.DOTALL)
-      assertResult(true)(a2 equiv a2)
-      assertResult(true)(a2 equiv a3)
-      assertResult(true)(a3 equiv a1)
-      assertResult(true)(b1 equiv b2)
-      assertResult(true)(b2 equiv b3)
-      assertResult(true)(b3 equiv b1)
-      assertResult(false)(a1 doIntersect b1)
-      assertResult(true)((a1 union b1) equiv c)
+      val compiled =
+        Regex.compile(java.util.List.of("""\S""", """[\S]""", """[^\s]""", """\s""", """[\s]""", """[^\S]""", "."), Pattern.DOTALL)
+      assertResult(true)(compiled.get(1) equiv compiled.get(1))
+      assertResult(true)(compiled.get(1) equiv compiled.get(2))
+      assertResult(true)(compiled.get(2) equiv compiled.get(0))
+      assertResult(true)(compiled.get(4) equiv compiled.get(4))
+      assertResult(true)(compiled.get(4) equiv compiled.get(5))
+      assertResult(true)(compiled.get(5) equiv compiled.get(3))
+      assertResult(false)(compiled.get(0) doIntersect compiled.get(4))
+      assertResult(true)((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
     }
 
     {
-      val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\D""", """[\D]""", """[^\d]""", """\d""", """[\d]""", """[^\D]""", "."), Pattern.DOTALL)
-      assertResult(true)(a2 equiv a2)
-      assertResult(true)(a2 equiv a3)
-      assertResult(true)(a3 equiv a1)
-      assertResult(true)(b1 equiv b2)
-      assertResult(true)(b2 equiv b3)
-      assertResult(true)(b3 equiv b1)
-      assertResult(false)(a1 doIntersect b1)
-      assertResult(true)((a1 union b1) equiv c)
+      val compiled =
+        Regex.compile(java.util.List.of("""\D""", """[\D]""", """[^\d]""", """\d""", """[\d]""", """[^\D]""", "."), Pattern.DOTALL)
+      assertResult(true)(compiled.get(1) equiv compiled.get(1))
+      assertResult(true)(compiled.get(1) equiv compiled.get(2))
+      assertResult(true)(compiled.get(2) equiv compiled.get(0))
+      assertResult(true)(compiled.get(4) equiv compiled.get(4))
+      assertResult(true)(compiled.get(4) equiv compiled.get(5))
+      assertResult(true)(compiled.get(5) equiv compiled.get(3))
+      assertResult(false)(compiled.get(0) doIntersect compiled.get(4))
+      assertResult(true)((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
     }
 
     {
-      val Seq(a1, a2, a3, b1, b2, b3, c) =
-        Regex.compile(Seq("""\W""", """[\W]""", """[^\w]""", """\w""", """[\w]""", """[^\W]""", "."), Pattern.DOTALL)
-      assertResult(true)(a2 equiv a2)
-      assertResult(true)(a2 equiv a3)
-      assertResult(true)(a3 equiv a1)
-      assertResult(true)(b1 equiv b2)
-      assertResult(true)(b2 equiv b3)
-      assertResult(true)(b3 equiv b1)
-      assertResult(false)(a1 doIntersect b1)
-      assertResult(true)((a1 union b1) equiv c)
+      val compiled =
+        Regex.compile(java.util.List.of("""\W""", """[\W]""", """[^\w]""", """\w""", """[\w]""", """[^\W]""", "."), Pattern.DOTALL)
+      assertResult(true)(compiled.get(1) equiv compiled.get(1))
+      assertResult(true)(compiled.get(1) equiv compiled.get(2))
+      assertResult(true)(compiled.get(2) equiv compiled.get(0))
+      assertResult(true)(compiled.get(4) equiv compiled.get(4))
+      assertResult(true)(compiled.get(4) equiv compiled.get(5))
+      assertResult(true)(compiled.get(5) equiv compiled.get(3))
+      assertResult(false)(compiled.get(0) doIntersect compiled.get(4))
+      assertResult(true)((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
     }
 
     {
-      val Seq(a, b) = Regex.compile(Seq("""\d""", """[^\D\W]"""))
-      assertResult(true)(a equiv b)
+      val compiled = Regex.compile(java.util.List.of("""\d""", """[^\D\W]"""))
+      assertResult(true)(compiled.get(0) equiv compiled.get(1))
     }
 
   }
