@@ -408,13 +408,6 @@ object RegexParser {
 
   private val embeddedFlagPattern = Pattern.compile("""\(\?([a-z]*)\)""")
 
-//  sealed trait DotMatch
-//  object DotMatch {
-//    case object All extends DotMatch
-//    case object JavaLines extends DotMatch
-//    case object UnixLines extends DotMatch
-//  }
-
   case class Flags(
       var dotMatch: DotMatch = DotMatch.All,
       literal: Boolean = false,
