@@ -13,7 +13,7 @@ public final class CompiledRegex extends Regex {
     private final Node parsedTree;
 
     CompiledRegex(@NonNull String originalString, @NonNull Node parsedTree, @NonNull Universe universe) {
-        super(new Compiler(universe.alphabet()).fromTree(parsedTree), universe);
+        super(new Compiler(universe.getAlphabet()).fromTree(parsedTree), universe);
         this.originalString = originalString;
         this.parsedTree = parsedTree;
     }
