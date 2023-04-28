@@ -59,7 +59,7 @@ public abstract class Regex {
      * failure.
      */
     public DfaAlgorithms.MatchResult matchAndReport(CharSequence string) {
-        return DfaAlgorithms.matchString(dfa, universe.normalization().normalize(string));
+        return DfaAlgorithms.matchString(dfa, universe.getNormalization().normalize(string));
     }
 
     /**
