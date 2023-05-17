@@ -50,7 +50,7 @@ libraryDependencies ++=
   "org.slf4j" % "slf4j-api" % "2.0.7" ::
   "org.scala-lang.modules" %% "scala-parser-combinators" % "2.2.0" ::
   "org.scala-lang.modules" %% "scala-collection-compat" % "2.10.0" ::
-  "org.scalatest" %% "scalatest-funsuite" % "3.2.15" % Test ::
+  "org.scalatest" %% "scalatest-funsuite" % "3.2.16" % Test ::
   "ch.qos.logback" % "logback-classic" % "1.2.11" % Test ::
   Nil
 
