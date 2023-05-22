@@ -2,13 +2,14 @@ package dregex.impl
 
 import java.util.regex.Pattern
 import dregex.{InvalidRegexException, ParsedRegex}
-import dregex.impl.database.{JavaProperties, PosixCharSets, UnicodePosixCharSets, UnicodeBinaryProperties, UnicodeBlocks, UnicodeDatabaseReader, UnicodeGeneralCategories, UnicodeScripts}
+import dregex.impl.database.{JavaProperties, PosixCharSets, UnicodeBinaryProperties, UnicodeBlocks, UnicodeDatabaseReader, UnicodeGeneralCategories, UnicodePosixCharSets, UnicodeScripts}
 
 import scala.util.parsing.combinator.RegexParsers
 import scala.jdk.CollectionConverters._
 import dregex.impl.tree.{CharRange, CharSet, Condition, Direction, Disj, Juxt, Lit, Lookaround, NamedCaptureGroup, Node, PositionalCaptureGroup, Rep, Wildcard}
 
 import java.util.Optional
+import scala.util.matching.Regex
 
 class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean) extends RegexParsers {
 
@@ -16,26 +17,23 @@ class RegexParser(comments: Boolean, dotMatch: DotMatch, unicodeClasses: Boolean
 
   // Atoms (strings and regexes)
 
-  def backslash = """\"""
-  def hexDigit = """\p{XDigit}""".r
-  def octalDigit = "[0-7]".r
-  def decimalDigit = """\d""".r
+  val backslash: String = """\"""
 
   // Parsers that return a primitive (string, number)
 
-  def hexNumber(digitCount: Int) = repN(digitCount, hexDigit) ^^ { digits =>
+  def hexNumber(digitCount: Int) = repN(digitCount, """\p{XDigit}""".r) ^^ { digits =>
     Integer.parseInt(digits.mkString, 16)
   }
 
-  def hexNumber = hexDigit.+ ^^ { digits =>
+  def hexNumber = """\p{XDigit}""".r.+ ^^ { digits =>
     Integer.parseInt(digits.mkString, 16)
   }
 
-  def octalNumber(digitCount: Int) = repN(digitCount, octalDigit) ^^ { digits =>
+  def octalNumber(digitCount: Int) = repN(digitCount, "[0-7]".r) ^^ { digits =>
     Integer.parseInt(digits.mkString, 8)
   }
 
-  def number = decimalDigit.+ ^^ { digits =>
+  def number = """\d""".r.+ ^^ { digits =>
     try {
       Integer.parseInt(digits.mkString)
     } catch {
