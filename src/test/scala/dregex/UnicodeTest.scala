@@ -6,6 +6,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
 import java.lang.Character.{UnicodeBlock, UnicodeScript}
+import java.util.regex.Pattern
 import scala.util.control.Breaks._
 import scala.jdk.CollectionConverters._
 
@@ -20,6 +21,11 @@ class UnicodeTest extends AnyFunSuite {
       assertResult(true)(r.matches("\uD801\uDC37"))
     }
     using(Regex.compile("𐐷")) { r =>
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("𐐷"))
+      assertResult(true)(r.matches("\uD801\uDC37"))
+    }
+    using(Regex.compile("𐐷", Pattern.LITERAL)) { r =>
       assertResult(false)(r.matches("a"))
       assertResult(true)(r.matches("𐐷"))
       assertResult(true)(r.matches("\uD801\uDC37"))

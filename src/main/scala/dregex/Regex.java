@@ -159,15 +159,15 @@ public abstract class Regex {
      */
 
     private static RegexParser.Flags flagsFromBits(int bits) {
-        return new RegexParser.Flags(
-                dotMatcherFromFlags(bits),
-                (bits & Pattern.LITERAL) != 0,
-                (bits & Pattern.COMMENTS) != 0,
-                (bits & Pattern.UNICODE_CHARACTER_CLASS) != 0,
-                (bits & Pattern.CASE_INSENSITIVE) != 0,
-                (bits & Pattern.UNICODE_CASE) != 0,
-                (bits & Pattern.CANON_EQ) != 0,
-                false);
+        var flags = new RegexParser.Flags();
+        flags.dotMatch = dotMatcherFromFlags(bits);
+        flags.literal = (bits & Pattern.LITERAL) != 0;
+        flags.comments = (bits & Pattern.COMMENTS) != 0;
+        flags.unicodeClasses = (bits & Pattern.UNICODE_CHARACTER_CLASS) != 0;
+        flags.caseInsensitive = (bits & Pattern.CASE_INSENSITIVE) != 0;
+        flags.unicodeCase = (bits & Pattern.UNICODE_CASE) != 0;
+        flags.canonicalEq = (bits & Pattern.CANON_EQ) != 0;
+        return flags;
     }
 
     /**
@@ -187,7 +187,7 @@ public abstract class Regex {
      * @param flags $flagsDesc
      */
     public static ParsedRegex parse(String regex, int flags) {
-        return RegexParser$.MODULE$.parse(regex, flagsFromBits(flags));
+        return RegexParser.parse(regex, flagsFromBits(flags));
     }
 
     /**
