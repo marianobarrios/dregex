@@ -10,6 +10,9 @@ class CompileTest extends AnyFunSuite {
     intercept[InvalidRegexException] {
       Regex.compile("""\1""") // backreferences
     }
+    intercept[InvalidRegexException] {
+      Regex.compile("""\b(\w+)(\s+\1)+\b""") // backreference
+    }
   }
 
 }
