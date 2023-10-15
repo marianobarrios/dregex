@@ -1,7 +1,6 @@
 package dregex;
 
 import dregex.impl.Compiler;
-import lombok.NonNull;
 import dregex.impl.tree.Node;
 
 /**
@@ -12,7 +11,7 @@ public final class CompiledRegex extends Regex {
     private final String originalString;
     private final Node parsedTree;
 
-    CompiledRegex(@NonNull String originalString, @NonNull Node parsedTree, @NonNull Universe universe) {
+    CompiledRegex(String originalString, Node parsedTree, Universe universe) {
         super(new Compiler(universe.getAlphabet()).fromTree(parsedTree), universe);
         this.originalString = originalString;
         this.parsedTree = parsedTree;

@@ -1,11 +1,10 @@
 package dregex.impl;
 
 import dregex.impl.tree.AbstractRange;
-import scala.math.Ordered;
 
 import java.util.*;
 
-public final class CharInterval implements AtomPart, Ordered<CharInterval> {
+public final class CharInterval implements AtomPart, Comparable<CharInterval> {
 
     public final int from;
     public final int to;
@@ -32,7 +31,7 @@ public final class CharInterval implements AtomPart, Ordered<CharInterval> {
     }
 
     @Override
-    public int compare(CharInterval that) {
+    public int compareTo(CharInterval that) {
         return Integer.compare(from, that.from);
     }
 
@@ -74,5 +73,4 @@ public final class CharInterval implements AtomPart, Ordered<CharInterval> {
         }
         return ret;
     }
-
 }
