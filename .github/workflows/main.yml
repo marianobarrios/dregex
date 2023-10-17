@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [ 11, 17, 20 ]
+        java-version: [ 11, 17, 21 ]
     steps:
       - uses: actions/checkout@v4
 
@@ -15,7 +15,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
 
       - name: build
-        run: sbt -v +test
+        run: ./gradlew check
 
       - uses: actions/upload-artifact@v3
         if: always()

@@ -1,5 +1,6 @@
 /**
-  * Main package for Dregex implementation. User-facing classes reside directly in the top-level package. The rest of
-  * the sub-packages contain implementation classes.
+  * Dregex is a Scala/JVM library that implements a regular expression engine using deterministic finite automata (DFA).
+  * The range of features supported is a middle ground between Perl-style (slow) engines and DFA-based ones. Yet it
+  * retains the linear matching time offered by the latter.
   */
 package dregex;

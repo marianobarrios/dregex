@@ -1,11 +1,4 @@
-target/
-.project
-.classpath
-.cache
-.cache-main
-.cache-tests
-/bin/
-*.log
-.settings
-.idea/
-/.bsp/
+/build/
+/*.log
+/.idea/
+/.gradle
