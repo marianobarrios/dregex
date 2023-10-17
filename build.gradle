@@ -19,7 +19,7 @@ dependencies {
     implementation 'org.jparsec:jparsec:3.1'
 
     // log
-    implementation 'org.slf4j:slf4j-api:2.0.6'
+    implementation 'org.slf4j:slf4j-api:2.0.9'
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.3.4'
 
     // tests are in Scala
