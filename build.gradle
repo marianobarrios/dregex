@@ -23,7 +23,7 @@ dependencies {
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.3.4'
 
     // tests are in Scala
-    testImplementation 'org.scala-lang:scala-library:2.13.10'
+    testImplementation 'org.scala-lang:scala-library:2.13.12'
 
     // test framework
     testImplementation 'org.scalatest:scalatest-funsuite_2.13:3.2.15'
