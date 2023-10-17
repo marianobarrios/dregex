@@ -1,6 +1,6 @@
 # Dregex - Deterministic Regular Expression Engine
 
-Dregex is a JVM library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, and difference).
+Dregex is a Java library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, and difference).
 
 [![Build Status](https://github.com/marianobarrios/dregex/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/dregex/actions)
 
@@ -160,15 +160,15 @@ This is a relatively straightforward algorithm that is implemented using the alr
 
 ## Requirements
 
-Dregex requires Java 8.
+Dregex requires Java 11.
 
 ### Logging
 
-The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the JVM. As a policy, all logging event emitted are at TRACE level, which is below the default threshold in most logging implementations and thus completely silent by default.
+The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the Java. As a policy, all logging event emitted are at TRACE level, which is below the default threshold in most logging implementations and thus completely silent by default.
 
 ### Dependencies
 
-Dregex is written in Scala (but fully usable from Java), so it depends on the Scala runtime library (5 MB). There are two more small dependencies: [SLF4J](https://www.slf4j.org/) and [scala-parser-combinators](https://github.com/scala/scala-parser-combinators). The main jar file is about 200 KB.
+There is are two small dependencies: [SLF4J](https://www.slf4j.org/) and [jparsec](https://github.com/jparsec/jparsec). The main jar file is about 200 KB.
 
 ## Similar efforts
 

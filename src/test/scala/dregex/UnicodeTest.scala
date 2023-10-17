@@ -1,12 +1,14 @@
 package dregex
 
 import TestUtil.using
-import dregex.impl.{PredefinedCharSets, UnicodeChar}
+import dregex.impl.database.{UnicodeBlocks, UnicodeScripts}
 import org.scalatest.funsuite.AnyFunSuite
 import org.slf4j.LoggerFactory
 
 import java.lang.Character.{UnicodeBlock, UnicodeScript}
+import java.util.regex.Pattern
 import scala.util.control.Breaks._
+import scala.jdk.CollectionConverters._
 
 class UnicodeTest extends AnyFunSuite {
 
@@ -19,6 +21,11 @@ class UnicodeTest extends AnyFunSuite {
       assertResult(true)(r.matches("\uD801\uDC37"))
     }
     using(Regex.compile("𐐷")) { r =>
+      assertResult(false)(r.matches("a"))
+      assertResult(true)(r.matches("𐐷"))
+      assertResult(true)(r.matches("\uD801\uDC37"))
+    }
+    using(Regex.compile("𐐷", Pattern.LITERAL)) { r =>
       assertResult(false)(r.matches("a"))
       assertResult(true)(r.matches("𐐷"))
       assertResult(true)(r.matches("\uD801\uDC37"))
@@ -98,7 +105,7 @@ class UnicodeTest extends AnyFunSuite {
      * Exhaustively test all combinations of Unicode blocks and code points against
      * the java.util.regex implementation.
      */
-    for (block <- PredefinedCharSets.unicodeBlocks.keys.toSeq.sorted) {
+    for (block <- UnicodeBlocks.charSets.keySet().asScala.toSeq.sorted) {
       val blockExistsInJava = try {
         Character.UnicodeBlock.forName(block); true
       } catch {
@@ -110,7 +117,7 @@ class UnicodeTest extends AnyFunSuite {
         val regexString = f"\\p{block=$block}"
         val regex = Regex.compile(regexString)
         val javaRegex = java.util.regex.Pattern.compile(regexString)
-        for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+        for (codePoint <- Character.MIN_CODE_POINT to Character.MAX_CODE_POINT) {
           breakable {
 
             codePoint match {
@@ -169,7 +176,7 @@ class UnicodeTest extends AnyFunSuite {
      * Exhaustively test all combinations of Unicode scripts and code points against
      * the java.util.regex implementation.
      */
-    for (script <- PredefinedCharSets.unicodeScripts.keys.toSeq.sorted) {
+    for (script <- UnicodeScripts.chatSets.asScala.keys.toSeq.sorted) {
       val scriptExistsInJava = try {
         Character.UnicodeScript.forName(script); true
       } catch {
@@ -181,7 +188,7 @@ class UnicodeTest extends AnyFunSuite {
         val regexString = f"\\p{script=$script}"
         val regex = Regex.compile(regexString)
         val javaRegex = java.util.regex.Pattern.compile(regexString)
-        for (codePoint <- UnicodeChar.min.codePoint to UnicodeChar.max.codePoint) {
+        for (codePoint <- Character.MIN_CODE_POINT to Character.MAX_CODE_POINT) {
           breakable {
             // A few code points were removed from scripts as Java versions evolved, ignore them
             codePoint match {
@@ -247,6 +254,7 @@ class UnicodeTest extends AnyFunSuite {
 
     using(Regex.compile("""\p{general_category=L}""")) { r =>
       assertResult(true)(r.matches("A"))
+      assertResult(true)(r.matches("a"))
       assertResult(false)(r.matches("-"))
     }
 

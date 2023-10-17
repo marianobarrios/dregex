@@ -4,33 +4,31 @@ import java.util.regex.Pattern
 
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.immutable.Seq
-
 class OperationsTest extends AnyFunSuite {
 
   private def doIntersect(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right), Pattern.DOTALL)
-    leftCompiled doIntersect rightCompiled
+    val compiled = Regex.compile(java.util.List.of(left, right), Pattern.DOTALL)
+    compiled.get(0) doIntersect compiled.get(1)
   }
 
   private def isSubset(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right), Pattern.DOTALL)
-    leftCompiled isSubsetOf rightCompiled
+    val compiled = Regex.compile(java.util.List.of(left, right), Pattern.DOTALL)
+    compiled.get(0) isSubsetOf compiled.get(1)
   }
 
   private def isProperSubset(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right), Pattern.DOTALL)
-    leftCompiled isProperSubsetOf rightCompiled
+    val compiled = Regex.compile(java.util.List.of(left, right), Pattern.DOTALL)
+    compiled.get(0) isProperSubsetOf compiled.get(1)
   }
 
   private def testIntersection(left: String, right: String)(result: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result), Pattern.DOTALL)
-    (leftCompiled intersect rightCompiled) equiv resultCompiled
+    val compiled = Regex.compile(java.util.List.of(left, right, result), Pattern.DOTALL)
+    (compiled.get(0) intersect compiled.get(1)) equiv compiled.get(2)
   }
 
   private def testUnion(left: String, right: String)(result: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled, resultCompiled) = Regex.compile(Seq(left, right, result), Pattern.DOTALL)
-    (leftCompiled union rightCompiled) equiv resultCompiled
+    val compiled = Regex.compile(java.util.List.of(left, right, result), Pattern.DOTALL)
+    (compiled.get(0) union compiled.get(1)) equiv compiled.get(2)
   }
 
   test("intersections - boolean") {

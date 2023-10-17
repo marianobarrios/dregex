@@ -4,13 +4,11 @@ import java.util.regex.Pattern
 
 import org.scalatest.funsuite.AnyFunSuite
 
-import scala.collection.immutable.Seq
-
 class EquivalenceTest extends AnyFunSuite {
 
   private def equiv(left: String, right: String): Boolean = {
-    val Seq(leftCompiled, rightCompiled) = Regex.compile(Seq(left, right), Pattern.DOTALL)
-    leftCompiled equiv rightCompiled
+    val compiled = Regex.compile(java.util.List.of(left, right), Pattern.DOTALL)
+    compiled.get(0) equiv compiled.get(1)
   }
 
   test("grouping") {
@@ -108,8 +106,8 @@ class EquivalenceTest extends AnyFunSuite {
   }
 
   test("disjunctions") {
-    val Seq(a, b, c) = Regex.compile(Seq("a|b", "a", "b"))
-    assertResult(true)(a equiv (b union c))
+    val compiled = Regex.compile(java.util.List.of("a|b", "a", "b"))
+    assertResult(true)(compiled.get(0) equiv (compiled.get(1) union compiled.get(2)))
   }
 
   test("block quotes and literal flag") {
@@ -122,7 +120,7 @@ class EquivalenceTest extends AnyFunSuite {
     assertResult(true)(equiv("""(\Q)a\E)""", """\)a"""))
     assertResult(true)(equiv("""\Q|\E""", """\|"""))
     assertResult(true) {
-      val r = Regex.compile("""a|bc""", flags = Pattern.LITERAL)
+      val r = Regex.compile("""a|bc""", Pattern.LITERAL)
       r.matches("a|bc")
     }
   }

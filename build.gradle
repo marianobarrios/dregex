@@ -1,0 +1,109 @@
+plugins {
+    id 'java'
+    id 'scala'
+    id 'signing'
+    id 'maven-publish'
+}
+
+compileJava {
+    options.compilerArgs.addAll(['-source', '11', '-target', '11', '-Xlint'])
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    // regex parser
+    implementation 'org.jparsec:jparsec:3.1'
+
+    // log
+    implementation 'org.slf4j:slf4j-api:2.0.6'
+    testRuntimeOnly 'ch.qos.logback:logback-classic:1.3.4'
+
+    // tests are in Scala
+    testImplementation 'org.scala-lang:scala-library:2.13.12'
+
+    // test framework
+    testImplementation 'org.scalatest:scalatest-funsuite_2.13:3.2.15'
+
+    // required by ScalaTest
+    testRuntimeOnly 'com.vladsch.flexmark:flexmark-all:0.64.8'
+}
+
+compileScala {
+    options.compilerArgs = [
+            "-language:implicitConversions",
+            "-Xlint",
+            "-deprecation",
+            "-Xfatal-warnings"
+    ]
+}
+
+task scalaTest(dependsOn: ['testClasses'], type: JavaExec) {
+    // override security properties enabling all options
+    mainClass = 'org.scalatest.tools.Runner'
+    args = ['-R', 'build/classes/scala/test', '-o']
+    args += ['-h', file("$buildDir/reports/test")]
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+test.enabled = false
+check.dependsOn scalaTest
+
+javadoc {
+    exclude "dregex/impl"
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    publications {
+        dregex(MavenPublication) {
+            groupId = 'com.github.marianobarrios'
+            artifactId = 'dregex'
+            version = '0.8.0-SNAPSHOT'
+            from components.java
+            pom {
+                name = 'dregex'
+                 description = 'Dregex is a Java library that implements a regular expression engine using deterministic ' +
+                 'finite automata (DFA). It supports some Perl-style features and yet retains linear matching time, and ' +
+                 'also offers set operations.'
+                url = 'https://github.com/marianobarrios/dregex'
+                licenses {
+                    license {
+                        name = 'BSD 2-Clause "Simplified" License'
+                        url = 'https://opensource.org/license/bsd-2-clause/'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Mariano Barrios'
+                        email = 'marbar@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git@github.com:marianobarrios/dregex.git'
+                    url = 'scm:git@github.com:marianobarrios/dregex.git'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+            credentials {
+                username = project.findProperty('sonatypeUsername')
+                password = project.findProperty('sonatypePassword')
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.dregex
+}
