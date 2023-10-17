@@ -26,7 +26,7 @@ dependencies {
     testImplementation 'org.scala-lang:scala-library:2.13.12'
 
     // test framework
-    testImplementation 'org.scalatest:scalatest-funsuite_2.13:3.2.15'
+    testImplementation 'org.scalatest:scalatest-funsuite_2.13:3.3.0-SNAP4'
 
     // required by ScalaTest
     testRuntimeOnly 'com.vladsch.flexmark:flexmark-all:0.64.8'
