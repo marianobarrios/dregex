@@ -485,7 +485,7 @@ public class RegexParser {
         });
     }
 
-    private final Parser<Node> regexAtom = or(
+    private final Parser<Node> regexAtom = or(List.of(
             quotedLiteral,
             charLit,
             charWildcard(),
@@ -495,7 +495,7 @@ public class RegexParser {
             shorthandCharSet(),
             specialCharSet(),
             group,
-            namedGroup);
+            namedGroup));
 
     private final Parser<Quantification> predefQuantifier = or(litChar('+'), litChar('*'), litChar('?')).map(ch -> {
         switch (ch.intValue()) {
