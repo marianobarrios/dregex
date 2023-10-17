@@ -2,7 +2,8 @@ package dregex
 
 import TestUtil.using
 import dregex.impl.database.{UnicodeBlocks, UnicodeScripts}
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.{assertFalse, assertTrue}
+import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
 import java.lang.Character.{UnicodeBlock, UnicodeScript}
@@ -10,29 +11,31 @@ import java.util.regex.Pattern
 import scala.util.control.Breaks._
 import scala.jdk.CollectionConverters._
 
-class UnicodeTest extends AnyFunSuite {
+class UnicodeTest {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[UnicodeTest])
 
-  test("astral planes") {
+  @Test
+  def testAstralPlanes() = {
     using(Regex.compile(".")) { r =>
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("𐐷"))
-      assertResult(true)(r.matches("\uD801\uDC37"))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("𐐷"))
+      assertTrue(r.matches("\uD801\uDC37"))
     }
     using(Regex.compile("𐐷")) { r =>
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("𐐷"))
-      assertResult(true)(r.matches("\uD801\uDC37"))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("𐐷"))
+      assertTrue(r.matches("\uD801\uDC37"))
     }
     using(Regex.compile("𐐷", Pattern.LITERAL)) { r =>
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("𐐷"))
-      assertResult(true)(r.matches("\uD801\uDC37"))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("𐐷"))
+      assertTrue(r.matches("\uD801\uDC37"))
     }
   }
 
-  test("escapes") {
+  @Test
+  def testEscapes() = {
 
     /*
      * Note that Unicode escaping still happens at the source code level even inside triple quotes, so
@@ -40,65 +43,66 @@ class UnicodeTest extends AnyFunSuite {
      */
 
     using(Regex.compile("""\x41""")) { r =>
-      assertResult(true)(r.matches("A"))
+      assertTrue(r.matches("A"))
     }
     using(Regex.compile("\\u0041")) { r =>
-      assertResult(true)(r.matches("A"))
+      assertTrue(r.matches("A"))
     }
     using(Regex.compile("""\x{41}""")) { r =>
-      assertResult(true)(r.matches("A"))
+      assertTrue(r.matches("A"))
     }
     using(Regex.compile("""\x{10437}""")) { r =>
-      assertResult(true)(r.matches("𐐷"))
+      assertTrue(r.matches("𐐷"))
     }
 
     // double Unicode escaping
     using(Regex.compile("\\uD801\\uDC37")) { r =>
-      assertResult(true)(r.matches("𐐷"))
+      assertTrue(r.matches("𐐷"))
     }
 
     // high surrogate alone, works like a normal character
     using(Regex.compile("\\uD801")) { r =>
-      assertResult(false)(r.matches("A"))
-      assertResult(true)(r.matches("\uD801"))
+      assertFalse(r.matches("A"))
+      assertTrue(r.matches("\uD801"))
     }
 
     // high surrogate followed by normal char, works like two normal characters
     using(Regex.compile("\\uD801\\u0041")) { r =>
-      assertResult(false)(r.matches("A"))
-      assertResult(true)(r.matches("\uD801\u0041"))
-      assertResult(true)(r.matches("\uD801" + "\u0041"))
+      assertFalse(r.matches("A"))
+      assertTrue(r.matches("\uD801\u0041"))
+      assertTrue(r.matches("\uD801" + "\u0041"))
     }
 
   }
 
-  test("blocks") {
+  @Test
+  def testBlocks() = {
 
     using(Regex.compile("""\p{InGreek}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("Ω"))
-      assertResult(false)(r.matches("z"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("Ω"))
+      assertFalse(r.matches("z"))
     }
 
     using(Regex.compile("""\p{InGREEK}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{InGreek and Coptic}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{block=Greek}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{blk=Greek}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
     }
 
     /*
@@ -143,33 +147,34 @@ class UnicodeTest extends AnyFunSuite {
 
   }
 
-  test("scripts") {
+  @Test
+  def testScripts() = {
 
     using(Regex.compile("""\p{IsGreek}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("Ω"))
-      assertResult(false)(r.matches("z"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("Ω"))
+      assertFalse(r.matches("z"))
     }
 
     using(Regex.compile("""\p{IsGREEK}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{IsGREEK}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{script=GREK}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{sc=Greek}""")) { r =>
-      assertResult(true)(r.matches("α"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("α"))
+      assertFalse(r.matches("a"))
     }
 
     /*
@@ -230,68 +235,72 @@ class UnicodeTest extends AnyFunSuite {
 
   }
 
-  test("general categories") {
+  @Test
+  def testGeneralCategories() = {
 
     using(Regex.compile("""\p{Lu}""")) { r =>
-      assertResult(true)(r.matches("A"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("A"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{IsLu}""")) { r =>
-      assertResult(true)(r.matches("A"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("A"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{general_category=Lu}""")) { r =>
-      assertResult(true)(r.matches("A"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("A"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{gc=Lu}""")) { r =>
-      assertResult(true)(r.matches("A"))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("A"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\p{general_category=L}""")) { r =>
-      assertResult(true)(r.matches("A"))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("-"))
+      assertTrue(r.matches("A"))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("-"))
     }
 
   }
 
-  test("binary properties") {
+  @Test
+  def testBinaryProperties() = {
 
     using(Regex.compile("""\p{IsAlphabetic}""")) { r =>
-      assertResult(true)(r.matches("A"))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("*"))
+      assertTrue(r.matches("A"))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("*"))
     }
 
     using(Regex.compile("""\p{IsHex_Digit}""")) { r =>
-      assertResult(true)(r.matches("f"))
-      assertResult(false)(r.matches("g"))
+      assertTrue(r.matches("f"))
+      assertFalse(r.matches("g"))
     }
 
   }
 
-  test("linebreak") {
+  @Test
+  def testLinebreak() = {
 
     using(Regex.compile("""\R""")) { r =>
-      assertResult(true)(r.matches("\n"))
-      assertResult(true)(r.matches("\u000A"))
-      assertResult(true)(r.matches("\u2029"))
-      assertResult(false)(r.matches("\u000A\u000D"))
-      assertResult(true)(r.matches("\u000D\u000A"))
+      assertTrue(r.matches("\n"))
+      assertTrue(r.matches("\u000A"))
+      assertTrue(r.matches("\u2029"))
+      assertFalse(r.matches("\u000A\u000D"))
+      assertTrue(r.matches("\u000D\u000A"))
     }
 
   }
 
-  test("java categories") {
+  @Test
+  def testJavaCategories() = {
 
     using(Regex.compile("""\p{javaLowerCase}""")) { r =>
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("A"))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("A"))
     }
 
   }

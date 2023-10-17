@@ -1,7 +1,8 @@
 package dregex
 
 import dregex.impl.RegexParser
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
 import java.time.Duration
@@ -9,11 +10,12 @@ import java.time.Duration
 /**
   * Test the full cycle of serialization and parsing.
   */
-class SerializerTest extends AnyFunSuite {
+class SerializerTest {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[SerializerTest])
 
-  test("serialize") {
+  @Test
+  def testSerialize() = {
     val generator = new TreeGenerator
     var i = 0
     val start = System.nanoTime()
@@ -28,8 +30,8 @@ class SerializerTest extends AnyFunSuite {
       logger.trace("Reparsed: " + reparsed)
       val reserialized = reparsed.toRegex
       logger.trace("Reserialized: " + reserialized)
-      assert(reparsed === canonicalTree)
-      assert(serialized === reserialized)
+      assertEquals(reparsed, canonicalTree)
+      assertEquals(serialized, reserialized)
     }
     val elapsed = Duration.ofNanos(System.nanoTime() - start)
     logger.debug(s"Trees iteration took: $elapsed; size: $i")

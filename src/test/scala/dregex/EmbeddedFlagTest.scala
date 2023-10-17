@@ -1,25 +1,28 @@
 package dregex
 
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.function.Executable
 
-class EmbeddedFlagTest extends AnyFunSuite {
+class EmbeddedFlagTest {
 
-  test("embedded flags") {
+  @Test
+  def testEmbeddedFlags() = {
     // OK
     Regex.compile("(?x)a")
 
     // flags in the middle
-    intercept[InvalidRegexException] {
-      Regex.compile(" (?x)a")
-    }
-    intercept[InvalidRegexException] {
-      Regex.compile("(?x)a(?x)")
-    }
+    assertThrows(classOf[InvalidRegexException], new Executable {
+      def execute() = Regex.compile(" (?x)a")
+    })
+    assertThrows(classOf[InvalidRegexException], new Executable {
+      def execute() = Regex.compile("(?x)a(?x)")
+    })
 
     // unknown flag
-    intercept[InvalidRegexException] {
-      Regex.compile("(?w)a")
-    }
+    assertThrows(classOf[InvalidRegexException], new Executable {
+      def execute() = Regex.compile("(?w)a")
+    })
   }
 
 }

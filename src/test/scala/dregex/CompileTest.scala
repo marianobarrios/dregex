@@ -1,15 +1,18 @@
 package dregex
 
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.function.Executable
 
-class CompileTest extends AnyFunSuite {
+class CompileTest {
 
-  test("compilation") {
+  @Test
+  def testCompilation() = {
     Regex.compile("a" * 2500) // long juxtaposition
     Regex.compile("a{2500}") // long repetition
-    intercept[InvalidRegexException] {
-      Regex.compile("""\1""") // backreferences
-    }
+    assertThrows(classOf[InvalidRegexException], new Executable {
+      def execute() = Regex.compile("""\1""") // backreferences
+    })
   }
 
 }

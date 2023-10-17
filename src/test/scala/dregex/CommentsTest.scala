@@ -1,11 +1,13 @@
 package dregex
 
 import dregex.impl.RegexParser
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 
-class CommentsTest extends AnyFunSuite {
+class CommentsTest {
 
-  test("comments with flag") {
+  @Test
+  def testCommentsWithFlag() = {
     def equiv(withComments: String, withoutComments: String): Boolean = {
       val normal = RegexParser.parse(withoutComments, new RegexParser.Flags())
 
@@ -18,21 +20,22 @@ class CommentsTest extends AnyFunSuite {
       val cComments = new CompiledRegex(withComments, comments.getTree, universe)
       cNormal equiv cComments
     }
-    assert(equiv("a b # comment", "ab"))
-    assert(equiv("a b # comment\nc ", "abc"))
-    assert(equiv(" a | b c  ", "a|bc"))
-    assert(equiv(" ( a |  b ) c ", "(a|b)c"))
-    assert(equiv(" a  b + c ", "ab+c"))
-    assert(equiv(" a\\ b", "a b"))
+    assertTrue(equiv("a b # comment", "ab"))
+    assertTrue(equiv("a b # comment\nc ", "abc"))
+    assertTrue(equiv(" a | b c  ", "a|bc"))
+    assertTrue(equiv(" ( a |  b ) c ", "(a|b)c"))
+    assertTrue(equiv(" a  b + c ", "ab+c"))
+    assertTrue(equiv(" a\\ b", "a b"))
   }
 
-  test("comments with embedded flag") {
+  @Test
+  def testCommentsWithEmbeddedFlag() = {
     def equiv(a: String, b: String): Boolean = {
       val c = Regex.compile(java.util.List.of(a, b))
       c.get(0) equiv c.get(1)
     }
-    assert(equiv("(?x) a  b c", "abc"))
-    assert(equiv("(?x) a  b c", "abc"))
+    assertTrue(equiv("(?x) a  b c", "abc"))
+    assertTrue(equiv("(?x) a  b c", "abc"))
   }
 
 }

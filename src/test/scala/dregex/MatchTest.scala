@@ -1,810 +1,816 @@
 package dregex
 
 import java.util.regex.Pattern
-
 import TestUtil.using
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.{assertFalse, assertTrue}
+import org.junit.jupiter.api.Test
 
-import collection.immutable.Seq
+class MatchTest {
 
-class MatchTest extends AnyFunSuite {
+  @Test
+  def testCharacterClassesSimple() = {
 
-  test("character classes - simple") {
-
-    assertResult(false)(Regex.nullRegex(Universe.Empty).matchesAtLeastOne())
+    assertFalse(Regex.nullRegex(Universe.Empty).matchesAtLeastOne())
 
     using(Regex.compile("")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile(" ")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches(" "))
-      assertResult(false)(r.matches("  "))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches(" "))
+      assertFalse(r.matches("  "))
     }
 
     using(Regex.compile(".")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("aa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("aa"))
     }
 
     using(Regex.compile("[a-d]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("aa"))
-      assertResult(false)(r.matches("x"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("aa"))
+      assertFalse(r.matches("x"))
     }
 
     using(Regex.compile("[^a]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("b"))
     }
 
     using(Regex.compile("[^ab]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
-      assertResult(true)(r.matches("c"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("b"))
+      assertTrue(r.matches("c"))
     }
 
     using(Regex.compile("[ab-c]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("c"))
-      assertResult(false)(r.matches("d"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("c"))
+      assertFalse(r.matches("d"))
     }
 
     using(Regex.compile("[a-bc]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("c"))
-      assertResult(false)(r.matches("d"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("c"))
+      assertFalse(r.matches("d"))
     }
 
     using(Regex.compile("[^ab-c]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
-      assertResult(false)(r.matches("c"))
-      assertResult(true)(r.matches("d"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("b"))
+      assertFalse(r.matches("c"))
+      assertTrue(r.matches("d"))
     }
 
     using(Regex.compile("[^a-bc]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
-      assertResult(false)(r.matches("c"))
-      assertResult(true)(r.matches("d"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("b"))
+      assertFalse(r.matches("c"))
+      assertTrue(r.matches("d"))
     }
 
   }
 
-  test("character classes - special characters inside") {
+  @Test
+  def testCharacterClassesSpecialCharactersInside() = {
 
-    //Special characters inside character classes
-    using(Regex.compile("[.]"))(r => assertResult(true)(r.matches(".")))
-    using(Regex.compile("[(]"))(r => assertResult(true)(r.matches("(")))
-    using(Regex.compile("[)]"))(r => assertResult(true)(r.matches(")")))
-    using(Regex.compile("[$]"))(r => assertResult(true)(r.matches("$")))
-    using(Regex.compile("[[]"))(r => assertResult(true)(r.matches("[")))
-    using(Regex.compile("""[\]]"""))(r => assertResult(true)(r.matches("]")))
+    // Special characters inside character classes
+    using(Regex.compile("[.]"))(r => assertTrue(r.matches(".")))
+    using(Regex.compile("[(]"))(r => assertTrue(r.matches("(")))
+    using(Regex.compile("[)]"))(r => assertTrue(r.matches(")")))
+    using(Regex.compile("[$]"))(r => assertTrue(r.matches("$")))
+    using(Regex.compile("[[]"))(r => assertTrue(r.matches("[")))
+    using(Regex.compile("""[\]]"""))(r => assertTrue(r.matches("]")))
 
-    //Dash is interpreted literally inside character classes when it is the first or the last element
+    // Dash is interpreted literally inside character classes when it is the first or the last element
 
     using(Regex.compile("[-]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("-"))
-      assertResult(false)(r.matches("x"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("-"))
+      assertFalse(r.matches("x"))
     }
 
     using(Regex.compile("[-a]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("-"))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("x"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("-"))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("x"))
     }
 
     using(Regex.compile("[a-]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("-"))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("x"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("-"))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("x"))
     }
 
     using(Regex.compile("[-a-]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("-"))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("x"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("-"))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("x"))
     }
 
     using(Regex.compile("[^-]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("-"))
-      assertResult(true)(r.matches("a"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("-"))
+      assertTrue(r.matches("a"))
     }
 
     using(Regex.compile("[^-a]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("-"))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("-"))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("b"))
     }
 
     using(Regex.compile("[^a-]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("-"))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("-"))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("b"))
     }
 
     using(Regex.compile("[^-a-]")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("-"))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("-"))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("b"))
     }
 
   }
 
-  test("character classes - shorthand") {
+  @Test
+  def testCharacterClassesShorthand() = {
 
     using(Regex.compile("""\d""")) { r =>
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("0"))
-      assertResult(true)(r.matches("9"))
-      assertResult(false)(r.matches("a"))
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("0"))
+      assertTrue(r.matches("9"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\w""")) { r =>
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("0"))
-      assertResult(true)(r.matches("9"))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("A"))
-      assertResult(true)(r.matches("_"))
-      assertResult(false)(r.matches(":"))
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("0"))
+      assertTrue(r.matches("9"))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("A"))
+      assertTrue(r.matches("_"))
+      assertFalse(r.matches(":"))
     }
 
     using(Regex.compile("""\s""")) { r =>
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches(" "))
-      assertResult(true)(r.matches("\t"))
-      assertResult(true)(r.matches("\n"))
-      assertResult(true)(r.matches("\r"))
-      assertResult(true)(r.matches("\f"))
-      assertResult(false)(r.matches("a"))
+      assertFalse(r.matches(""))
+      assertTrue(r.matches(" "))
+      assertTrue(r.matches("\t"))
+      assertTrue(r.matches("\n"))
+      assertTrue(r.matches("\r"))
+      assertTrue(r.matches("\f"))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("""\D""")) { r =>
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("0"))
-      assertResult(false)(r.matches("9"))
-      assertResult(true)(r.matches("a"))
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("0"))
+      assertFalse(r.matches("9"))
+      assertTrue(r.matches("a"))
     }
 
     using(Regex.compile("""\W""")) { r =>
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("0"))
-      assertResult(false)(r.matches("9"))
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("A"))
-      assertResult(false)(r.matches("_"))
-      assertResult(true)(r.matches(":"))
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("0"))
+      assertFalse(r.matches("9"))
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("A"))
+      assertFalse(r.matches("_"))
+      assertTrue(r.matches(":"))
     }
 
     using(Regex.compile("""\S""")) { r =>
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches(" "))
-      assertResult(false)(r.matches("\t"))
-      assertResult(false)(r.matches("\n"))
-      assertResult(false)(r.matches("\r"))
-      assertResult(false)(r.matches("\f"))
-      assertResult(true)(r.matches("a"))
+      assertFalse(r.matches(""))
+      assertFalse(r.matches(" "))
+      assertFalse(r.matches("\t"))
+      assertFalse(r.matches("\n"))
+      assertFalse(r.matches("\r"))
+      assertFalse(r.matches("\f"))
+      assertTrue(r.matches("a"))
     }
 
     {
       val compiled =
         Regex.compile(java.util.List.of("""\S""", """[\S]""", """[^\s]""", """\s""", """[\s]""", """[^\S]""", "."), Pattern.DOTALL)
-      assertResult(true)(compiled.get(1) equiv compiled.get(1))
-      assertResult(true)(compiled.get(1) equiv compiled.get(2))
-      assertResult(true)(compiled.get(2) equiv compiled.get(0))
-      assertResult(true)(compiled.get(4) equiv compiled.get(4))
-      assertResult(true)(compiled.get(4) equiv compiled.get(5))
-      assertResult(true)(compiled.get(5) equiv compiled.get(3))
-      assertResult(false)(compiled.get(0) doIntersect compiled.get(4))
-      assertResult(true)((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
+      assertTrue(compiled.get(1) equiv compiled.get(1))
+      assertTrue(compiled.get(1) equiv compiled.get(2))
+      assertTrue(compiled.get(2) equiv compiled.get(0))
+      assertTrue(compiled.get(4) equiv compiled.get(4))
+      assertTrue(compiled.get(4) equiv compiled.get(5))
+      assertTrue(compiled.get(5) equiv compiled.get(3))
+      assertFalse(compiled.get(0) doIntersect compiled.get(4))
+      assertTrue((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
     }
 
     {
       val compiled =
         Regex.compile(java.util.List.of("""\D""", """[\D]""", """[^\d]""", """\d""", """[\d]""", """[^\D]""", "."), Pattern.DOTALL)
-      assertResult(true)(compiled.get(1) equiv compiled.get(1))
-      assertResult(true)(compiled.get(1) equiv compiled.get(2))
-      assertResult(true)(compiled.get(2) equiv compiled.get(0))
-      assertResult(true)(compiled.get(4) equiv compiled.get(4))
-      assertResult(true)(compiled.get(4) equiv compiled.get(5))
-      assertResult(true)(compiled.get(5) equiv compiled.get(3))
-      assertResult(false)(compiled.get(0) doIntersect compiled.get(4))
-      assertResult(true)((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
+      assertTrue(compiled.get(1) equiv compiled.get(1))
+      assertTrue(compiled.get(1) equiv compiled.get(2))
+      assertTrue(compiled.get(2) equiv compiled.get(0))
+      assertTrue(compiled.get(4) equiv compiled.get(4))
+      assertTrue(compiled.get(4) equiv compiled.get(5))
+      assertTrue(compiled.get(5) equiv compiled.get(3))
+      assertFalse(compiled.get(0) doIntersect compiled.get(4))
+      assertTrue((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
     }
 
     {
       val compiled =
         Regex.compile(java.util.List.of("""\W""", """[\W]""", """[^\w]""", """\w""", """[\w]""", """[^\W]""", "."), Pattern.DOTALL)
-      assertResult(true)(compiled.get(1) equiv compiled.get(1))
-      assertResult(true)(compiled.get(1) equiv compiled.get(2))
-      assertResult(true)(compiled.get(2) equiv compiled.get(0))
-      assertResult(true)(compiled.get(4) equiv compiled.get(4))
-      assertResult(true)(compiled.get(4) equiv compiled.get(5))
-      assertResult(true)(compiled.get(5) equiv compiled.get(3))
-      assertResult(false)(compiled.get(0) doIntersect compiled.get(4))
-      assertResult(true)((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
+      assertTrue(compiled.get(1) equiv compiled.get(1))
+      assertTrue(compiled.get(1) equiv compiled.get(2))
+      assertTrue(compiled.get(2) equiv compiled.get(0))
+      assertTrue(compiled.get(4) equiv compiled.get(4))
+      assertTrue(compiled.get(4) equiv compiled.get(5))
+      assertTrue(compiled.get(5) equiv compiled.get(3))
+      assertFalse(compiled.get(0) doIntersect compiled.get(4))
+      assertTrue((compiled.get(0) union compiled.get(4)) equiv compiled.get(6))
     }
 
     {
       val compiled = Regex.compile(java.util.List.of("""\d""", """[^\D\W]"""))
-      assertResult(true)(compiled.get(0) equiv compiled.get(1))
+      assertTrue(compiled.get(0) equiv compiled.get(1))
     }
 
   }
 
-  test("quantifiers") {
+  @Test
+  def testQuantifiers() = {
 
     using(Regex.compile("")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("a")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
-      assertResult(false)(r.matches("aa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("b"))
+      assertFalse(r.matches("aa"))
     }
 
     using(Regex.compile("a*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(false)(r.matches("aab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertFalse(r.matches("aab"))
     }
 
     using(Regex.compile("a+")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(false)(r.matches("aab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertFalse(r.matches("aab"))
     }
 
     using(Regex.compile("a?")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("aa"))
-      assertResult(false)(r.matches("aab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("aa"))
+      assertFalse(r.matches("aab"))
     }
 
     using(Regex.compile("(a{2})*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(false)(r.matches("aaa"))
-      assertResult(true)(r.matches("aaaa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertFalse(r.matches("aaa"))
+      assertTrue(r.matches("aaaa"))
     }
 
     using(Regex.compile("(a{2})+")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(false)(r.matches("aaa"))
-      assertResult(true)(r.matches("aaaa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertFalse(r.matches("aaa"))
+      assertTrue(r.matches("aaaa"))
     }
 
     using(Regex.compile("(a{2,3})*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("aaa"))
-      assertResult(true)(r.matches("aaaa"))
-      assertResult(true)(r.matches("aaaaa"))
-      assertResult(true)(r.matches("aaaaaa"))
-      assertResult(true)(r.matches("aaaaaaa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("aaa"))
+      assertTrue(r.matches("aaaa"))
+      assertTrue(r.matches("aaaaa"))
+      assertTrue(r.matches("aaaaaa"))
+      assertTrue(r.matches("aaaaaaa"))
     }
 
     using(Regex.compile("a{0}")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("a{1}")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("aa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("aa"))
     }
 
     using(Regex.compile("a{2}")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(false)(r.matches("aaa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertFalse(r.matches("aaa"))
     }
 
     using(Regex.compile("a{1,3}")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("aaa"))
-      assertResult(false)(r.matches("aaaa"))
-      assertResult(false)(r.matches("aab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("aaa"))
+      assertFalse(r.matches("aaaa"))
+      assertFalse(r.matches("aab"))
     }
 
     using(Regex.compile("a{2,}")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("aaa"))
-      assertResult(false)(r.matches("aab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("aaa"))
+      assertFalse(r.matches("aab"))
     }
 
     using(Regex.compile("a{0,2}")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(false)(r.matches("aaa"))
-      assertResult(false)(r.matches("aab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertFalse(r.matches("aaa"))
+      assertFalse(r.matches("aab"))
     }
 
     // watch out!
     using(Regex.compile("a{,2}")) { r =>
-      assertResult(true)(r.matches("a{,2}"))
+      assertTrue(r.matches("a{,2}"))
     }
 
   }
 
-  test("disjunctions") {
+  @Test
+  def testDisjunctions() = {
 
     using(Regex.compile("a|b")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
-      assertResult(false)(r.matches("c"))
-      assertResult(false)(r.matches("aa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("b"))
+      assertFalse(r.matches("c"))
+      assertFalse(r.matches("aa"))
     }
 
     using(Regex.compile("ab|c")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
-      assertResult(true)(r.matches("c"))
-      assertResult(false)(r.matches("aa"))
-      assertResult(true)(r.matches("ab"))
-      assertResult(false)(r.matches("abc"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("b"))
+      assertTrue(r.matches("c"))
+      assertFalse(r.matches("aa"))
+      assertTrue(r.matches("ab"))
+      assertFalse(r.matches("abc"))
     }
 
     using(Regex.compile("(a|b)c")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("ac"))
-      assertResult(true)(r.matches("bc"))
-      assertResult(false)(r.matches("cc"))
-      assertResult(false)(r.matches("aca"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("ac"))
+      assertTrue(r.matches("bc"))
+      assertFalse(r.matches("cc"))
+      assertFalse(r.matches("aca"))
     }
 
   }
 
-  test("quantifiers with disjunctions") {
+  @Test
+  def testQuantifiersWithDisjunctions() = {
 
     using(Regex.compile("((a|b)c)+")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("ac"))
-      assertResult(true)(r.matches("bc"))
-      assertResult(false)(r.matches("acc"))
-      assertResult(true)(r.matches("acbc"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("ac"))
+      assertTrue(r.matches("bc"))
+      assertFalse(r.matches("acc"))
+      assertTrue(r.matches("acbc"))
     }
 
     using(Regex.compile("a*|b*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("aa"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(false)(r.matches("ba"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("aa"))
+      assertFalse(r.matches("ab"))
+      assertFalse(r.matches("ba"))
     }
 
     using(Regex.compile("a?|b*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("aa"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(false)(r.matches("ba"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("aa"))
+      assertFalse(r.matches("ab"))
+      assertFalse(r.matches("ba"))
     }
 
     using(Regex.compile("(a*|b*)|c")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("c"))
-      assertResult(false)(r.matches("ac"))
-      assertResult(false)(r.matches("bc"))
-      assertResult(false)(r.matches("abc"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("c"))
+      assertFalse(r.matches("ac"))
+      assertFalse(r.matches("bc"))
+      assertFalse(r.matches("abc"))
     }
 
     using(Regex.compile("(a*|b*)*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("ab"))
-      assertResult(false)(r.matches("abc"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("ab"))
+      assertFalse(r.matches("abc"))
     }
 
     using(Regex.compile("(a*|b*)*|c")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("c"))
-      assertResult(false)(r.matches("ac"))
-      assertResult(false)(r.matches("bc"))
-      assertResult(false)(r.matches("abc"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("c"))
+      assertFalse(r.matches("ac"))
+      assertFalse(r.matches("bc"))
+      assertFalse(r.matches("abc"))
     }
 
     using(Regex.compile("(a*|b*)+")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("bb"))
-      assertResult(true)(r.matches("ab"))
-      assertResult(true)(r.matches("bbbab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("bb"))
+      assertTrue(r.matches("ab"))
+      assertTrue(r.matches("bbbab"))
     }
 
     using(Regex.compile("(a+|b+)+")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("bb"))
-      assertResult(true)(r.matches("ab"))
-      assertResult(true)(r.matches("bbbab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("bb"))
+      assertTrue(r.matches("ab"))
+      assertTrue(r.matches("bbbab"))
     }
 
     using(Regex.compile("(a+|b+)*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("bb"))
-      assertResult(true)(r.matches("ab"))
-      assertResult(true)(r.matches("bbbab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("bb"))
+      assertTrue(r.matches("ab"))
+      assertTrue(r.matches("bbbab"))
     }
 
     using(Regex.compile("a+|b*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("bb"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(false)(r.matches("bbbab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("bb"))
+      assertFalse(r.matches("ab"))
+      assertFalse(r.matches("bbbab"))
     }
 
   }
 
-  test("escaping") {
+  @Test
+  def testEscaping() = {
 
-    using(Regex.compile("""\B"""))(r => assertResult(true)(r.matches("""\""")))
-    using(Regex.compile("""\\"""))(r => assertResult(true)(r.matches("""\""")))
+    using(Regex.compile("""\B"""))(r => assertTrue(r.matches("""\""")))
+    using(Regex.compile("""\\"""))(r => assertTrue(r.matches("""\""")))
 
-    using(Regex.compile("\u0041"))(r => assertResult(true)(r.matches("A")))
-    using(Regex.compile("""\x41"""))(r => assertResult(true)(r.matches("A")))
-    using(Regex.compile("""\x{41}"""))(r => assertResult(true)(r.matches("A")))
-    using(Regex.compile("""\x{000041}"""))(r => assertResult(true)(r.matches("A")))
-    using(Regex.compile("""\0101"""))(r => assertResult(true)(r.matches("A")))
+    using(Regex.compile("\u0041"))(r => assertTrue(r.matches("A")))
+    using(Regex.compile("""\x41"""))(r => assertTrue(r.matches("A")))
+    using(Regex.compile("""\x{41}"""))(r => assertTrue(r.matches("A")))
+    using(Regex.compile("""\x{000041}"""))(r => assertTrue(r.matches("A")))
+    using(Regex.compile("""\0101"""))(r => assertTrue(r.matches("A")))
 
-    using(Regex.compile("""\n"""))(r => assertResult(true)(r.matches("\n")))
-    using(Regex.compile("""\r"""))(r => assertResult(true)(r.matches("\r")))
-    using(Regex.compile("""\t"""))(r => assertResult(true)(r.matches("\t")))
-    using(Regex.compile("""\f"""))(r => assertResult(true)(r.matches("\f")))
-    using(Regex.compile("""\b"""))(r => assertResult(true)(r.matches("\b")))
+    using(Regex.compile("""\n"""))(r => assertTrue(r.matches("\n")))
+    using(Regex.compile("""\r"""))(r => assertTrue(r.matches("\r")))
+    using(Regex.compile("""\t"""))(r => assertTrue(r.matches("\t")))
+    using(Regex.compile("""\f"""))(r => assertTrue(r.matches("\f")))
+    using(Regex.compile("""\b"""))(r => assertTrue(r.matches("\b")))
 
     using(Regex.compile("""\.""")) { r =>
-      assertResult(true)(r.matches("."))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matches("."))
+      assertFalse(r.matches("a"))
     }
 
-    using(Regex.compile("""\+"""))(r => assertResult(true)(r.matches("+")))
-    using(Regex.compile("""\("""))(r => assertResult(true)(r.matches("(")))
-    using(Regex.compile("""\)"""))(r => assertResult(true)(r.matches(")")))
+    using(Regex.compile("""\+"""))(r => assertTrue(r.matches("+")))
+    using(Regex.compile("""\("""))(r => assertTrue(r.matches("(")))
+    using(Regex.compile("""\)"""))(r => assertTrue(r.matches(")")))
 
   }
 
-  test("lookahead") {
+  @Test
+  def testLookahead() = {
 
     using(Regex.compile("(?!b)")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("b"))
     }
 
     using(Regex.compile("a(?!b).")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("ac"))
-      assertResult(false)(r.matches("ab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("ac"))
+      assertFalse(r.matches("ab"))
     }
 
     using(Regex.compile("a(?!b).|other")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("ac"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(true)(r.matches("other"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("ac"))
+      assertFalse(r.matches("ab"))
+      assertTrue(r.matches("other"))
     }
 
     using(Regex.compile("(a+(?!b).|other)+")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("aaa"))
-      assertResult(true)(r.matches("ac"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(false)(r.matches("aab"))
-      assertResult(true)(r.matches("other"))
-      assertResult(true)(r.matches("otherother"))
-      assertResult(true)(r.matches("aaaother"))
-      assertResult(false)(r.matches("aabother"))
-      assertResult(true)(r.matches("aaotheraa"))
-      assertResult(false)(r.matches("aabotherab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("aaa"))
+      assertTrue(r.matches("ac"))
+      assertFalse(r.matches("ab"))
+      assertFalse(r.matches("aab"))
+      assertTrue(r.matches("other"))
+      assertTrue(r.matches("otherother"))
+      assertTrue(r.matches("aaaother"))
+      assertFalse(r.matches("aabother"))
+      assertTrue(r.matches("aaotheraa"))
+      assertFalse(r.matches("aabotherab"))
     }
 
     using(Regex.compile("([ax]+(?!b).|other)+")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("x"))
-      assertResult(true)(r.matches("xa"))
-      assertResult(true)(r.matches("xaa"))
-      assertResult(true)(r.matches("xc"))
-      assertResult(false)(r.matches("xb"))
-      assertResult(false)(r.matches("xab"))
-      assertResult(true)(r.matches("other"))
-      assertResult(true)(r.matches("otherother"))
-      assertResult(true)(r.matches("xaaother"))
-      assertResult(false)(r.matches("xabother"))
-      assertResult(true)(r.matches("xaotheraa"))
-      assertResult(false)(r.matches("xabotherab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("x"))
+      assertTrue(r.matches("xa"))
+      assertTrue(r.matches("xaa"))
+      assertTrue(r.matches("xc"))
+      assertFalse(r.matches("xb"))
+      assertFalse(r.matches("xab"))
+      assertTrue(r.matches("other"))
+      assertTrue(r.matches("otherother"))
+      assertTrue(r.matches("xaaother"))
+      assertFalse(r.matches("xabother"))
+      assertTrue(r.matches("xaotheraa"))
+      assertFalse(r.matches("xabotherab"))
     }
 
     using(Regex.compile("a+(?!b).")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("ac"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("aaa"))
-      assertResult(true)(r.matches("aac"))
-      assertResult(false)(r.matches("aab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("ac"))
+      assertFalse(r.matches("ab"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("aaa"))
+      assertTrue(r.matches("aac"))
+      assertFalse(r.matches("aab"))
     }
 
     using(Regex.compile(".*(?!a).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("aaa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("aaa"))
     }
 
     using(Regex.compile("(?!.?)")) { r =>
-      assertResult(false)(r.matchesAtLeastOne())
+      assertFalse(r.matchesAtLeastOne())
     }
 
     using(Regex.compile("(?=b)")) { r =>
-      assertResult(false)(r.matchesAtLeastOne())
+      assertFalse(r.matchesAtLeastOne())
     }
 
     using(Regex.compile("(?=.?)")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("a"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("(a|c)(?!b).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches("ad"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(false)(r.matches("cb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches("ad"))
+      assertFalse(r.matches("ab"))
+      assertFalse(r.matches("cb"))
     }
 
     using(Regex.compile("[ac](?!b).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches("ad"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(false)(r.matches("cb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches("ad"))
+      assertFalse(r.matches("ab"))
+      assertFalse(r.matches("cb"))
     }
 
     using(Regex.compile("(d|[ac])(?!b).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches("ad"))
-      assertResult(false)(r.matches("db"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(false)(r.matches("cb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches("ad"))
+      assertFalse(r.matches("db"))
+      assertFalse(r.matches("ab"))
+      assertFalse(r.matches("cb"))
     }
 
     using(Regex.compile("(?!b)a")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("a"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("a"))
     }
 
     using(Regex.compile("a(?!b)")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches("a"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches("a"))
     }
 
     using(Regex.compile("a+(?!b)")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches("a"))
-      assertResult(true)(r.matches("aa"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches("a"))
+      assertTrue(r.matches("aa"))
     }
 
     using(Regex.compile("(?!a)a")) { r =>
-      assertResult(false)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
+      assertFalse(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("(?!.*)a")) { r =>
-      assertResult(false)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
+      assertFalse(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
     }
 
     using(Regex.compile("(?!a)b")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("b"))
     }
 
     using(Regex.compile("(?!a).")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("b"))
     }
 
     using(Regex.compile("(?=b)a")) { r =>
-      assertResult(false)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
+      assertFalse(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("b"))
     }
 
     using(Regex.compile("a(?=b)")) { r =>
-      assertResult(false)(r.matchesAtLeastOne())
+      assertFalse(r.matchesAtLeastOne())
     }
 
     using(Regex.compile("(?!b).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(true)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
-      assertResult(true)(r.matches("ab"))
-      assertResult(false)(r.matches("bb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertTrue(r.matches("a"))
+      assertFalse(r.matches("b"))
+      assertTrue(r.matches("ab"))
+      assertFalse(r.matches("bb"))
     }
 
     using(Regex.compile("(?=b).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(true)(r.matches("bb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("b"))
+      assertFalse(r.matches("ab"))
+      assertTrue(r.matches("bb"))
     }
 
     using(Regex.compile("xxx(?=a|b)(?!c).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("xxxa"))
-      assertResult(true)(r.matches("xxxb"))
-      assertResult(true)(r.matches("xxxax"))
-      assertResult(true)(r.matches("xxxbx"))
-      assertResult(false)(r.matches("xxxc"))
-      assertResult(false)(r.matches("xxxcx"))
-      assertResult(false)(r.matches("xxxxb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("xxxa"))
+      assertTrue(r.matches("xxxb"))
+      assertTrue(r.matches("xxxax"))
+      assertTrue(r.matches("xxxbx"))
+      assertFalse(r.matches("xxxc"))
+      assertFalse(r.matches("xxxcx"))
+      assertFalse(r.matches("xxxxb"))
     }
 
     using(Regex.compile("xxx(?=a|b).(?!c).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(true)(r.matches("xxxay"))
-      assertResult(true)(r.matches("xxxby"))
-      assertResult(true)(r.matches("xxxay"))
-      assertResult(true)(r.matches("xxxby"))
-      assertResult(false)(r.matches("xxxyc"))
-      assertResult(false)(r.matches("xxxycx"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertTrue(r.matches("xxxay"))
+      assertTrue(r.matches("xxxby"))
+      assertTrue(r.matches("xxxay"))
+      assertTrue(r.matches("xxxby"))
+      assertFalse(r.matches("xxxyc"))
+      assertFalse(r.matches("xxxycx"))
     }
 
     using(Regex.compile("xxx(?!a|b)(?!c).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("xxxa"))
-      assertResult(false)(r.matches("xxxb"))
-      assertResult(false)(r.matches("xxxax"))
-      assertResult(false)(r.matches("xxxbx"))
-      assertResult(false)(r.matches("xxxc"))
-      assertResult(false)(r.matches("xxxcx"))
-      assertResult(true)(r.matches("xxxxb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("xxxa"))
+      assertFalse(r.matches("xxxb"))
+      assertFalse(r.matches("xxxax"))
+      assertFalse(r.matches("xxxbx"))
+      assertFalse(r.matches("xxxc"))
+      assertFalse(r.matches("xxxcx"))
+      assertTrue(r.matches("xxxxb"))
     }
 
     using(Regex.compile("xxx(?![ab])(?!c).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("xxxa"))
-      assertResult(false)(r.matches("xxxb"))
-      assertResult(false)(r.matches("xxxax"))
-      assertResult(false)(r.matches("xxxbx"))
-      assertResult(false)(r.matches("xxxc"))
-      assertResult(false)(r.matches("xxxcx"))
-      assertResult(true)(r.matches("xxxxb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("xxxa"))
+      assertFalse(r.matches("xxxb"))
+      assertFalse(r.matches("xxxax"))
+      assertFalse(r.matches("xxxbx"))
+      assertFalse(r.matches("xxxc"))
+      assertFalse(r.matches("xxxcx"))
+      assertTrue(r.matches("xxxxb"))
     }
 
     using(Regex.compile("xxx(?!a|b)(?=.*)(?!c).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches(""))
-      assertResult(false)(r.matches("xxxa"))
-      assertResult(false)(r.matches("xxxb"))
-      assertResult(false)(r.matches("xxxax"))
-      assertResult(false)(r.matches("xxxbx"))
-      assertResult(false)(r.matches("xxxc"))
-      assertResult(false)(r.matches("xxxcx"))
-      assertResult(true)(r.matches("xxxxb"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches(""))
+      assertFalse(r.matches("xxxa"))
+      assertFalse(r.matches("xxxb"))
+      assertFalse(r.matches("xxxax"))
+      assertFalse(r.matches("xxxbx"))
+      assertFalse(r.matches("xxxc"))
+      assertFalse(r.matches("xxxcx"))
+      assertTrue(r.matches("xxxxb"))
     }
 
     !Regex.compile("(?!.?).*").matchesAtLeastOne()
@@ -815,93 +821,94 @@ class MatchTest extends AnyFunSuite {
     !Regex.compile("(?!a{0,10}).*").matchesAtLeastOne()
 
     using(Regex.compile("(?!a).|c.")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("a"))
-      assertResult(true)(r.matches("b"))
-      assertResult(true)(r.matches("c"))
-      assertResult(true)(r.matches("cx"))
-      assertResult(false)(r.matches("bx"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("a"))
+      assertTrue(r.matches("b"))
+      assertTrue(r.matches("c"))
+      assertTrue(r.matches("cx"))
+      assertFalse(r.matches("bx"))
     }
 
     using(Regex.compile("(a|aa)(?!b).+")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(true)(r.matches("ac"))
-      assertResult(true)(r.matches("aa"))
-      assertResult(true)(r.matches("aac"))
-      assertResult(true)(r.matches("aab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("ab"))
+      assertTrue(r.matches("ac"))
+      assertTrue(r.matches("aa"))
+      assertTrue(r.matches("aac"))
+      assertTrue(r.matches("aab"))
     }
 
     using(Regex.compile("(a|aa)(?!b)(c|cc)(?!d).*")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(true)(r.matches("ac"))
-      assertResult(false)(r.matches("aa"))
-      assertResult(true)(r.matches("aac"))
-      assertResult(true)(r.matches("acc"))
-      assertResult(true)(r.matches("aacc"))
-      assertResult(true)(r.matches("aaccd"))
-      assertResult(true)(r.matches("aacce"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("ab"))
+      assertTrue(r.matches("ac"))
+      assertFalse(r.matches("aa"))
+      assertTrue(r.matches("aac"))
+      assertTrue(r.matches("acc"))
+      assertTrue(r.matches("aacc"))
+      assertTrue(r.matches("aaccd"))
+      assertTrue(r.matches("aacce"))
     }
 
     using(Regex.compile("(?!bb)b")) { r =>
-      assertResult(true)(r.matches("b"))
+      assertTrue(r.matches("b"))
     }
 
     using(Regex.compile("((?!bb)b)+")) { r =>
-      assertResult(true)(r.matches("b"))
+      assertTrue(r.matches("b"))
       // true because lookahead cannot "escape" the expression it's in
-      assertResult(true)(r.matches("bb"))
+      assertTrue(r.matches("bb"))
     }
 
   }
 
-  test("lookbehind") {
+  @Test
+  def testLookbehind() = {
 
     using(Regex.compile("(?<!b)")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(true)(r.matches(""))
-      assertResult(false)(r.matches("a"))
-      assertResult(false)(r.matches("b"))
+      assertTrue(r.matchesAtLeastOne())
+      assertTrue(r.matches(""))
+      assertFalse(r.matches("a"))
+      assertFalse(r.matches("b"))
     }
 
     using(Regex.compile(".(?<!a)b")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("b"))
-      assertResult(true)(r.matches("bb"))
-      assertResult(true)(r.matches("cb"))
-      assertResult(false)(r.matches("ab"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("b"))
+      assertTrue(r.matches("bb"))
+      assertTrue(r.matches("cb"))
+      assertFalse(r.matches("ab"))
     }
 
     using(Regex.compile("other|.(?<!a)b")) { r =>
-      assertResult(true)(r.matchesAtLeastOne())
-      assertResult(false)(r.matches("b"))
-      assertResult(true)(r.matches("bb"))
-      assertResult(true)(r.matches("cb"))
-      assertResult(false)(r.matches("ab"))
-      assertResult(true)(r.matches("other"))
+      assertTrue(r.matchesAtLeastOne())
+      assertFalse(r.matches("b"))
+      assertTrue(r.matches("bb"))
+      assertTrue(r.matches("cb"))
+      assertFalse(r.matches("ab"))
+      assertTrue(r.matches("other"))
     }
 
     using(Regex.compile("a(?<!a)")) { r =>
-      assertResult(false)(r.matchesAtLeastOne())
+      assertFalse(r.matchesAtLeastOne())
     }
 
     using(Regex.compile("a(?<!a)|a")) { r =>
-      assertResult(true)(r.matches("a"))
+      assertTrue(r.matches("a"))
     }
 
     using(Regex.compile("ong(?<!long)")) { r =>
-      assertResult(true)(r.matches("ong"))
+      assertTrue(r.matches("ong"))
     }
 
     using(Regex.compile("(a|b)(?<!a|b)")) { r =>
-      assertResult(false)(r.matchesAtLeastOne())
+      assertFalse(r.matchesAtLeastOne())
     }
 
     using(Regex.compile("[a-c](?<!a|b)")) { r =>
-      assertResult(true)(r.matches("c"))
+      assertTrue(r.matches("c"))
     }
 
   }

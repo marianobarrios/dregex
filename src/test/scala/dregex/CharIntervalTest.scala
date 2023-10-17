@@ -2,11 +2,13 @@ package dregex
 
 import dregex.impl.CharInterval
 import dregex.impl.tree.CharRange
-import org.scalatest.funsuite.AnyFunSuite
 import dregex.impl.tree.AbstractRange
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+
 import scala.jdk.CollectionConverters._
 
-class CharIntervalTest extends AnyFunSuite {
+class CharIntervalTest {
 
   implicit def pairToRange(pair: (Int, Int)): CharRange = {
     pair match {
@@ -20,7 +22,8 @@ class CharIntervalTest extends AnyFunSuite {
     }
   }
 
-  test("non-overlapping") {
+  @Test
+  def testNonOverlapping() = {
     val ranges = Seq[AbstractRange]((10, 20), (21, 30), (0, 100), (9, 9), (10, 11), (9, 10), (10, 12), (17, 25))
     val nonOverlapping = CharInterval.calculateNonOverlapping(ranges.asJava)
     val expected = java.util.Map.of(
@@ -60,7 +63,7 @@ class CharIntervalTest extends AnyFunSuite {
         new CharInterval(17, 20),
         new CharInterval(21, 25))
     )
-    assert(expected == nonOverlapping)
+    assertEquals(expected, nonOverlapping)
   }
 
 }

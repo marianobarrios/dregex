@@ -1,11 +1,11 @@
 package dregex
 
 import dregex.impl.Normalization
-import org.scalatest.funsuite.AnyFunSuite
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 
 import java.time.Duration
-import collection.immutable.Seq
 
 /**
   * This test generates possible regex trees, and then generates strings
@@ -13,11 +13,12 @@ import collection.immutable.Seq
   * many regex and strings as wanted. Note that this test is designed to
   * catch false negatives, but no false positives.
   */
-class AutoTest extends AnyFunSuite {
+class AutoTest  {
 
   private[this] val logger = LoggerFactory.getLogger(classOf[AutoTest])
 
-  test("generate examples") {
+  @Test
+  def testGeneratedExamples() = {
     val generator = new TreeGenerator
     var totalTrees = 0
     var totalStrings = 0
@@ -30,7 +31,7 @@ class AutoTest extends AnyFunSuite {
       totalStrings += strings.size
       logger.debug("Testing: {}, generated: {}", regexString, strings.size)
       for (string <- strings) {
-        assertResult(true)(regex.matches(string))
+        assertTrue(regex.matches(string))
       }
     }
     val elapsed = Duration.ofNanos(System.nanoTime() - start)
