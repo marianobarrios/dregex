@@ -14,27 +14,27 @@ import scala.jdk.CollectionConverters._
   */
 object StringGenerator {
 
-  def generate(regex: Node, maxAlternatives: Int, maxRepeat: Int): Seq[String] = {
+  def generate(regex: Node, maxAlternatives: Int, maxRepeat: Int): java.util.List[String] = {
     regex match {
 
       case set: CharSet =>
         val gen = for {
           range <- set.ranges.asScala.toSeq
         } yield {
-          generate(range, maxAlternatives, maxRepeat)
+          generate(range, maxAlternatives, maxRepeat).asScala
         }
-        gen.flatten
+        gen.flatten.asJava
 
       case range: AbstractRange =>
         val length = math.min(maxAlternatives, range.to - range.from + 1)
-        for {
+        (for {
           i <- 0 until length
         } yield {
           new String(Character.toChars(range.from + i))
-        }
+        }).asJava
 
       case disj: Disj =>
-        disj.values.asScala.toSeq.flatMap(v => generate(v, maxAlternatives, maxRepeat))
+        disj.values.asScala.toSeq.flatMap(v => generate(v, maxAlternatives, maxRepeat).asScala).asJava
 
       case rep: Rep =>
         import scala.util.control.Breaks._
@@ -43,34 +43,34 @@ object StringGenerator {
         val res = ArrayBuffer[String]()
         breakable {
           for (i <- rep.min to max) {
-            res ++= fixedRepeat(rep.value, maxAlternatives, maxRepeat, i)
+            res ++= fixedRepeat(rep.value, maxAlternatives, maxRepeat, i).asScala
             count += 1
             if (count >= maxRepeat)
               break()
           }
         }
-        res.toSeq
+        res.toSeq.asJava
 
       case juxt: Juxt if juxt.values.isEmpty() =>
-        Seq()
+        Seq().asJava
 
       case juxt: Juxt if juxt.values.size() == 1 =>
         generate(juxt.values.get(0), maxAlternatives, maxRepeat)
 
       case juxt: Juxt if juxt.values.size() > 0 =>
-        for {
-          left <- generate(juxt.values.get(0), maxAlternatives, maxRepeat)
-          right <- generate(new Juxt(juxt.values.subList(1, juxt.values.size() - 1)), maxAlternatives, maxRepeat)
+        (for {
+          left <- generate(juxt.values.get(0), maxAlternatives, maxRepeat).asScala
+          right <- generate(new Juxt(juxt.values.subList(1, juxt.values.size() - 1)), maxAlternatives, maxRepeat).asScala
         } yield {
           left + right
-        }
+        }).asJava
 
       case other =>
         throw new RuntimeException("Unsupported node type: " + other.getClass)
     }
   }
 
-  def fixedRepeat(value: Node, maxAlternatives: Int, maxRepeat: Int, qtty: Int): Seq[String] = {
+  def fixedRepeat(value: Node, maxAlternatives: Int, maxRepeat: Int, qtty: Int): java.util.List[String] = {
     /*
      * To avoid a too fast explosion of combinations, we limit the number of
      * alternatives and repetitions to 1 inside repetitions to all but one
@@ -78,16 +78,16 @@ object StringGenerator {
      */
     qtty match {
       case 0 =>
-        Seq()
+        Seq().asJava
       case 1 =>
         generate(value, maxAlternatives, maxRepeat)
       case n =>
-        for {
-          left <- generate(value, maxAlternatives = 1, maxRepeat = 1)
-          right <- fixedRepeat(value, maxAlternatives, maxRepeat, qtty - 1)
+        (for {
+          left <- generate(value, maxAlternatives = 1, maxRepeat = 1).asScala
+          right <- fixedRepeat(value, maxAlternatives, maxRepeat, qtty - 1).asScala
         } yield {
           left + right
-        }
+        }).asJava
     }
   }
 
