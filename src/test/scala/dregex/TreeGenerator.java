@@ -28,7 +28,7 @@ class TreeGenerator {
         new CharSet(new CharRange('d', 'f')).complement(),
         PosixCharSets.digit);
     } else {
-      return generateFixedDepth(levels - 1).flatMap(node -> {
+      return generateFixedDepth(levels - 1).flatMap(  node -> {
         var simple = Stream.of(
           new Rep(0, Optional.empty(), node),
           new Rep(1, Optional.empty(), node),
