@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'scala'
     id 'signing'
     id 'maven-publish'
 }
@@ -22,21 +21,9 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.9'
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.4.11'
 
-    // tests are in Scala
-    testImplementation 'org.scala-lang:scala-library:2.13.12'
-
     // test framework
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
-}
-
-compileScala {
-    options.compilerArgs = [
-            "-language:implicitConversions",
-            "-Xlint",
-            "-deprecation",
-            "-Xfatal-warnings"
-    ]
 }
 
 test {
