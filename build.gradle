@@ -34,7 +34,8 @@ dependencies {
 
 spotless {
     java {
-        palantirJavaFormat()
+        // remove when spotless moved to this Palantir version
+        palantirJavaFormat("2.38.0")
     }
 }
 
