@@ -18,19 +18,23 @@ import java.util.stream.IntStream;
 class StringGenerator {
 
     static List<String> generate(Node regex, int maxAlternatives, int maxRepeat) {
-        if (regex instanceof CharSet set) {
+        if (regex instanceof CharSet) {
+            var set = (CharSet) regex;
             var gen = set.ranges.stream().map(range -> generate(range, maxAlternatives, maxRepeat).stream());
             return gen.flatMap(Function.identity()).collect(Collectors.toList());
-        } else if (regex instanceof AbstractRange range) {
+        } else if (regex instanceof AbstractRange) {
+            var range = (AbstractRange) regex;
             var length = Math.min(maxAlternatives, range.to() - range.from() + 1);
             return IntStream.range(0, length)
                     .mapToObj(i -> new String(Character.toChars(range.from() + i)))
                     .collect(Collectors.toList());
-        } else if (regex instanceof Disj disj) {
+        } else if (regex instanceof Disj) {
+            var disj = (Disj) regex;
             return disj.values.stream()
                     .flatMap(v -> generate(v, maxAlternatives, maxRepeat).stream())
                     .collect(Collectors.toList());
-        } else if (regex instanceof Rep rep) {
+        } else if (regex instanceof Rep) {
+            var rep = (Rep) regex;
             int max = rep.max.orElseGet(() -> Integer.MAX_VALUE - 1);
             var count = 0;
             List<String> res = new ArrayList<>();
@@ -42,7 +46,8 @@ class StringGenerator {
                 }
             }
             return res;
-        } else if (regex instanceof Juxt juxt) {
+        } else if (regex instanceof Juxt) {
+            var juxt = (Juxt) regex;
             if (juxt.values.isEmpty()) {
                 return List.of();
             } else if (juxt.values.size() == 1) {

@@ -6,7 +6,12 @@ plugins {
 }
 
 compileJava {
-    options.compilerArgs.addAll(['-source', '11', '-target', '11', '-Xlint'])
+    sourceCompatibility = '11'
+    targetCompatibility = '11'
+}
+
+compileJava {
+    options.compilerArgs.add('-Xlint')
 }
 
 repositories {
