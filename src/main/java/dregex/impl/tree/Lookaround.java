@@ -1,6 +1,5 @@
 package dregex.impl.tree;
 
-import java.util.List;
 import java.util.Objects;
 
 public class Lookaround implements Node {
@@ -32,15 +31,25 @@ public class Lookaround implements Node {
     public String toRegex() {
         String dirStr;
         switch (dir) {
-            case Ahead: dirStr = ""; break;
-            case Behind: dirStr = "<"; break;
-            default: throw new IllegalStateException();
+            case Ahead:
+                dirStr = "";
+                break;
+            case Behind:
+                dirStr = "<";
+                break;
+            default:
+                throw new IllegalStateException();
         }
         String condStr;
         switch (cond) {
-            case Negative: condStr = "!"; break;
-            case Positive: condStr = "="; break;
-            default: throw new IllegalStateException();
+            case Negative:
+                condStr = "!";
+                break;
+            case Positive:
+                condStr = "=";
+                break;
+            default:
+                throw new IllegalStateException();
         }
         return String.format("(?%s%s%s)", dirStr, condStr, value.toRegex());
     }
@@ -54,5 +63,4 @@ public class Lookaround implements Node {
     public int precedence() {
         return 1;
     }
-
 }

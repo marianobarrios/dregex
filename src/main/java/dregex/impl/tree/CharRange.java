@@ -6,8 +6,7 @@ public final class CharRange extends AbstractRange {
     public final int to;
 
     public CharRange(int from, int to) {
-        if (from > to)
-            throw new IllegalArgumentException("'from' value cannot be larger than 'to'");
+        if (from > to) throw new IllegalArgumentException("'from' value cannot be larger than 'to'");
         this.from = from;
         this.to = to;
     }
@@ -41,5 +40,4 @@ public final class CharRange extends AbstractRange {
     public String toString() {
         return String.format("%d-%d", from, to);
     }
-
 }

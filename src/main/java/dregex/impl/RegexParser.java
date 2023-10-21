@@ -1,22 +1,21 @@
 package dregex.impl;
 
+import static org.jparsec.Parsers.*;
+import static org.jparsec.pattern.Patterns.*;
+import static org.jparsec.pattern.Patterns.isChar;
+
 import dregex.InvalidRegexException;
 import dregex.ParsedRegex;
 import dregex.impl.database.*;
 import dregex.impl.tree.*;
-import org.jparsec.Parser;
-import org.jparsec.error.ParserException;
-import org.jparsec.pattern.CharPredicate;
-import org.jparsec.pattern.CharPredicates;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.jparsec.pattern.Patterns.*;
-import static org.jparsec.Parsers.*;
-import static org.jparsec.pattern.Patterns.isChar;
+import org.jparsec.Parser;
+import org.jparsec.error.ParserException;
+import org.jparsec.pattern.CharPredicate;
+import org.jparsec.pattern.CharPredicates;
 
 public class RegexParser {
 
@@ -33,47 +32,46 @@ public class RegexParser {
     }
 
     public final CharPredicate IS_OCTAL_DIGIT = new CharPredicate() {
-        @Override public boolean isChar(char c) {
-            return c>='0' && c <= '7';
+        @Override
+        public boolean isChar(char c) {
+            return c >= '0' && c <= '7';
         }
-        @Override public String toString() {
+
+        @Override
+        public String toString() {
             return "[0-7]";
         }
     };
 
     private final Parser<Integer> backslash = litChar('\\');
 
-    private final Parser<Integer> hexNumber = many1(CharPredicates.IS_HEX_DIGIT)
-            .toScanner("hex number").source()
-            .map(s -> Integer.parseInt(s, 16));
+    private final Parser<Integer> hexNumber =
+            many1(CharPredicates.IS_HEX_DIGIT).toScanner("hex number").source().map(s -> Integer.parseInt(s, 16));
 
     private final Parser<Character> hexNumber4 = repeat(4, CharPredicates.IS_HEX_DIGIT)
-            .toScanner("hex number").source()
+            .toScanner("hex number")
+            .source()
             .map(s -> (char) Integer.parseInt(s, 16));
 
     private final Parser<Character> hexNumber2 = repeat(2, CharPredicates.IS_HEX_DIGIT)
-            .toScanner("hex number").source()
+            .toScanner("hex number")
+            .source()
             .map(s -> (char) Integer.parseInt(s, 16));
 
-    private final Parser<Integer> octalNumber = times(1, 3, IS_OCTAL_DIGIT)
-            .toScanner("octal number").source()
-            .map(s -> Integer.parseInt(s, 8));
+    private final Parser<Integer> octalNumber =
+            times(1, 3, IS_OCTAL_DIGIT).toScanner("octal number").source().map(s -> Integer.parseInt(s, 8));
 
-    private final Parser<Long> decimalNumber = many1(CharPredicates.IS_DIGIT)
-            .toScanner("decimal number").source()
-            .map(s -> Long.parseLong(s));
+    private final Parser<Long> decimalNumber =
+            many1(CharPredicates.IS_DIGIT).toScanner("decimal number").source().map(s -> Long.parseLong(s));
 
     private final Parser<Lit> controlEscape = sequence(
-            backslash,
-            litChar('c'),
-            isChar(CharPredicates.ALWAYS).toScanner(""))
+                    backslash, litChar('c'), isChar(CharPredicates.ALWAYS).toScanner(""))
             .map(x -> {
                 throw new InvalidRegexException("Unsupported feature: control escape");
             });
 
     private final Parser<Lit> backReference = sequence(
-            backslash,
-            many1(CharPredicates.IS_DIGIT).toScanner(""))
+                    backslash, many1(CharPredicates.IS_DIGIT).toScanner(""))
             .map(x -> {
                 throw new InvalidRegexException("Unsupported feature: back reference");
             });
@@ -84,20 +82,30 @@ public class RegexParser {
                 throw new InvalidRegexException("Unsupported feature: anchor");
             });
 
-    private final Parser<Lit> specialEscape =
-            sequence(backslash, regex( "[^dwsDWSuxcpR0123456789]").toScanner("").source())
+    private final Parser<Lit> specialEscape = sequence(
+                    backslash, regex("[^dwsDWSuxcpR0123456789]").toScanner("").source())
             .map(code -> {
                 switch (code) {
-                    case "n": return new Lit('\n');
-                    case "r": return new Lit('\r');
-                    case "t": return new Lit('\t');
-                    case "f": return new Lit('\f');
-                    case "b": return new Lit('\b');
-                    case "v": return new Lit(0xB); // vertical tab
-                    case "a": return new Lit(0x7); // bell
-                    case "e": return new Lit(0x1B); // escape
-                    case "B": return new Lit('\\');
-                    default: return Lit.fromSingletonString(code) ;// remaining escaped characters stand for themselves
+                    case "n":
+                        return new Lit('\n');
+                    case "r":
+                        return new Lit('\r');
+                    case "t":
+                        return new Lit('\t');
+                    case "f":
+                        return new Lit('\f');
+                    case "b":
+                        return new Lit('\b');
+                    case "v":
+                        return new Lit(0xB); // vertical tab
+                    case "a":
+                        return new Lit(0x7); // bell
+                    case "e":
+                        return new Lit(0x1B); // escape
+                    case "B":
+                        return new Lit('\\');
+                    default:
+                        return Lit.fromSingletonString(code); // remaining escaped characters stand for themselves
                 }
             });
 
@@ -119,13 +127,15 @@ public class RegexParser {
         }
     });
 
-    private final Parser<Lit> hexEscape = sequence(backslash, litChar('x'), hexNumber2).map(ch -> new Lit(ch));
+    private final Parser<Lit> hexEscape =
+            sequence(backslash, litChar('x'), hexNumber2).map(ch -> new Lit(ch));
 
-    private final Parser<Lit> longHexEscape = sequence(backslash, litChar('x'), hexNumber.between(litChar('{'), litChar('}')))
+    private final Parser<Lit> longHexEscape = sequence(
+                    backslash, litChar('x'), hexNumber.between(litChar('{'), litChar('}')))
             .map(ch -> new Lit(ch));
 
-    private final Parser<Lit> octalEscape = sequence(backslash, litChar('0'), octalNumber)
-            .map(ch -> new Lit(ch));
+    private final Parser<Lit> octalEscape =
+            sequence(backslash, litChar('0'), octalNumber).map(ch -> new Lit(ch));
 
     /**
      * Order between Unicode escapes is important
@@ -145,14 +155,15 @@ public class RegexParser {
             anyEscape,
             regex("[^\\\\.|()\\[\\]+*?]").toScanner("").source().map(ch -> Lit.fromSingletonString(ch)));
 
-    private final Parser<Lit> characterClassLit = or(
-            anyEscape,
-            regex("[^\\\\^\\]-]").toScanner("").source().map(ch -> Lit.fromSingletonString(ch)));
+    private final Parser<Lit> characterClassLit =
+            or(anyEscape, regex("[^\\\\^\\]-]").toScanner("").source().map(ch -> Lit.fromSingletonString(ch)));
 
     private final Parser<CharSet> singleCharacterClassLit = characterClassLit.map(lit -> new CharSet(lit));
 
     private final Parser<CharSet> charClassRange = sequence(
-            characterClassLit, litChar('-'), characterClassLit,
+            characterClassLit,
+            litChar('-'),
+            characterClassLit,
             (start, dash, end) -> new CharSet(new CharRange(start.codePoint, end.codePoint)));
 
     private final Parser<CharSet> specialCharSetByName = sequence(
@@ -162,7 +173,8 @@ public class RegexParser {
             regex("[a-z_]+").toScanner("").source(),
             litChar('='),
             regex("[0-9a-zA-Z_ -]+").toScanner("").source(),
-            litChar('}'), (bl, p, op, propName, eq, propValue, cl) -> {
+            litChar('}'),
+            (bl, p, op, propName, eq, propValue, cl) -> {
                 switch (propName) {
                     case "block":
                     case "blk":
@@ -201,7 +213,8 @@ public class RegexParser {
             litChar('{'),
             regex("Is").toScanner("").source(),
             regex("[0-9a-zA-Z_ -]+").toScanner("").source(),
-            litChar('}'), (bl, p, op, is, propValue, cl) -> {
+            litChar('}'),
+            (bl, p, op, is, propValue, cl) -> {
                 var upperCaseValue = propValue.toUpperCase();
                 var script = UnicodeScripts.chatSets.get(upperCaseValue);
                 if (script != null) {
@@ -215,7 +228,8 @@ public class RegexParser {
                 if (ubp != null) {
                     return ubp;
                 }
-                throw new InvalidRegexException("Invalid Unicode script, general category or binary property: " + propValue);
+                throw new InvalidRegexException(
+                        "Invalid Unicode script, general category or binary property: " + propValue);
             });
 
     private final Parser<CharSet> specialCharSetWithIn = sequence(
@@ -224,7 +238,8 @@ public class RegexParser {
             litChar('{'),
             regex("In").toScanner("").source(),
             regex("[0-9a-zA-Z_ -]+").toScanner("").source(),
-            litChar('}'), (bl, p, op, in, blockName, cl) -> {
+            litChar('}'),
+            (bl, p, op, in, blockName, cl) -> {
                 var block = UnicodeBlocks.charSets.get(UnicodeDatabaseReader.canonicalizeBlockName(blockName));
                 if (block == null) {
                     throw new InvalidRegexException("Invalid Unicode block: " + blockName);
@@ -240,16 +255,17 @@ public class RegexParser {
             regex("[0-9a-zA-Z_ -]+").toScanner("").source(),
             litChar('}'),
             (bl, p, op, java, charClass, cl) -> {
-        var ret = JavaProperties.charSets.get("java" + charClass);
-        if (ret == null) {
-            var validOptions = String.join(",", JavaProperties.charSets.keySet());
-            throw new InvalidRegexException(String.format(
-                    "invalid Java character class: %1$s " +
-                    "(note: for such a class to be valid, a method java.lang.Character.is%1$s() must exist) " +
-                    "(valid options: %2$s)", charClass, validOptions));
-        }
-        return ret;
-    });
+                var ret = JavaProperties.charSets.get("java" + charClass);
+                if (ret == null) {
+                    var validOptions = String.join(",", JavaProperties.charSets.keySet());
+                    throw new InvalidRegexException(String.format(
+                            "invalid Java character class: %1$s "
+                                    + "(note: for such a class to be valid, a method java.lang.Character.is%1$s() must exist) "
+                                    + "(valid options: %2$s)",
+                            charClass, validOptions));
+                }
+                return ret;
+            });
 
     private Parser<CharSet> specialCharSetImplicit() {
         return sequence(
@@ -257,7 +273,8 @@ public class RegexParser {
                 litChar('p'),
                 litChar('{'),
                 regex("[0-9a-zA-Z_ -]+").toScanner("").source(),
-                litChar('}'), (bl, p, op, name, cl) -> {
+                litChar('}'),
+                (bl, p, op, name, cl) -> {
                     Map<String, CharSet> effPosixClasses;
                     if (unicodeClasses) {
                         effPosixClasses = UnicodePosixCharSets.charSets;
@@ -275,7 +292,6 @@ public class RegexParser {
                     throw new InvalidRegexException("Invalid POSIX character class: " + name);
                 });
     }
-
 
     private Parser<CharSet> shorthandCharSetDigit() {
         return sequence(backslash, litChar('d')).map(x -> {
@@ -357,10 +373,7 @@ public class RegexParser {
     }
 
     private Parser<CharSet> charClassAtom() {
-        return or(charClassRange,
-                singleCharacterClassLit,
-                shorthandCharSet(),
-                specialCharSet());
+        return or(charClassRange, singleCharacterClassLit, shorthandCharSet(), specialCharSet());
     }
 
     private final Parser<CharSet> charClass = sequence(
@@ -375,21 +388,19 @@ public class RegexParser {
                 if (leftDash.isPresent() || rightDash.isPresent()) {
                     chars.add(new CharSet(new Lit('-')));
                 }
-                var set = new CharSet(chars.stream().flatMap(x -> x.ranges.stream()).collect(Collectors.toList()));
+                var set = new CharSet(
+                        chars.stream().flatMap(x -> x.ranges.stream()).collect(Collectors.toList()));
                 if (negated.isPresent()) {
                     return set.complement();
                 } else {
                     return set;
                 }
-        });
+            });
 
     // There is the special case of a character class with only one character: the dash. This is valid, but
     // not easily parsed by the general constructs.
-    private final Parser<CharSet> dashClass = sequence(
-            litChar('['),
-            litChar('^').asOptional(),
-            litChar('-'),
-            litChar(']'), (op, negated, dash, cl) -> {
+    private final Parser<CharSet> dashClass =
+            sequence(litChar('['), litChar('^').asOptional(), litChar('-'), litChar(']'), (op, negated, dash, cl) -> {
                 var set = new CharSet(new Lit('-'));
                 if (negated.isPresent()) {
                     return set.complement();
@@ -399,31 +410,36 @@ public class RegexParser {
             });
 
     private final Parser<Juxt> quotedLiteral = between(
-            sequence(backslash, litChar('Q')),
-            regex(".").toScanner("").source().until(sequence(backslash, litChar('E'))),
-            sequence(backslash, litChar('E'))).map(
-            literals -> {
-                return new Juxt(literals.stream().map(ch -> new Lit(ch.codePointAt(0))).collect(Collectors.toList()));
+                    sequence(backslash, litChar('Q')),
+                    regex(".").toScanner("").source().until(sequence(backslash, litChar('E'))),
+                    sequence(backslash, litChar('E')))
+            .map(literals -> {
+                return new Juxt(
+                        literals.stream().map(ch -> new Lit(ch.codePointAt(0))).collect(Collectors.toList()));
             });
 
-    private final Parser<Disj> unicodeLineBreak = sequence(backslash, litChar('R')).map(x -> {
-        return new Disj(
-                new Juxt(new Lit(0xD), new Lit(0xA)),
-                new Lit(0xA), new Lit(0xB), new Lit(0xC), new Lit(0xD),
-                new Lit(0x85), new Lit(0x2028), new Lit(0x2029));
-        });
+    private final Parser<Disj> unicodeLineBreak = sequence(backslash, litChar('R'))
+            .map(x -> {
+                return new Disj(
+                        new Juxt(new Lit(0xD), new Lit(0xA)),
+                        new Lit(0xA),
+                        new Lit(0xB),
+                        new Lit(0xC),
+                        new Lit(0xD),
+                        new Lit(0x85),
+                        new Lit(0x2028),
+                        new Lit(0x2029));
+            });
 
     private final Parser.Reference<Node> regexRef = Parser.newReference();
 
     private final Parser<Node> group = sequence(
             litChar('('),
-            tuple(
-                    litChar('?'),
-                    litChar('<').asOptional(),
-                    or(litChar(':'), litChar('='), litChar('!'))
-            ).asOptional(),
+            tuple(litChar('?'), litChar('<').asOptional(), or(litChar(':'), litChar('='), litChar('!')))
+                    .asOptional(),
             regexRef.lazy(),
-            litChar(')'), (paren1, optModifiers, value, paren2) -> {
+            litChar(')'),
+            (paren1, optModifiers, value, paren2) -> {
                 if (optModifiers.isEmpty()) {
                     // Naked parenthesis
                     return new PositionalCaptureGroup(value);
@@ -471,12 +487,8 @@ public class RegexParser {
                 case All:
                     return Wildcard.instance;
                 case JavaLines:
-                    return new CharSet(
-                            new Lit('\n'),
-                            new Lit('\r'),
-                            new Lit(0x85),
-                            new Lit(0x2028),
-                            new Lit(0x2829)).complement();
+                    return new CharSet(new Lit('\n'), new Lit('\r'), new Lit(0x85), new Lit(0x2028), new Lit(0x2829))
+                            .complement();
                 case UnixLines:
                     return new CharSet(new Lit('\n')).complement();
                 default:
@@ -497,18 +509,24 @@ public class RegexParser {
             group,
             namedGroup));
 
-    private final Parser<Quantification> predefQuantifier = or(litChar('+'), litChar('*'), litChar('?')).map(ch -> {
-        switch (ch.intValue()) {
-            case '+': return new Quantification(1);
-            case '*': return new Quantification(0);
-            case '?': return new Quantification(0, 1);
-            default: throw new IllegalArgumentException();
-        }
-    });
+    private final Parser<Quantification> predefQuantifier = or(litChar('+'), litChar('*'), litChar('?'))
+            .map(ch -> {
+                switch (ch.intValue()) {
+                    case '+':
+                        return new Quantification(1);
+                    case '*':
+                        return new Quantification(0);
+                    case '?':
+                        return new Quantification(0, 1);
+                    default:
+                        throw new IllegalArgumentException();
+                }
+            });
 
     private final Parser<Quantification> generalQuantifier = sequence(
             litChar('{'),
-            decimalNumber, sequence(litChar(','), decimalNumber.asOptional()).asOptional(),
+            decimalNumber,
+            sequence(litChar(','), decimalNumber.asOptional()).asOptional(),
             litChar('}'),
             (br1, minVal, maxVal, br2) -> {
                 if (maxVal.isPresent()) {
@@ -516,10 +534,8 @@ public class RegexParser {
                     if (max.isPresent()) {
                         var maxVal2 = max.orElseThrow();
                         // Quantifiers of the for {min,max}
-                        if (minVal <= maxVal2)
-                           return new Quantification(minVal.intValue(), maxVal2.intValue());
-                        else
-                            throw new InvalidRegexException("invalid range in quantifier");
+                        if (minVal <= maxVal2) return new Quantification(minVal.intValue(), maxVal2.intValue());
+                        else throw new InvalidRegexException("invalid range in quantifier");
                     } else {
                         // Quantifiers of the form {min,}
                         return new Quantification(minVal.intValue());
@@ -542,11 +558,13 @@ public class RegexParser {
                 throw new InvalidRegexException("possessive quantifiers are not supported");
             });
 
-    private final Parser<Rep> quantifiedBranch = sequence(regexAtom, quantifier,
-            (atom, q) -> new Rep(q.min, q.max, atom));
+    private final Parser<Rep> quantifiedBranch =
+            sequence(regexAtom, quantifier, (atom, q) -> new Rep(q.min, q.max, atom));
 
-    private final Parser<Node> branch =
-            or(lazyQuantifiedBranch, possesivelyQuantifiedBranch, quantifiedBranch, regexAtom).many1().map(parts -> {
+    private final Parser<Node> branch = or(
+                    lazyQuantifiedBranch, possesivelyQuantifiedBranch, quantifiedBranch, regexAtom)
+            .many1()
+            .map(parts -> {
                 if (parts.isEmpty()) {
                     throw new AssertionError();
                 }
@@ -559,8 +577,8 @@ public class RegexParser {
 
     private final Parser<Node> emptyRegex = regex("").toScanner("").map(x -> new Juxt(List.of()));
 
-    private final Parser<Node> nonEmptyRegex = sequence(
-            branch, sequence(litChar('|'), regexRef.lazy()).asOptional(), (left, optRight) -> {
+    private final Parser<Node> nonEmptyRegex =
+            sequence(branch, sequence(litChar('|'), regexRef.lazy()).asOptional(), (left, optRight) -> {
                 if (optRight.isEmpty()) {
                     return left;
                 } else {
@@ -569,6 +587,7 @@ public class RegexParser {
             });
 
     private final Parser<Node> regex = or(nonEmptyRegex, emptyRegex);
+
     {
         regexRef.set(regex);
     }
@@ -577,17 +596,18 @@ public class RegexParser {
 
     private static final java.util.regex.Pattern spacePattern = java.util.regex.Pattern.compile("((?<!\\\\)\\s)+");
 
-    private static final java.util.regex.Pattern embeddedFlagPattern = java.util.regex.Pattern.compile("\\(\\?([a-z]*)\\)");
+    private static final java.util.regex.Pattern embeddedFlagPattern =
+            java.util.regex.Pattern.compile("\\(\\?([a-z]*)\\)");
 
     public static class Flags {
-            public DotMatch dotMatch  = DotMatch.All;
-            public boolean literal = false;
-            public boolean comments = false;
-            public boolean unicodeClasses = false;
-            public boolean caseInsensitive = false;
-            public boolean unicodeCase = false;
-            public boolean canonicalEq = false;
-            public boolean multiline = false;
+        public DotMatch dotMatch = DotMatch.All;
+        public boolean literal = false;
+        public boolean comments = false;
+        public boolean unicodeClasses = false;
+        public boolean caseInsensitive = false;
+        public boolean unicodeCase = false;
+        public boolean canonicalEq = false;
+        public boolean multiline = false;
     }
 
     public static ParsedRegex parse(String regex, Flags flags) {
@@ -601,7 +621,7 @@ public class RegexParser {
                 if (matcher.start() > 0) {
                     throw new InvalidRegexException("embedded flag are only valid at the beginning of the pattern");
                 }
-                for (int i = 0; i < matcher.group(1).length(); i++){
+                for (int i = 0; i < matcher.group(1).length(); i++) {
                     char flag = matcher.group(1).charAt(i);
                     switch (flag) {
                         case 'x':
@@ -625,13 +645,15 @@ public class RegexParser {
                         case 'm':
                             flags.multiline = true;
                             break;
-                        default: throw new InvalidRegexException(String.format("invalid embedded flag: %s", flag));
+                        default:
+                            throw new InvalidRegexException(String.format("invalid embedded flag: %s", flag));
                     }
                     effRegex = effRegex.substring(matcher.end());
                 }
             }
             if (flags.multiline) {
-                throw new InvalidRegexException("multiline flag is not supported; this class always works in multiline mode");
+                throw new InvalidRegexException(
+                        "multiline flag is not supported; this class always works in multiline mode");
             }
 
             if (flags.comments) {
@@ -682,5 +704,4 @@ public class RegexParser {
             throw new InvalidRegexException(e.getMessage());
         }
     }
-
 }

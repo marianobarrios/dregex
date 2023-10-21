@@ -1,7 +1,6 @@
 package dregex.impl.tree;
 
 import dregex.impl.RangeOps;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -38,7 +37,8 @@ public class CharSet implements Node {
 
     @Override
     public String toRegex() {
-        return String.format("[%s]", ranges.stream().map(r -> r.toCharClassLit()).collect(Collectors.joining()));
+        return String.format(
+                "[%s]", ranges.stream().map(r -> r.toCharClassLit()).collect(Collectors.joining()));
     }
 
     @Override
@@ -51,13 +51,16 @@ public class CharSet implements Node {
         return 1;
     }
 
-    @Override public String toString() {
-        return String.format("%s(%s)", getClass().getSimpleName(),
+    @Override
+    public String toString() {
+        return String.format(
+                "%s(%s)",
+                getClass().getSimpleName(),
                 ranges.stream().map(r -> r.toString()).collect(Collectors.joining(", ")));
     }
 
     public static CharSet fromCharSets(CharSet... charSets) {
-        return new CharSet(Arrays.stream(charSets).flatMap(x -> x.ranges.stream()).collect(Collectors.toList()));
+        return new CharSet(
+                Arrays.stream(charSets).flatMap(x -> x.ranges.stream()).collect(Collectors.toList()));
     }
-
 }

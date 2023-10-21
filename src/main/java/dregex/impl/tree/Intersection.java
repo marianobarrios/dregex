@@ -10,6 +10,4 @@ public class Intersection extends Operation {
     public Intersection canonical() {
         return new Intersection(left.canonical(), right.canonical());
     }
-
 }
-

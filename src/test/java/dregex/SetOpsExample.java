@@ -27,5 +27,4 @@ class SetOpsExample {
             System.out.println(lower.matches("Aaa")); // false
         }
     }
-
 }

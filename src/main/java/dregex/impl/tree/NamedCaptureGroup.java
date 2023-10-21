@@ -9,7 +9,8 @@ public class NamedCaptureGroup extends CaptureGroup {
         this.name = name;
     }
 
-    @Override public String toRegex () {
+    @Override
+    public String toRegex() {
         return String.format("(?<%s)", value.toRegex());
     }
 }

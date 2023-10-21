@@ -1,14 +1,12 @@
 package dregex;
 
+import dregex.impl.*;
+import java.time.Duration;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import dregex.impl.*;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.time.Duration;
-import java.util.stream.Collectors;
 
 /**
  * A regular expression, ready to be tested against strings, or to take part in an operation against another.
@@ -70,7 +68,8 @@ public abstract class Regex {
     public Regex intersect(Regex other) {
         checkUniverse(other);
         var start = System.nanoTime();
-        var ret = new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.doIntersect(this.dfa, other.dfa)), universe);
+        var ret = new SynteticRegex(
+                DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.doIntersect(this.dfa, other.dfa)), universe);
         var time = Duration.ofNanos(System.nanoTime() - start);
         logger.trace("{} and {} intersected in {}", this, other, time);
         return ret;
@@ -84,7 +83,8 @@ public abstract class Regex {
     public Regex diff(Regex other) {
         var start = System.nanoTime();
         checkUniverse(other);
-        var ret = new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.diff(this.dfa, other.dfa)), universe);
+        var ret = new SynteticRegex(
+                DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.diff(this.dfa, other.dfa)), universe);
         var time = Duration.ofNanos(System.nanoTime() - start);
         logger.trace("{} and {} diffed in {}", this, other, time);
         return ret;
@@ -98,7 +98,8 @@ public abstract class Regex {
     public Regex union(Regex other) {
         var start = System.nanoTime();
         checkUniverse(other);
-        var ret = new SynteticRegex(DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.union(this.dfa, other.dfa)), universe);
+        var ret = new SynteticRegex(
+                DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.union(this.dfa, other.dfa)), universe);
         var time = Duration.ofNanos(System.nanoTime() - start);
         logger.trace("{} and {} unioned in {}", this, other, time);
         return ret;
@@ -222,7 +223,8 @@ public abstract class Regex {
     public static CompiledRegex compile(String regex, int flags) {
         var parsedRegex = parse(regex, flags);
         var start = System.nanoTime();
-        var compiled = new CompiledRegex(regex, parsedRegex.getTree(), new Universe(List.of(parsedRegex.getTree()), parsedRegex.getNorm()));
+        var compiled = new CompiledRegex(
+                regex, parsedRegex.getTree(), new Universe(List.of(parsedRegex.getTree()), parsedRegex.getNorm()));
         var time = Duration.ofNanos(System.nanoTime() - start);
         logger.trace("{} compiled in {}", compiled, time);
         return compiled;
@@ -254,7 +256,9 @@ public abstract class Regex {
      */
     public static List<CompiledRegex> compile(List<String> regexes, int flags) {
         var parsedRegexes = parse(regexes, flags);
-        var universe = new Universe(parsedRegexes.stream().map(r -> r.getTree()).collect(Collectors.toList()), parsedRegexes.get(0).getNorm());
+        var universe = new Universe(
+                parsedRegexes.stream().map(r -> r.getTree()).collect(Collectors.toList()),
+                parsedRegexes.get(0).getNorm());
         return parsedRegexes.stream().map(r -> compileParsed(r, universe)).collect(Collectors.toList());
     }
 
@@ -270,5 +274,4 @@ public abstract class Regex {
     public static Regex nullRegex(Universe u) {
         return new SynteticRegex(Dfa.nothingDfa, u);
     }
-
 }

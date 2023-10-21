@@ -4,7 +4,6 @@ import dregex.impl.CharInterval;
 import dregex.impl.Normalization;
 import dregex.impl.Normalizer;
 import dregex.impl.tree.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

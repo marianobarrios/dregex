@@ -14,5 +14,4 @@ public class Util {
         ret.addAll(right);
         return ret;
     }
-
 }

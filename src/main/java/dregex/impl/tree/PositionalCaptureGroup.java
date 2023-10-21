@@ -6,7 +6,8 @@ public class PositionalCaptureGroup extends CaptureGroup {
         super(value);
     }
 
-    @Override public String toRegex () {
+    @Override
+    public String toRegex() {
         return String.format("(%s)", value.toRegex());
     }
 }

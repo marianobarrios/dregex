@@ -8,6 +8,7 @@ import java.util.Objects;
 public abstract class AbstractRange implements Node {
 
     public abstract int from();
+
     public abstract int to();
 
     @Override

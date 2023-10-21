@@ -18,12 +18,14 @@ public class Juxt implements Node {
         this.values = Arrays.asList(values);
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return String.format("Juxt(%s)", values.stream().map(Object::toString).collect(Collectors.joining(",")));
     }
 
-    @Override public Node canonical() {
-      return new Juxt(flattenValues(values).map(v -> v.canonical()).collect(Collectors.toList()));
+    @Override
+    public Node canonical() {
+        return new Juxt(flattenValues(values).map(v -> v.canonical()).collect(Collectors.toList()));
     }
 
     private Stream<Node> flattenValues(List<? extends Node> values) {
@@ -36,7 +38,8 @@ public class Juxt implements Node {
         });
     }
 
-    @Override public String toRegex() {
+    @Override
+    public String toRegex() {
         StringBuilder ret = new StringBuilder();
         for (var value : values) {
             if (value.precedence() > this.precedence()) {
@@ -48,7 +51,8 @@ public class Juxt implements Node {
         return ret.toString();
     }
 
-    @Override public int precedence() {
+    @Override
+    public int precedence() {
         return 3;
     }
 

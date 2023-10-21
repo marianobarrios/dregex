@@ -28,8 +28,7 @@ public class JavaProperties {
             Map.entry("javaSpaceChar", Character::isSpaceChar),
             Map.entry("javaWhitespace", Character::isWhitespace),
             Map.entry("javaISOControl", Character::isISOControl),
-            Map.entry("javaMirrored", Character::isMirrored)
-    );
+            Map.entry("javaMirrored", Character::isMirrored));
 
     public static final Map<String, CharSet> charSets;
 
@@ -58,5 +57,4 @@ public class JavaProperties {
             charSets.put(prop, new CharSet(ranges));
         }
     }
-
 }

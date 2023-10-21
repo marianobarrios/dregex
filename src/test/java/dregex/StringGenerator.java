@@ -1,12 +1,11 @@
 package dregex;
 
-import dregex.impl.tree.Node;
 import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
 import dregex.impl.tree.Disj;
-import dregex.impl.tree.Rep;
 import dregex.impl.tree.Juxt;
-
+import dregex.impl.tree.Node;
+import dregex.impl.tree.Rep;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -24,9 +23,13 @@ class StringGenerator {
             return gen.flatMap(Function.identity()).collect(Collectors.toList());
         } else if (regex instanceof AbstractRange range) {
             var length = Math.min(maxAlternatives, range.to() - range.from() + 1);
-            return IntStream.range(0, length).mapToObj(i -> new String(Character.toChars(range.from() + i))).collect(Collectors.toList());
+            return IntStream.range(0, length)
+                    .mapToObj(i -> new String(Character.toChars(range.from() + i)))
+                    .collect(Collectors.toList());
         } else if (regex instanceof Disj disj) {
-            return disj.values.stream().flatMap(v -> generate(v, maxAlternatives, maxRepeat).stream()).collect(Collectors.toList());
+            return disj.values.stream()
+                    .flatMap(v -> generate(v, maxAlternatives, maxRepeat).stream())
+                    .collect(Collectors.toList());
         } else if (regex instanceof Rep rep) {
             int max = rep.max.orElseGet(() -> Integer.MAX_VALUE - 1);
             var count = 0;
@@ -45,11 +48,15 @@ class StringGenerator {
             } else if (juxt.values.size() == 1) {
                 return generate(juxt.values.get(0), maxAlternatives, maxRepeat);
             } else {
-                return generate(juxt.values.get(0), maxAlternatives, maxRepeat).stream().flatMap(left ->
-                        generate(new Juxt(juxt.values.subList(1, juxt.values.size() - 1)), maxAlternatives, maxRepeat).stream().map(right ->
-                                left + right
-                        )
-                ).collect(Collectors.toList());
+                return generate(juxt.values.get(0), maxAlternatives, maxRepeat).stream()
+                        .flatMap(
+                                left -> generate(
+                                                new Juxt(juxt.values.subList(1, juxt.values.size() - 1)),
+                                                maxAlternatives,
+                                                maxRepeat)
+                                        .stream()
+                                        .map(right -> left + right))
+                        .collect(Collectors.toList());
             }
         } else {
             throw new RuntimeException("Unsupported node type: " + regex.getClass());
@@ -67,12 +74,10 @@ class StringGenerator {
         } else if (qtty == 1) {
             return generate(value, maxAlternatives, maxRepeat);
         } else {
-            return generate(value, 1, 1).stream().flatMap(left ->
-                    fixedRepeat(value, maxAlternatives, maxRepeat, qtty - 1).stream().map(right ->
-                            left + right
-                    )
-            ).collect(Collectors.toList());
+            return generate(value, 1, 1).stream()
+                    .flatMap(left -> fixedRepeat(value, maxAlternatives, maxRepeat, qtty - 1).stream()
+                            .map(right -> left + right))
+                    .collect(Collectors.toList());
         }
     }
-
 }

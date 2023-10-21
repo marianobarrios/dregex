@@ -1,7 +1,6 @@
 package dregex.impl;
 
 import dregex.impl.tree.AbstractRange;
-
 import java.util.*;
 
 public final class CharInterval implements AtomPart, Comparable<CharInterval> {

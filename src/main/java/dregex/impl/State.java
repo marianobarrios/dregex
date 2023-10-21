@@ -1,4 +1,3 @@
 package dregex.impl;
 
-public interface State {
-}
+public interface State {}

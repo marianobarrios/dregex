@@ -106,5 +106,4 @@ public class UnicodeDatabaseReader {
     public static String canonicalizeBlockName(String name) {
         return name.replaceAll("[-_\\s]+", "").toUpperCase();
     }
-
 }

@@ -1,5 +1,7 @@
 package dregex.impl;
 
 public enum DotMatch {
-    All, JavaLines, UnixLines;
+    All,
+    JavaLines,
+    UnixLines;
 }

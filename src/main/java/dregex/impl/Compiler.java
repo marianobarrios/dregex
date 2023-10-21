@@ -1,9 +1,7 @@
 package dregex.impl;
 
-
 import dregex.InvalidRegexException;
 import dregex.impl.tree.*;
-
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -57,7 +55,8 @@ public class Compiler {
             addTransitionsFromRep(transitions, rep, from, to);
         } else if (node instanceof Intersection) {
             var intersection = (Intersection) node;
-            addTransitionsFromOperation(transitions, DfaAlgorithms::doIntersect, intersection.left, intersection.right, from, to);
+            addTransitionsFromOperation(
+                    transitions, DfaAlgorithms::doIntersect, intersection.left, intersection.right, from, to);
         } else if (node instanceof Union) {
             var union = (Union) node;
             addTransitionsFromOperation(transitions, DfaAlgorithms::union, union.left, union.right, from, to);
@@ -146,7 +145,8 @@ public class Compiler {
         }
     }
 
-    public void addTransitionsFromJuxtNoLookaround(List<Nfa.Transition> transitions, Juxt juxt, SimpleState from, SimpleState to) {
+    public void addTransitionsFromJuxtNoLookaround(
+            List<Nfa.Transition> transitions, Juxt juxt, SimpleState from, SimpleState to) {
         if (juxt.values.isEmpty()) {
             transitions.add(new Nfa.Transition(from, to, Epsilon.instance));
         } else if (juxt.values.size() == 1) {
@@ -163,7 +163,13 @@ public class Compiler {
         }
     }
 
-    private void addTransitionsFromOperation(List<Nfa.Transition> transitions, BiFunction<Dfa, Dfa, Dfa> operation, Node left, Node right, SimpleState from, SimpleState to) {
+    private void addTransitionsFromOperation(
+            List<Nfa.Transition> transitions,
+            BiFunction<Dfa, Dfa, Dfa> operation,
+            Node left,
+            Node right,
+            SimpleState from,
+            SimpleState to) {
         var leftDfa = fromTree(left);
         var rightDfa = fromTree(right);
         var result = DfaAlgorithms.toNfa(operation.apply(leftDfa, rightDfa));
@@ -174,7 +180,8 @@ public class Compiler {
         transitions.add(new Nfa.Transition(from, result.initial, Epsilon.instance));
     }
 
-    private void addTransitionsFromCaptureGroup(List<Nfa.Transition> transitions, Node value, SimpleState from, SimpleState to) {
+    private void addTransitionsFromCaptureGroup(
+            List<Nfa.Transition> transitions, Node value, SimpleState from, SimpleState to) {
         var int1 = new SimpleState();
         var int2 = new SimpleState();
         transitions.add(new Nfa.Transition(from, int1, Epsilon.instance));
@@ -256,7 +263,6 @@ public class Compiler {
         } else {
             throw new IllegalArgumentException();
         }
-
     }
 
     private void addTransitionsFromDisj(List<Nfa.Transition> transitions, Disj disj, SimpleState from, SimpleState to) {
@@ -264,5 +270,4 @@ public class Compiler {
             addTransitionsFromNode(transitions, part, from, to);
         }
     }
-
 }

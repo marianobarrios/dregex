@@ -2,7 +2,6 @@ package dregex.extra;
 
 import dregex.impl.Epsilon;
 import dregex.impl.Nfa;
-
 import java.util.stream.Collectors;
 
 class DotFormatter {
@@ -30,10 +29,11 @@ class DotFormatter {
             } else {
                 weight = 2;
             }
-            return String.format("\"%s\" -> \"%s\" [label=%s, weight=%s];", transition.from, transition.to, transition.ch, weight);
+            return String.format(
+                    "\"%s\" -> \"%s\" [label=%s, weight=%s];", transition.from, transition.to, transition.ch, weight);
         });
-        return String.format("digraph graphname { rankdir=LR; %s %s}",
+        return String.format(
+                "digraph graphname { rankdir=LR; %s %s}",
                 states.collect(Collectors.joining("\n")), transitions.collect(Collectors.joining("\n")));
     }
-
 }

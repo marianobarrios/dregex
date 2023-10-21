@@ -35,10 +35,8 @@ public final class Lit extends AbstractRange {
 
     @Override
     public String toRegex() {
-        if (Character.isLetterOrDigit(codePoint))
-            return new String(Character.toChars(codePoint));
-        else
-            return String.format("\\x{%X}", codePoint);
+        if (Character.isLetterOrDigit(codePoint)) return new String(Character.toChars(codePoint));
+        else return String.format("\\x{%X}", codePoint);
     }
 
     public static Lit fromSingletonString(String str) {

@@ -35,5 +35,4 @@ public final class Wildcard extends AbstractRange {
     public String toString() {
         return "✶";
     }
-
 }

@@ -2,7 +2,6 @@ package dregex.impl.database;
 
 import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
@@ -20,9 +19,7 @@ public class UnicodeBlocks {
         }
     }
 
-    private static final Map<String, String> synonyms = Map.of(
-            "Greek and Coptic", "Greek"
-    );
+    private static final Map<String, String> synonyms = Map.of("Greek and Coptic", "Greek");
 
     public static final Map<String, CharSet> charSets;
 
@@ -37,9 +34,9 @@ public class UnicodeBlocks {
         for (var entry : synonyms.entrySet()) {
             var block = entry.getKey();
             var alias = entry.getValue();
-            charSets.put(UnicodeDatabaseReader.canonicalizeBlockName(alias),
+            charSets.put(
+                    UnicodeDatabaseReader.canonicalizeBlockName(alias),
                     charSets.get(UnicodeDatabaseReader.canonicalizeBlockName(block)));
         }
     }
-
 }

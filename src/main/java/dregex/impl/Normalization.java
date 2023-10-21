@@ -1,7 +1,6 @@
 package dregex.impl;
 
 public enum Normalization implements Normalizer {
-
     NoNormalization {
         @Override
         public CharSequence normalize(CharSequence str) {
@@ -39,6 +38,4 @@ public enum Normalization implements Normalizer {
             return java.text.Normalizer.normalize(str, java.text.Normalizer.Form.NFD);
         }
     };
-
 }
-

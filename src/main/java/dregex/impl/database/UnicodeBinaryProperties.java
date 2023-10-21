@@ -1,5 +1,7 @@
 package dregex.impl.database;
 
+import static java.lang.Character.*;
+
 import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
 import java.util.ArrayList;
@@ -7,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntPredicate;
-
-import static java.lang.Character.*;
 
 public class UnicodeBinaryProperties {
 
@@ -29,7 +29,7 @@ public class UnicodeBinaryProperties {
             Map.entry("ALNUM", ch -> Character.isAlphabetic(ch) || Character.isDigit(ch)),
             Map.entry("BLANK", ch -> isPropertyBlank(ch)),
             Map.entry("GRAPH", ch -> isPropertyGraph(ch)),
-            Map.entry("PRINT",  ch -> (isPropertyGraph(ch) || isPropertyBlank(ch)) && !isCharacterControl(ch)),
+            Map.entry("PRINT", ch -> (isPropertyGraph(ch) || isPropertyBlank(ch)) && !isCharacterControl(ch)),
             Map.entry("JOIN_CONTROL", ch -> isPropertyJoinControl(ch)),
             Map.entry("WORD", ch -> isPropertyWord(ch)));
 
@@ -45,13 +45,22 @@ public class UnicodeBinaryProperties {
 
     private static boolean isPropertyPunctuation(int ch) {
         int type = Character.getType(ch);
-        return type == CONNECTOR_PUNCTUATION || type == DASH_PUNCTUATION || type == START_PUNCTUATION || type == END_PUNCTUATION
-                || type == OTHER_PUNCTUATION || type == INITIAL_QUOTE_PUNCTUATION || type == FINAL_QUOTE_PUNCTUATION;
+        return type == CONNECTOR_PUNCTUATION
+                || type == DASH_PUNCTUATION
+                || type == START_PUNCTUATION
+                || type == END_PUNCTUATION
+                || type == OTHER_PUNCTUATION
+                || type == INITIAL_QUOTE_PUNCTUATION
+                || type == FINAL_QUOTE_PUNCTUATION;
     }
 
     private static boolean isPropertyHexDigit(int ch) {
-        return Character.isDigit(ch) || (ch >= 0x0030 && ch <= 0x0039) || (ch >= 0x0041 && ch <= 0x0046)
-                || (ch >= 0x0061 && ch <= 0x0066) || (ch >= 0xFF10 && ch <= 0xFF19) || (ch >= 0xFF21 && ch <= 0xFF26)
+        return Character.isDigit(ch)
+                || (ch >= 0x0030 && ch <= 0x0039)
+                || (ch >= 0x0041 && ch <= 0x0046)
+                || (ch >= 0x0061 && ch <= 0x0066)
+                || (ch >= 0xFF10 && ch <= 0xFF19)
+                || (ch >= 0xFF21 && ch <= 0xFF26)
                 || (ch >= 0xFF41 && ch <= 0xFF46);
     }
 
@@ -59,10 +68,14 @@ public class UnicodeBinaryProperties {
         return Character.getType(ch) == Character.SPACE_SEPARATOR || ch == 0x9; // \N{HT}
     }
 
-    private static boolean isPropertyGraph(int ch)  {
+    private static boolean isPropertyGraph(int ch) {
         int type = Character.getType(ch);
-        return type == SPACE_SEPARATOR || type == LINE_SEPARATOR || type == PARAGRAPH_SEPARATOR || type == CONTROL
-                || type == SURROGATE || type == UNASSIGNED;
+        return type == SPACE_SEPARATOR
+                || type == LINE_SEPARATOR
+                || type == PARAGRAPH_SEPARATOR
+                || type == CONTROL
+                || type == SURROGATE
+                || type == UNASSIGNED;
     }
 
     private static boolean isPropertyJoinControl(int ch) {
@@ -71,8 +84,13 @@ public class UnicodeBinaryProperties {
 
     private static boolean isPropertyWord(int ch) {
         int type = Character.getType(ch);
-        return Character.isAlphabetic(ch) || type == NON_SPACING_MARK || type == ENCLOSING_MARK || type == COMBINING_SPACING_MARK
-                || type == DECIMAL_DIGIT_NUMBER || type == CONNECTOR_PUNCTUATION || isPropertyJoinControl(ch);
+        return Character.isAlphabetic(ch)
+                || type == NON_SPACING_MARK
+                || type == ENCLOSING_MARK
+                || type == COMBINING_SPACING_MARK
+                || type == DECIMAL_DIGIT_NUMBER
+                || type == CONNECTOR_PUNCTUATION
+                || isPropertyJoinControl(ch);
     }
 
     public static final Map<String, CharSet> charSets;
@@ -102,5 +120,4 @@ public class UnicodeBinaryProperties {
             charSets.put(prop, new CharSet(ranges));
         }
     }
-
 }

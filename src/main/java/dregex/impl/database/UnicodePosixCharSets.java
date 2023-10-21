@@ -5,20 +5,18 @@ import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharRange;
 import dregex.impl.tree.CharSet;
 import dregex.impl.tree.Lit;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class UnicodePosixCharSets {
 
-    private static final CharSet unicodeGraph = CharSet
-            .fromCharSets(
+    private static final CharSet unicodeGraph = CharSet.fromCharSets(
                     UnicodeBinaryProperties.charSets.get("WHITE_SPACE"),
                     UnicodeGeneralCategories.charSets.get("Cc"),
                     UnicodeGeneralCategories.charSets.get("Cs"),
-                    UnicodeGeneralCategories.charSets.get("Cn")
-            ).complement();
+                    UnicodeGeneralCategories.charSets.get("Cn"))
+            .complement();
 
     private static final CharSet unicodeBlank;
 
@@ -28,8 +26,8 @@ public class UnicodePosixCharSets {
         exceptions.addAll(UnicodeGeneralCategories.charSets.get("Zp").ranges);
         exceptions.add(new CharRange(0xA, 0xD));
         exceptions.add(new Lit(0x85));
-        unicodeBlank = new CharSet(
-                RangeOps.diff(UnicodeBinaryProperties.charSets.get("WHITE_SPACE").ranges, exceptions));
+        unicodeBlank =
+                new CharSet(RangeOps.diff(UnicodeBinaryProperties.charSets.get("WHITE_SPACE").ranges, exceptions));
     }
 
     public static final Map<String, CharSet> charSets = Map.ofEntries(
@@ -38,20 +36,25 @@ public class UnicodePosixCharSets {
             Map.entry("ASCII", PosixCharSets.charSets.get("ASCII")),
             Map.entry("Alpha", UnicodeBinaryProperties.charSets.get("ALPHABETIC")),
             Map.entry("Digit", UnicodeBinaryProperties.charSets.get("DIGIT")),
-            Map.entry("Alnum", CharSet.fromCharSets(
-                    UnicodeBinaryProperties.charSets.get("ALPHABETIC"),
-                    UnicodeBinaryProperties.charSets.get("DIGIT"))),
+            Map.entry(
+                    "Alnum",
+                    CharSet.fromCharSets(
+                            UnicodeBinaryProperties.charSets.get("ALPHABETIC"),
+                            UnicodeBinaryProperties.charSets.get("DIGIT"))),
             Map.entry("Punct", UnicodeBinaryProperties.charSets.get("PUNCTUATION")),
             Map.entry("Graph", unicodeGraph),
-            Map.entry("Print", new CharSet(
-                    RangeOps.diff(
+            Map.entry(
+                    "Print",
+                    new CharSet(RangeOps.diff(
                             CharSet.fromCharSets(unicodeGraph, unicodeBlank).ranges,
                             UnicodeGeneralCategories.charSets.get("Cc").ranges))),
             Map.entry("Blank", unicodeBlank),
             Map.entry("Cntrl", UnicodeGeneralCategories.charSets.get("Cc")),
-            Map.entry("XDigit", CharSet.fromCharSets(
-                    UnicodeGeneralCategories.charSets.get("Nd"),
-                    UnicodeBinaryProperties.charSets.get("HEX_DIGIT"))),
+            Map.entry(
+                    "XDigit",
+                    CharSet.fromCharSets(
+                            UnicodeGeneralCategories.charSets.get("Nd"),
+                            UnicodeBinaryProperties.charSets.get("HEX_DIGIT"))),
             Map.entry("Space", UnicodeBinaryProperties.charSets.get("WHITE_SPACE")));
 
     public static final CharSet wordCharSet = CharSet.fromCharSets(

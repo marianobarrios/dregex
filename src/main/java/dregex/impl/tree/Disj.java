@@ -33,7 +33,8 @@ public class Disj implements Node {
 
     @Override
     public String toString() {
-        return String.format("%s(%s)",
+        return String.format(
+                "%s(%s)",
                 getClass().getSimpleName(),
                 values.stream().map(v -> v.toString()).collect(Collectors.joining(", ")));
     }
@@ -61,5 +62,4 @@ public class Disj implements Node {
     public int precedence() {
         return 4;
     }
-
 }

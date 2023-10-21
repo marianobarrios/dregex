@@ -2,7 +2,6 @@ package dregex.impl.database;
 
 import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
@@ -180,7 +179,6 @@ public class UnicodeScripts {
             Map.entry("DIVES_AKURU", "DIAK"),
             Map.entry("KHITAN_SMALL_SCRIPT", "KITS"));
 
-
     public static final Map<String, CharSet> chatSets;
 
     static {
@@ -188,7 +186,9 @@ public class UnicodeScripts {
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var ranges = entry.getValue();
-            var chatSet = new CharSet(ranges.stream().map(range -> AbstractRange.of(range.from, range.to)).collect(Collectors.toList()));
+            var chatSet = new CharSet(ranges.stream()
+                    .map(range -> AbstractRange.of(range.from, range.to))
+                    .collect(Collectors.toList()));
             chatSets.put(block.toUpperCase(), chatSet);
         }
         for (var entry : synomyms.entrySet()) {
@@ -197,5 +197,4 @@ public class UnicodeScripts {
             chatSets.put(alias.toUpperCase(), chatSets.get(script.toUpperCase()));
         }
     }
-
 }

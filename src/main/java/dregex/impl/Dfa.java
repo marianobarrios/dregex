@@ -11,7 +11,11 @@ public final class Dfa {
 
     public final boolean minimal;
 
-    public Dfa(State initial, Map<State, TreeMap<CharInterval, State>> defTransitions, Set<? extends State> accepting, boolean minimal) {
+    public Dfa(
+            State initial,
+            Map<State, TreeMap<CharInterval, State>> defTransitions,
+            Set<? extends State> accepting,
+            boolean minimal) {
         this.initial = initial;
         this.defTransitions = defTransitions;
         this.accepting = accepting;
@@ -27,7 +31,9 @@ public final class Dfa {
         Set<State> ret = new HashSet<>();
         ret.add(initial);
         ret.addAll(defTransitions.keySet());
-        ret.addAll(defTransitions.values().stream().flatMap(x -> x.values().stream()).collect(Collectors.toList()));
+        ret.addAll(defTransitions.values().stream()
+                .flatMap(x -> x.values().stream())
+                .collect(Collectors.toList()));
         ret.addAll(accepting);
         return ret;
     }
@@ -39,7 +45,9 @@ public final class Dfa {
     }
 
     public Set<CharInterval> allChars() {
-        return defTransitions.values().stream().flatMap(x -> x.keySet().stream()).collect(Collectors.toSet());
+        return defTransitions.values().stream()
+                .flatMap(x -> x.keySet().stream())
+                .collect(Collectors.toSet());
     }
 
     public int stateCount() {
@@ -51,10 +59,8 @@ public final class Dfa {
         return ret == null ? Map.of() : ret;
     }
 
-
     /**
      * Match-nothing DFA
      */
     public static Dfa nothingDfa = new Dfa(new SimpleState(), Map.of(), Set.of(), false);
-
 }

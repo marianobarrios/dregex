@@ -48,7 +48,7 @@ public class Rep implements Node {
          */
         if (value.precedence() > this.precedence() || value instanceof Rep) {
             return String.format("(?:%s)%s", value.toRegex(), suffix);
-        } else{
+        } else {
             return value.toRegex() + suffix;
         }
     }
@@ -62,7 +62,8 @@ public class Rep implements Node {
         }
     }
 
-    @Override public int precedence() {
+    @Override
+    public int precedence() {
         return 2;
     }
 

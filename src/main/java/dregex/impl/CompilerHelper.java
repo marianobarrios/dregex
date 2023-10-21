@@ -1,7 +1,6 @@
 package dregex.impl;
 
 import dregex.impl.tree.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +18,8 @@ public class CompilerHelper {
                 var la2 = (Lookaround) juxt.values.get(i);
                 if (la1.dir == Direction.Ahead && la2.dir == Direction.Ahead) {
                     if (la1.cond == Condition.Negative && la2.cond == Condition.Negative) {
-                        newValues.set(newValues.size() - 1,
+                        newValues.set(
+                                newValues.size() - 1,
                                 new Lookaround(Direction.Ahead, Condition.Negative, new Disj(la1.value, la2.value)));
                         continue;
                     }
@@ -38,5 +38,4 @@ public class CompilerHelper {
         }
         return -1;
     }
-
 }

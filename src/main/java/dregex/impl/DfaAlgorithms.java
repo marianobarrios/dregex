@@ -35,7 +35,8 @@ public class DfaAlgorithms {
         Collection<State> allLeftStates = getAllStatesWithNullState(left);
         Collection<State> allRightStates = getAllStatesWithNullState(right);
 
-        Map<State, TreeMap<CharInterval, State>> newTransitions = new HashMap<>(allLeftStates.size() * allRightStates.size());
+        Map<State, TreeMap<CharInterval, State>> newTransitions =
+                new HashMap<>(allLeftStates.size() * allRightStates.size());
         for (var leftState : allLeftStates) {
             Map<CharInterval, State> leftCharMap = left.transitionMap(leftState);
 
@@ -92,15 +93,19 @@ public class DfaAlgorithms {
         while (!pending.isEmpty()) {
             var currentState = pending.remove();
             visited.add(currentState);
-            Collection<State> currentPossibleTargets = new HashSet<>(dfa.transitionMap(currentState).values());
+            Collection<State> currentPossibleTargets =
+                    new HashSet<>(dfa.transitionMap(currentState).values());
             for (var targetState : currentPossibleTargets) {
                 if (!visited.contains(targetState)) {
                     pending.add(targetState);
                 }
             }
         }
-        var filteredTransitions = dfa.defTransitions.entrySet().stream().filter(s -> visited.contains(s.getKey())).collect(toMapCollector());
-        var filteredAccepting = dfa.accepting.stream().filter(s -> visited.contains(s)).collect(Collectors.toSet());
+        var filteredTransitions = dfa.defTransitions.entrySet().stream()
+                .filter(s -> visited.contains(s.getKey()))
+                .collect(toMapCollector());
+        var filteredAccepting =
+                dfa.accepting.stream().filter(s -> visited.contains(s)).collect(Collectors.toSet());
         return new Dfa(dfa.initial, filteredTransitions, filteredAccepting, false);
     }
 
@@ -122,8 +127,7 @@ public class DfaAlgorithms {
         } else {
             visited.add(current);
             for (var targetState : dfa.transitionMap(current).values()) {
-                if (!visited.contains(targetState) && hasPathToAccepting(visited, dfa, targetState))
-                    return true;
+                if (!visited.contains(targetState) && hasPathToAccepting(visited, dfa, targetState)) return true;
             }
             return false;
         }
@@ -167,11 +171,12 @@ public class DfaAlgorithms {
         for (var entry : dfa.defTransitions.entrySet()) {
             State s = entry.getKey();
             TreeMap<CharInterval, State> charMap = entry.getValue();
-            var newCharMap = new TreeMap<>(charMap.entrySet().stream().collect(
-                    Collectors.toMap(e -> e.getKey(), e -> mapping.get(e.getValue()))));
+            var newCharMap = new TreeMap<>(charMap.entrySet().stream()
+                    .collect(Collectors.toMap(e -> e.getKey(), e -> mapping.get(e.getValue()))));
             newTransitions.put(mapping.get(s), newCharMap);
         }
-        Set<State> newAccepting = dfa.accepting.stream().map(s -> mapping.get(s)).collect(Collectors.toSet());
+        Set<State> newAccepting =
+                dfa.accepting.stream().map(s -> mapping.get(s)).collect(Collectors.toSet());
         return new Dfa(mapping.get(dfa.initial), newTransitions, newAccepting, false);
     }
 
@@ -184,6 +189,7 @@ public class DfaAlgorithms {
             this.i = i;
         }
     }
+
     public static MatchResult matchString(Dfa dfa, CharSequence string) {
         var current = dfa.initial;
         int i = 0;
@@ -242,14 +248,17 @@ public class DfaAlgorithms {
         } else {
             var reversedDfa = reverseAsDfa(dfa);
             var doubleReversedDfa = reverseAsDfa(reversedDfa);
-            var minimalDfa = new Dfa(doubleReversedDfa.initial, doubleReversedDfa.defTransitions, doubleReversedDfa.accepting, true);
+            var minimalDfa = new Dfa(
+                    doubleReversedDfa.initial, doubleReversedDfa.defTransitions, doubleReversedDfa.accepting, true);
             return rewriteWithSimpleStates(minimalDfa);
         }
     }
 
     public static Nfa reverse(Dfa dfa) {
         var initial = new SimpleState();
-        Set<Nfa.Transition> nfaTransitions = dfa.accepting.stream().map(s -> new Nfa.Transition(initial, s, Epsilon.instance)).collect(Collectors.toSet());
+        Set<Nfa.Transition> nfaTransitions = dfa.accepting.stream()
+                .map(s -> new Nfa.Transition(initial, s, Epsilon.instance))
+                .collect(Collectors.toSet());
         for (var entry1 : dfa.defTransitions.entrySet()) {
             State from = entry1.getKey();
             var map = entry1.getValue();
@@ -272,11 +281,15 @@ public class DfaAlgorithms {
          * The rest of this method will use this map instead of the original list.
          */
         Map<State, Map<AtomPart, Set<State>>> transitionMap = new HashMap<>();
-        for (var entry : nfa.transitions.stream().collect(Collectors.groupingBy(t -> t.from)).entrySet()) {
+        for (var entry : nfa.transitions.stream()
+                .collect(Collectors.groupingBy(t -> t.from))
+                .entrySet()) {
             State state = entry.getKey();
             var stateTransitions = entry.getValue();
             Map<AtomPart, Set<State>> map = new HashMap<>();
-            for (var entry2 : stateTransitions.stream().collect(Collectors.groupingBy(x -> x.ch)).entrySet()) {
+            for (var entry2 : stateTransitions.stream()
+                    .collect(Collectors.groupingBy(x -> x.ch))
+                    .entrySet()) {
                 AtomPart atomPart = entry2.getKey();
                 var atomTransitions = entry2.getValue();
                 var states = atomTransitions.stream().map(t -> t.to).collect(Collectors.toSet());
@@ -319,7 +332,9 @@ public class DfaAlgorithms {
             MultiState current = pending.remove();
             dfaStates.add(current);
             // The set of all transition maps of the members of the current state
-            Set<Map<CharInterval, Set<State>>> currentTrans = current.states.stream().map(x -> epsilonFreeTransitions.getOrDefault(x, Map.of())).collect(Collectors.toSet());
+            Set<Map<CharInterval, Set<State>>> currentTrans = current.states.stream()
+                    .map(x -> epsilonFreeTransitions.getOrDefault(x, Map.of()))
+                    .collect(Collectors.toSet());
 
             // The transition function of the current state
             Map<CharInterval, Set<State>> mergedCurrentTrans = new HashMap<>();
@@ -327,7 +342,9 @@ public class DfaAlgorithms {
                 for (var entry : transitions.entrySet()) {
                     var charInterval = entry.getKey();
                     var states = entry.getValue();
-                    mergedCurrentTrans.computeIfAbsent(charInterval, x -> new HashSet<>()).addAll(states);
+                    mergedCurrentTrans
+                            .computeIfAbsent(charInterval, x -> new HashSet<>())
+                            .addAll(states);
                 }
             }
 
@@ -351,12 +368,15 @@ public class DfaAlgorithms {
             }
         }
         // a DFA state is accepting if any of its NFA member-states is
-        var dfaAccepting = dfaStates.stream().filter(st -> Util.doIntersect(st.states, nfa.accepting)).collect(Collectors.toSet());
+        var dfaAccepting = dfaStates.stream()
+                .filter(st -> Util.doIntersect(st.states, nfa.accepting))
+                .collect(Collectors.toSet());
 
         return new Dfa(dfaInitial, dfaTransitions, dfaAccepting, false);
     }
 
-    private static MultiState followEpsilonImpl(Map<State, Map<AtomPart, Set<State>>> transitionMap, Set<State> current) {
+    private static MultiState followEpsilonImpl(
+            Map<State, Map<AtomPart, Set<State>>> transitionMap, Set<State> current) {
         Set<Set<State>> immediate = new HashSet<>();
         for (var state : current) {
             immediate.add(transitionMap.getOrDefault(state, Map.of()).getOrDefault(Epsilon.instance, Set.of()));
