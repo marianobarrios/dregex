@@ -33,7 +33,7 @@ public class JavaProperties {
     public static final Map<String, CharSet> charSets;
 
     static {
-        charSets = new HashMap<>();
+        Map<String, CharSet> sets = new HashMap<>();
         for (var entry : properties.entrySet()) {
             var prop = entry.getKey();
             var fn = entry.getValue();
@@ -54,7 +54,8 @@ public class JavaProperties {
             if (rangeStart != -1) {
                 ranges.add(AbstractRange.of(rangeStart, Character.MAX_CODE_POINT));
             }
-            charSets.put(prop, new CharSet(ranges));
+            sets.put(prop, new CharSet(ranges));
         }
+        charSets = sets;
     }
 }

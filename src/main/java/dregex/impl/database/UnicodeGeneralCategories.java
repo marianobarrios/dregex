@@ -4,6 +4,7 @@ import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,8 @@ public class UnicodeGeneralCategories {
 
     static {
         try (var scriptsFile = UnicodeScripts.class.getResourceAsStream("/DerivedGeneralCategory.txt")) {
-            ranges = UnicodeDatabaseReader.getGeneralCategories(new InputStreamReader(scriptsFile));
+            ranges = UnicodeDatabaseReader.getGeneralCategories(
+                    new InputStreamReader(scriptsFile, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -24,14 +26,15 @@ public class UnicodeGeneralCategories {
     public static final Map<String, CharSet> charSets;
 
     static {
-        charSets = new HashMap<>();
+        Map<String, CharSet> sets = new HashMap<>();
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var ranges = entry.getValue();
             var chatSet = new CharSet(ranges.stream()
                     .map(range -> AbstractRange.of(range.from, range.to))
                     .collect(Collectors.toList()));
-            charSets.put(block, chatSet);
+            sets.put(block, chatSet);
         }
+        charSets = sets;
     }
 }

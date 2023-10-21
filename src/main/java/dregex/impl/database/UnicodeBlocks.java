@@ -4,6 +4,7 @@ import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ public class UnicodeBlocks {
 
     static {
         try (var blocksFile = UnicodeBlocks.class.getResourceAsStream("/Blocks.txt")) {
-            ranges = UnicodeDatabaseReader.getBlocks(new InputStreamReader(blocksFile));
+            ranges = UnicodeDatabaseReader.getBlocks(new InputStreamReader(blocksFile, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -24,19 +25,20 @@ public class UnicodeBlocks {
     public static final Map<String, CharSet> charSets;
 
     static {
-        charSets = new HashMap<>();
+        Map<String, CharSet> sets = new HashMap<>();
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var range = entry.getValue();
             var charSet = new CharSet(AbstractRange.of(range.from, range.to));
-            charSets.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet);
+            sets.put(UnicodeDatabaseReader.canonicalizeBlockName(block), charSet);
         }
         for (var entry : synonyms.entrySet()) {
             var block = entry.getKey();
             var alias = entry.getValue();
-            charSets.put(
+            sets.put(
                     UnicodeDatabaseReader.canonicalizeBlockName(alias),
-                    charSets.get(UnicodeDatabaseReader.canonicalizeBlockName(block)));
+                    sets.get(UnicodeDatabaseReader.canonicalizeBlockName(block)));
         }
+        charSets = sets;
     }
 }

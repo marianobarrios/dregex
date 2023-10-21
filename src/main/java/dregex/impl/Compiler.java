@@ -15,7 +15,7 @@ public class Compiler {
     private final Map<AbstractRange, List<CharInterval>> intervalMapping;
 
     public Compiler(Map<AbstractRange, List<CharInterval>> intervalMapping) {
-        this.intervalMapping = intervalMapping;
+        this.intervalMapping = Map.copyOf(intervalMapping);
     }
 
     /**

@@ -7,7 +7,7 @@ import java.util.*;
 
 public class UnicodeDatabaseReader {
 
-    public static class Range implements Comparable<Range> {
+    public static final class Range implements Comparable<Range> {
 
         public final int from;
         public final int to;
@@ -25,6 +25,23 @@ public class UnicodeDatabaseReader {
         @Override
         public int compareTo(Range other) {
             return Integer.compare(from, other.from);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Range range = (Range) o;
+            return from == range.from && to == range.to;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(from, to);
         }
     }
 

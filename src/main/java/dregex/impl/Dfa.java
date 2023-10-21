@@ -62,5 +62,5 @@ public final class Dfa {
     /**
      * Match-nothing DFA
      */
-    public static Dfa nothingDfa = new Dfa(new SimpleState(), Map.of(), Set.of(), false);
+    public static final Dfa nothingDfa = new Dfa(new SimpleState(), Map.of(), Set.of(), false);
 }

@@ -30,7 +30,7 @@ class PerformanceTest {
     @Test
     void testLargeSharacterClasses() {
         var start = System.nanoTime();
-        var regex = Regex.compile("[\\x{0}-\\x{10FFFF}]");
+        Regex.compile("[\\x{0}-\\x{10FFFF}]");
         var elapsed = Duration.ofNanos(System.nanoTime() - start);
         System.out.println("compilation time: " + elapsed);
     }

@@ -1,5 +1,7 @@
 package dregex.impl;
 
+import java.util.Objects;
+
 public final class Epsilon implements AtomPart {
 
     public static final Epsilon instance = new Epsilon();
@@ -11,12 +13,12 @@ public final class Epsilon implements AtomPart {
     }
 
     @Override
-    public boolean equals(Object other) {
-        return getClass().equals(other.getClass());
+    public boolean equals(Object o) {
+        return o == this || o != null && getClass() == o.getClass();
     }
 
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash();
     }
 }

@@ -34,10 +34,10 @@ public class Universe {
     private final Map<AbstractRange, List<CharInterval>> alphabet;
 
     public Universe(List<Node> parsedTrees, Normalizer normalization) {
-        this.parsedTrees = parsedTrees;
+        this.parsedTrees = List.copyOf(parsedTrees);
         this.normalization = normalization;
         var ranges = parsedTrees.stream().flatMap(t -> collect(t)).collect(Collectors.toList());
-        this.alphabet = CharInterval.calculateNonOverlapping(ranges);
+        this.alphabet = Map.copyOf(CharInterval.calculateNonOverlapping(ranges));
     }
 
     public List<Node> getParsedTrees() {

@@ -4,6 +4,7 @@ import dregex.impl.tree.AbstractRange;
 import dregex.impl.tree.CharSet;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,13 +16,13 @@ public class UnicodeScripts {
 
     static {
         try (var scriptsFile = UnicodeScripts.class.getResourceAsStream("/Scripts.txt")) {
-            ranges = UnicodeDatabaseReader.getScripts(new InputStreamReader(scriptsFile));
+            ranges = UnicodeDatabaseReader.getScripts(new InputStreamReader(scriptsFile, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static final Map<String, String> synomyms = Map.ofEntries(
+    private static final Map<String, String> synomyms = Map.<String, String>ofEntries(
             Map.entry("COMMON", "ZYYY"),
             Map.entry("LATIN", "LATN"),
             Map.entry("GREEK", "GREK"),
@@ -182,19 +183,20 @@ public class UnicodeScripts {
     public static final Map<String, CharSet> chatSets;
 
     static {
-        chatSets = new HashMap<>();
+        Map<String, CharSet> sets = new HashMap<>();
         for (var entry : ranges.entrySet()) {
             var block = entry.getKey();
             var ranges = entry.getValue();
             var chatSet = new CharSet(ranges.stream()
                     .map(range -> AbstractRange.of(range.from, range.to))
                     .collect(Collectors.toList()));
-            chatSets.put(block.toUpperCase(), chatSet);
+            sets.put(block.toUpperCase(), chatSet);
         }
         for (var entry : synomyms.entrySet()) {
             var script = entry.getKey();
             var alias = entry.getValue();
-            chatSets.put(alias.toUpperCase(), chatSets.get(script.toUpperCase()));
+            sets.put(alias.toUpperCase(), sets.get(script.toUpperCase()));
         }
+        chatSets = sets;
     }
 }
