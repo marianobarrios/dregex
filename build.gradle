@@ -84,7 +84,7 @@ publishing {
         dregex(MavenPublication) {
             groupId = 'com.github.marianobarrios'
             artifactId = 'dregex'
-            version = '0.8.0-SNAPSHOT'
+            version = '0.8.0'
             from components.java
             pom {
                 name = 'dregex'
