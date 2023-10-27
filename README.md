@@ -164,7 +164,7 @@ Dregex requires Java 11.
 
 ### Logging
 
-The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework for the Java. As a policy, all logging event emitted are at TRACE level, which is below the default threshold in most logging implementations and thus completely silent by default.
+The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most widely used pluggable logging framework in Java. As a policy, all logging event emitted are at TRACE level, which is below the default threshold in most logging implementations and thus completely silent by default.
 
 ### Dependencies
 
