@@ -2,8 +2,11 @@ package dregex.impl;
 
 import dregex.InvalidRegexException;
 import dregex.impl.tree.*;
+import java.time.Duration;
 import java.util.*;
 import java.util.function.BiFunction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Take a regex AST and produce a NFA.
@@ -12,6 +15,8 @@ import java.util.function.BiFunction;
  */
 public class Compiler {
 
+    private static final Logger logger = LoggerFactory.getLogger(Compiler.class);
+
     private final Map<AbstractRange, List<CharInterval>> intervalMapping;
 
     public Compiler(Map<AbstractRange, List<CharInterval>> intervalMapping) {
@@ -19,15 +24,19 @@ public class Compiler {
     }
 
     /**
-     * Transform a regular expression abstract syntax tree into a corresponding NFA
+     * Transform a regular expression abstract syntax tree into a corresponding DFA
      */
     public Dfa fromTree(Node ast) {
+        var start = System.nanoTime();
         var initial = new SimpleState();
         var accepting = new SimpleState();
         List<Nfa.Transition> transitions = new ArrayList<>();
         addTransitionsFromNode(transitions, ast, initial, accepting);
         var nfa = new Nfa(initial, transitions, Set.of(accepting));
-        return DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.fromNfa(nfa));
+        var dfa = DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.fromNfa(nfa));
+        var time = Duration.ofNanos(System.nanoTime() - start);
+        logger.trace("DFA compiled in {}", time);
+        return dfa;
     }
 
     private void addTransitionsFromNode(List<Nfa.Transition> transitions, Node node, SimpleState from, SimpleState to) {

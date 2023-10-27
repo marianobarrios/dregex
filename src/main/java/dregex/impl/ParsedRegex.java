@@ -1,6 +1,5 @@
-package dregex;
+package dregex.impl;
 
-import dregex.impl.Normalizer;
 import dregex.impl.tree.Node;
 
 public class ParsedRegex {

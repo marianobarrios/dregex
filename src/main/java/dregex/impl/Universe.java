@@ -1,8 +1,5 @@
-package dregex;
+package dregex.impl;
 
-import dregex.impl.CharInterval;
-import dregex.impl.Normalization;
-import dregex.impl.Normalizer;
 import dregex.impl.tree.*;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +13,7 @@ import java.util.stream.Stream;
  * The way this is enforced is that every compiled regular expression contains a reference to a [[Universe]], and
  * only expressions with the same universe are allowed to mix in set operation.
  * <p>
- * The same [[Universe]] ensures the same "alphabet" and [[Normalizer]] rules. Regular expressions compiled as a
+ * The same {@link Universe} ensures the same "alphabet" and [[Normalizer]] rules. Regular expressions compiled as a
  * group will always have the same universe.
  * <p>
  * In general, dealing with this class or calling the constructor is not necessary; a call to one of the `compile`

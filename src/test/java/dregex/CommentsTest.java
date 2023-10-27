@@ -2,7 +2,9 @@ package dregex;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dregex.impl.CompiledRegex;
 import dregex.impl.RegexParser;
+import dregex.impl.Universe;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

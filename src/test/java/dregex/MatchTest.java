@@ -3,6 +3,8 @@ package dregex;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dregex.impl.RegexImpl;
+import dregex.impl.Universe;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +13,7 @@ class MatchTest {
     @Test
     void testCharacterClassesSimple() {
 
-        assertFalse(Regex.nullRegex(Universe.Empty).matchesAtLeastOne());
+        assertFalse(RegexImpl.nullRegex(Universe.Empty).matchesAtLeastOne());
 
         {
             var r = Regex.compile("");

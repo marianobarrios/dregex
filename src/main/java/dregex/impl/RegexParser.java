@@ -5,7 +5,6 @@ import static org.jparsec.pattern.Patterns.*;
 import static org.jparsec.pattern.Patterns.isChar;
 
 import dregex.InvalidRegexException;
-import dregex.ParsedRegex;
 import dregex.impl.database.*;
 import dregex.impl.tree.*;
 import java.util.ArrayList;

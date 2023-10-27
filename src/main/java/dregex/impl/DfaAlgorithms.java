@@ -1,5 +1,6 @@
 package dregex.impl;
 
+import dregex.MatchResult;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -178,16 +179,6 @@ public class DfaAlgorithms {
         Set<State> newAccepting =
                 dfa.accepting.stream().map(s -> mapping.get(s)).collect(Collectors.toSet());
         return new Dfa(mapping.get(dfa.initial), newTransitions, newAccepting, false);
-    }
-
-    public static class MatchResult {
-        public final boolean matches;
-        public final int i;
-
-        public MatchResult(boolean matches, int i) {
-            this.matches = matches;
-            this.i = i;
-        }
     }
 
     public static MatchResult matchString(Dfa dfa, CharSequence string) {

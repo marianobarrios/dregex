@@ -2,7 +2,9 @@ package dregex;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dregex.impl.CompiledRegex;
 import dregex.impl.Normalization;
+import dregex.impl.Universe;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,8 +31,8 @@ class AutoTest {
         generator.generate(3).forEach(tree -> {
             totalTrees.incrementAndGet();
             var regexString = tree.toRegex();
-            var regex =
-                    new CompiledRegex(regexString, tree, new Universe(List.of(tree), Normalization.NoNormalization));
+            var regex = new Regex(
+                    new CompiledRegex(regexString, tree, new Universe(List.of(tree), Normalization.NoNormalization)));
             var strings = StringGenerator.generate(tree, 3, 3);
             totalStrings.addAndGet(strings.size());
             logger.debug("Testing: {}, generated: {}", regexString, strings.size());

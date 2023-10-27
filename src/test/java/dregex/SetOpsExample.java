@@ -7,7 +7,7 @@ class SetOpsExample {
 
     public static void main(String[] args) {
         {
-            List<CompiledRegex> regexes = Regex.compile(Arrays.asList("[a-z]+", "[A-Z]+", "[a-z]+|[A-Z]+"));
+            List<Regex> regexes = Regex.compile(Arrays.asList("[a-z]+", "[A-Z]+", "[a-z]+|[A-Z]+"));
             // In Scala 2.12
             // List<CompiledRegex> regexes = Regex.compile(Arrays.asList("[a-z]+", "[A-Z]+", "[a-z]+|[A-Z]+"));
             Regex lower = regexes.get(0);
@@ -17,7 +17,7 @@ class SetOpsExample {
             System.out.println(both.equiv(lower.union(upper))); // true
         }
         {
-            List<CompiledRegex> regexes = Regex.compile(Arrays.asList("[a-z]+|[A-Z]+", "[A-Z]+"));
+            List<Regex> regexes = Regex.compile(Arrays.asList("[a-z]+|[A-Z]+", "[A-Z]+"));
             // In Scala 2.12
             // List<CompiledRegex> regexes = Regex.compile(Arrays.asList("[a-z]+|[A-Z]+", "[A-Z]+"));
             Regex all = regexes.get(0);
