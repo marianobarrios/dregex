@@ -1,6 +1,6 @@
-# Dregex - Deterministic Regular Expression Engine
+# dregex - Deterministic Regular Expression Engine
 
-Dregex is a Java library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, and difference).
+dregex is a Java library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, and difference).
 
 [![Build Status](https://github.com/marianobarrios/dregex/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/dregex/actions)
 
@@ -28,7 +28,7 @@ Regular expressions were born as a very specific tool and, almost as an a accide
 - [Coding horror: regex performance](https://blog.codinghorror.com/regex-performance/)
 - [Stack Exchange regex outage postmortem](http://stackstatus.net/post/147710624694/outage-postmortem-july-20-2016)
 
-For cases when advanced Perl-style features are not needed, and predictable performance is desired, using DFA-based matching is usually a compelling alternative, unfortunately made difficult by the scarcity of proper implementations in most languages. Dregex offers an alternative for the Java ecosystem.
+For cases when advanced Perl-style features are not needed, and predictable performance is desired, using DFA-based matching is usually a compelling alternative, unfortunately made difficult by the scarcity of proper implementations in most languages. dregex offers an alternative for the Java ecosystem.
 
 ## Supported regex flavor
 
@@ -83,7 +83,7 @@ With one exception, all compile flags defined by `java.util.regex.Pattern` are s
 
 ## Set operations
 
-On top of regular matching, Dregex fully supports set operations of regular expressions. Set operations work on regular expressions themselves, that is, they don't involve strings.
+On top of regular matching, dregex fully supports set operations of regular expressions. Set operations work on regular expressions themselves, that is, they don't involve strings.
 
 It possible to do union, intersection and difference:
 
@@ -160,7 +160,7 @@ This is a relatively straightforward algorithm that is implemented using the alr
 
 ## Requirements
 
-Dregex requires Java 11.
+dregex requires Java 11.
 
 ### Logging
 
