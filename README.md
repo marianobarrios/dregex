@@ -106,7 +106,7 @@ System.out.println(lower.matches("Aaa")); // false
 
 ```
 
-The motivating use case was detecting non-intersecting expressions. Once it can be established that a set of expressions don't intersect (that they are disjoint) it becomes possible to short-circuit evaluations. Moreover, they can be tested in any order, so it becomes possible to reorder based on matching stats. This can be especially important in cases when there is a matching of several expressions in a performance-critical path—load balances being a prototypical example.
+The motivating use case was detecting non-intersecting expressions. Once it can be established that a set of expressions don't intersect (that they are disjoint) it becomes possible to short-circuit evaluations. Moreover, they can be tested in any order, so it becomes possible to reorder based on matching stats. This can be especially important in cases when there is a matching of several expressions in a performance-critical path—load balancers being a prototypical example.
 
 ## Note on lookaround
 
