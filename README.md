@@ -23,7 +23,7 @@ As mentioned, Perl-style expressions don't give any execution time guarantee. On
 
 ### Proposal
 
-Regular expressions were born as a very specific tool and, almost as an a accident, grew to one of the most versatile (and abused) tools in the world of software. There is, however, a fundamental trade-off between the two prototypical implementations, which is usually ignored. Unbounded execution time is undesirable for many (if not all) interactive uses, as problems can happen whether either the regular expression or the text are supplied by the user. As example see:
+Regular expressions were born as a very specific tool and, almost as an a accident, grew to one of the most versatile (and [abused](https://www.noulakaz.net/2007/03/18/a-regular-expression-to-check-for-prime-numbers/)) tools in the world of software. There is, however, a fundamental trade-off between the two prototypical implementations, which is usually ignored. Unbounded execution time is undesirable for many (if not all) interactive uses, as problems can happen whether either the regular expression or the text are supplied by the user. As example see:
 
 - [Coding horror: regex performance](https://blog.codinghorror.com/regex-performance/)
 - [Stack Exchange regex outage postmortem](http://stackstatus.net/post/147710624694/outage-postmortem-july-20-2016)
