@@ -168,7 +168,7 @@ The library uses [SLF4J](https://www.slf4j.org/) for logging, which is the most 
 
 ### Dependencies
 
-There is are two small dependencies: [SLF4J](https://www.slf4j.org/) and [jparsec](https://github.com/jparsec/jparsec). The main jar file is about 200 KB.
+There are two small dependencies: [SLF4J](https://www.slf4j.org/) and [jparsec](https://github.com/jparsec/jparsec). The main jar file is about 200 KB.
 
 ## Similar efforts
 
