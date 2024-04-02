@@ -34,5 +34,52 @@ class CaseInsensitiveTest {
             assertTrue(r.matches("Á"));
             assertTrue(r.matches("á"));
         }
+
+        {
+            var r = Regex.compile("\\d", Pattern.CASE_INSENSITIVE);
+            assertTrue(r.matches("3"));
+            assertFalse(r.matches("a"));
+        }
+
+        {
+            var r = Regex.compile("\\d", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            assertTrue(r.matches("3"));
+            assertFalse(r.matches("a"));
+        }
+
+        {
+            var r = Regex.compile("[ab]", Pattern.CASE_INSENSITIVE);
+            assertTrue(r.matches("a"));
+            assertTrue(r.matches("b"));
+            assertFalse(r.matches("c"));
+        }
+
+        {
+            var r = Regex.compile("[ab]", Pattern.CASE_INSENSITIVE);
+            assertTrue(r.matches("a"));
+            assertTrue(r.matches("b"));
+            assertFalse(r.matches("c"));
+        }
+
+        {
+            var r = Regex.compile("[ab]", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            assertTrue(r.matches("a"));
+            assertTrue(r.matches("b"));
+            assertFalse(r.matches("c"));
+        }
+
+        {
+            var r = Regex.compile("a|b", Pattern.CASE_INSENSITIVE);
+            assertTrue(r.matches("a"));
+            assertTrue(r.matches("b"));
+            assertFalse(r.matches("c"));
+        }
+
+        {
+            var r = Regex.compile("a|b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            assertTrue(r.matches("a"));
+            assertTrue(r.matches("b"));
+            assertFalse(r.matches("c"));
+        }
     }
 }
