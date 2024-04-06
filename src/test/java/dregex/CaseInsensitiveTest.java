@@ -50,6 +50,8 @@ class CaseInsensitiveTest {
 
         {
             var r = Regex.compile("[ab]", CASE_INSENSITIVE);
+            assertTrue(r.matches("A"));
+            assertTrue(r.matches("B"));
             assertTrue(r.matches("a"));
             assertTrue(r.matches("b"));
             assertFalse(r.matches("c"));
@@ -57,6 +59,8 @@ class CaseInsensitiveTest {
 
         {
             var r = Regex.compile("[ab]", CASE_INSENSITIVE | UNICODE_CASE);
+            assertTrue(r.matches("A"));
+            assertTrue(r.matches("B"));
             assertTrue(r.matches("a"));
             assertTrue(r.matches("b"));
             assertFalse(r.matches("c"));
@@ -64,6 +68,8 @@ class CaseInsensitiveTest {
 
         {
             var r = Regex.compile("a|b", CASE_INSENSITIVE);
+            assertTrue(r.matches("A"));
+            assertTrue(r.matches("B"));
             assertTrue(r.matches("a"));
             assertTrue(r.matches("b"));
             assertFalse(r.matches("c"));
@@ -71,6 +77,8 @@ class CaseInsensitiveTest {
 
         {
             var r = Regex.compile("a|b", CASE_INSENSITIVE | UNICODE_CASE);
+            assertTrue(r.matches("A"));
+            assertTrue(r.matches("B"));
             assertTrue(r.matches("a"));
             assertTrue(r.matches("b"));
             assertFalse(r.matches("c"));
