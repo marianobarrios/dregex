@@ -28,22 +28,6 @@ public abstract class AbstractRange implements Node {
         return Objects.hash(from(), to());
     }
 
-    public AbstractRange canonical() {
-        if (this instanceof Lit) {
-            return this;
-        }
-        if (this instanceof Wildcard) {
-            return this;
-        }
-        if (from() == to()) {
-            return new Lit(from());
-        } else if (from() == Character.MIN_CODE_POINT && to() == Character.MAX_CODE_POINT) {
-            return Wildcard.instance;
-        } else {
-            return this;
-        }
-    }
-
     public abstract String toCharClassLit();
 
     public static AbstractRange of(int from, int to) {

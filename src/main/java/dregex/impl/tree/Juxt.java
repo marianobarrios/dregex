@@ -1,5 +1,6 @@
 package dregex.impl.tree;
 
+import dregex.impl.Normalizer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -15,7 +16,7 @@ public class Juxt implements Node {
     }
 
     public Juxt(Node... values) {
-        this.values = Arrays.asList(values);
+        this(Arrays.asList(values));
     }
 
     @Override
@@ -25,7 +26,11 @@ public class Juxt implements Node {
 
     @Override
     public Node canonical() {
-        return new Juxt(flattenValues(values).map(v -> v.canonical()).collect(Collectors.toList()));
+        if (values.size() == 1) {
+            return values.get(0).canonical();
+        } else {
+            return new Juxt(flattenValues(values).map(v -> v.canonical()).collect(Collectors.toList()));
+        }
     }
 
     private Stream<Node> flattenValues(List<? extends Node> values) {
@@ -54,6 +59,11 @@ public class Juxt implements Node {
     @Override
     public int precedence() {
         return 3;
+    }
+
+    @Override
+    public Node caseNormalize(Normalizer normalizer) {
+        return new Juxt(values.stream().map(v -> v.caseNormalize(normalizer)).collect(Collectors.toList()));
     }
 
     @Override

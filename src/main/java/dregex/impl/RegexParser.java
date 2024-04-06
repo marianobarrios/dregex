@@ -611,7 +611,7 @@ public class RegexParser {
 
     public static ParsedRegex parse(String regex, Flags flags) {
         if (flags.literal) {
-            return parseLiteralRegex(regex);
+            return parseLiteralRegex(regex, flags);
         } else {
             // process embedded flags
             var effRegex = regex;
@@ -668,9 +668,20 @@ public class RegexParser {
     /**
      * Parse a quoted regex. They don't really need parsing.
      */
-    private static ParsedRegex parseLiteralRegex(String regex) {
+    private static ParsedRegex parseLiteralRegex(String regex, Flags flags) {
+        Normalizer normalizer;
+        if (flags.caseInsensitive) {
+            if (flags.unicodeCase) {
+                normalizer = Normalization.UnicodeLowerCase;
+            } else {
+                normalizer = Normalization.LowerCase;
+            }
+        } else {
+            normalizer = Normalization.NoNormalization;
+        }
+
         var literals = regex.codePoints().mapToObj(ch -> new Lit(ch)).collect(Collectors.toList());
-        return new ParsedRegex(regex, new Juxt(literals), Normalization.NoNormalization);
+        return new ParsedRegex(regex, new Juxt(literals).caseNormalize(normalizer), normalizer);
     }
 
     /**
@@ -697,7 +708,7 @@ public class RegexParser {
         var parser = new RegexParser(flags.dotMatch, flags.unicodeClasses);
 
         try {
-            var tree = parser.regex.parse(normalizer.normalize(regex));
+            var tree = parser.regex.parse(regex).caseNormalize(normalizer);
             return new ParsedRegex(regex, tree, normalizer);
         } catch (ParserException e) {
             throw new InvalidRegexException(e.getMessage());

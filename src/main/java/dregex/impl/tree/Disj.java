@@ -1,5 +1,7 @@
 package dregex.impl.tree;
 
+import dregex.impl.Normalizer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -28,7 +30,7 @@ public class Disj implements Node {
     }
 
     public Disj(Node... values) {
-        this.values = Arrays.asList(values);
+        this(Arrays.asList(values));
     }
 
     @Override
@@ -45,7 +47,39 @@ public class Disj implements Node {
 
     @Override
     public Node canonical() {
-        return new Disj(flattenValues(values).map(v -> v.canonical()).collect(Collectors.toList()));
+        if (values.size() == 1) {
+            return values.get(0).canonical();
+        } else {
+            var canonicalValues = flattenValues(values).map(v -> v.canonical()).collect(Collectors.toList());
+
+            var sets = canonicalValues.stream()
+                    .filter(v -> v instanceof CharRange || v instanceof Lit || v instanceof CharSet)
+                    .flatMap(v -> {
+                        // A disjunction of ranges, literals and sets can be expressed simpler as a compound char set
+                        if (v instanceof AbstractRange) {
+                            return Stream.of((AbstractRange) v);
+                        } else if (v instanceof CharSet) {
+                            return ((CharSet) v).ranges.stream();
+                        } else {
+                            throw new IllegalStateException();
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            var nonSets = canonicalValues.stream()
+                    .filter(v -> !(v instanceof CharRange || v instanceof Lit || v instanceof CharSet))
+                    .collect(Collectors.toList());
+
+            if (sets.isEmpty()) {
+                return new Disj(nonSets);
+            } else if (nonSets.isEmpty()) {
+                return new CharSet(sets);
+            } else {
+                List<Node> values = new ArrayList<>(nonSets);
+                values.add(new CharSet(sets));
+                return new Disj(values);
+            }
+        }
     }
 
     private Stream<Node> flattenValues(List<? extends Node> values) {
@@ -61,5 +95,10 @@ public class Disj implements Node {
     @Override
     public int precedence() {
         return 4;
+    }
+
+    @Override
+    public Node caseNormalize(Normalizer normalizer) {
+        return new Disj(values.stream().map(v -> v.caseNormalize(normalizer)).collect(Collectors.toList()));
     }
 }
