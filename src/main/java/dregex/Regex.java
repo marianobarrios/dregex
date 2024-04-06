@@ -177,8 +177,9 @@ public class Regex {
      * @return the compiled regex
      */
     public static Regex compile(String regex, int flags) {
-        var parsedRegex = RegexParser.parse(regex, flagsFromBits(flags));
-        var universe = new Universe(List.of(parsedRegex.getTree()), parsedRegex.getNorm());
+        var parsedFlags = flagsFromBits(flags);
+        var parsedRegex = RegexParser.parse(regex, parsedFlags);
+        var universe = new Universe(List.of(parsedRegex.getTree()), parsedRegex.getNorm(), parsedFlags.canonicalEq);
         return new Regex(new CompiledRegex(regex, parsedRegex.getTree(), universe));
     }
 
@@ -216,12 +217,13 @@ public class Regex {
      * @return the compiled regexes
      */
     public static List<Regex> compile(List<String> regexes, int flags) {
-        var parsedRegexes = regexes.stream()
-                .map(r -> RegexParser.parse(r, flagsFromBits(flags)))
-                .collect(Collectors.toList());
+        var parsedFlags = flagsFromBits(flags);
+        var parsedRegexes =
+                regexes.stream().map(r -> RegexParser.parse(r, parsedFlags)).collect(Collectors.toList());
         var universe = new Universe(
                 parsedRegexes.stream().map(pr -> pr.getTree()).collect(Collectors.toList()),
-                parsedRegexes.get(0).getNorm());
+                parsedRegexes.get(0).getNorm(),
+                parsedFlags.canonicalEq);
         return parsedRegexes.stream()
                 .map(pr -> new Regex(new CompiledRegex(pr.getLiteral(), pr.getTree(), universe)))
                 .collect(Collectors.toList());

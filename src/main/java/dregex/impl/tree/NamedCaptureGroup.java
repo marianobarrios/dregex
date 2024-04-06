@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.Normalizer;
+import dregex.impl.CaseNormalization;
 
 public class NamedCaptureGroup extends CaptureGroup {
 
@@ -17,7 +17,12 @@ public class NamedCaptureGroup extends CaptureGroup {
     }
 
     @Override
-    public Node caseNormalize(Normalizer normalizer) {
+    public Node caseNormalize(CaseNormalization normalizer) {
         return new NamedCaptureGroup(name, value.caseNormalize(normalizer));
+    }
+
+    @Override
+    public Node unicodeNormalize() {
+        return new NamedCaptureGroup(name, value.unicodeNormalize());
     }
 }

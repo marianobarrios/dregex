@@ -669,15 +669,15 @@ public class RegexParser {
      * Parse a quoted regex. They don't really need parsing.
      */
     private static ParsedRegex parseLiteralRegex(String regex, Flags flags) {
-        Normalizer normalizer;
+        CaseNormalization normalizer;
         if (flags.caseInsensitive) {
             if (flags.unicodeCase) {
-                normalizer = Normalization.UnicodeLowerCase;
+                normalizer = CaseNormalization.UnicodeLowerCase;
             } else {
-                normalizer = Normalization.LowerCase;
+                normalizer = CaseNormalization.LowerCase;
             }
         } else {
-            normalizer = Normalization.NoNormalization;
+            normalizer = CaseNormalization.NoNormalization;
         }
 
         var literals = regex.codePoints().mapToObj(ch -> new Lit(ch)).collect(Collectors.toList());
@@ -689,27 +689,26 @@ public class RegexParser {
      */
     private static ParsedRegex parseRegexImpl(String regex, Flags flags) {
         // normalize case
-        Normalizer normalizer;
+        CaseNormalization normalizer;
         if (flags.caseInsensitive) {
             if (flags.unicodeClasses | flags.unicodeCase) {
-                normalizer = Normalization.UnicodeLowerCase;
+                normalizer = CaseNormalization.UnicodeLowerCase;
             } else {
-                normalizer = Normalization.LowerCase;
+                normalizer = CaseNormalization.LowerCase;
             }
         } else {
-            normalizer = Normalization.NoNormalization;
-        }
-
-        if (flags.canonicalEq) {
-            normalizer = Normalizer.combine(Normalization.CanonicalDecomposition, normalizer);
+            normalizer = CaseNormalization.NoNormalization;
         }
 
         // parsing proper
         var parser = new RegexParser(flags.dotMatch, flags.unicodeClasses);
 
         try {
-            var tree = parser.regex.parse(regex).caseNormalize(normalizer);
-            return new ParsedRegex(regex, tree, normalizer);
+            Node tree = parser.regex.parse(regex);
+            if (flags.canonicalEq) {
+                tree = tree.unicodeNormalize();
+            }
+            return new ParsedRegex(regex, tree.caseNormalize(normalizer), normalizer);
         } catch (ParserException e) {
             throw new InvalidRegexException(e.getMessage());
         }

@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.Normalizer;
+import dregex.impl.CaseNormalization;
 import java.util.Objects;
 
 public class Lookaround implements Node {
@@ -66,7 +66,12 @@ public class Lookaround implements Node {
     }
 
     @Override
-    public Node caseNormalize(Normalizer normalizer) {
+    public Node caseNormalize(CaseNormalization normalizer) {
         return new Lookaround(dir, cond, value.caseNormalize(normalizer));
+    }
+
+    @Override
+    public Node unicodeNormalize() {
+        return new Lookaround(dir, cond, value.unicodeNormalize());
     }
 }
