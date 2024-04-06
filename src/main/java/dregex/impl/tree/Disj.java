@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.Normalizer;
+import dregex.impl.CaseNormalization;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -98,7 +98,12 @@ public class Disj implements Node {
     }
 
     @Override
-    public Node caseNormalize(Normalizer normalizer) {
+    public Node caseNormalize(CaseNormalization normalizer) {
         return new Disj(values.stream().map(v -> v.caseNormalize(normalizer)).collect(Collectors.toList()));
+    }
+
+    @Override
+    public Node unicodeNormalize() {
+        return new Disj(values.stream().map(v -> v.unicodeNormalize()).collect(Collectors.toList()));
     }
 }

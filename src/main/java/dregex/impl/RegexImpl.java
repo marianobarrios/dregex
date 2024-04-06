@@ -2,6 +2,7 @@ package dregex.impl;
 
 import dregex.IncompatibleRegexException;
 import dregex.MatchResult;
+import java.text.Normalizer;
 import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,14 @@ public class RegexImpl {
     }
 
     public MatchResult matchAndReport(CharSequence string) {
-        return DfaAlgorithms.matchString(dfa, universe.getNormalization().normalize(string));
+        if (universe.hasCanonicalEquivalence()) {
+            string = Normalizer.normalize(string, Normalizer.Form.NFD);
+        }
+        var builder = new StringBuilder();
+        string.codePoints()
+                .forEach(
+                        c -> builder.appendCodePoint(universe.getNormalization().normalize(c)));
+        return DfaAlgorithms.matchString(dfa, builder.toString());
     }
 
     public RegexImpl intersect(RegexImpl other) {

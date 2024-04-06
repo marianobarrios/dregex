@@ -1,7 +1,5 @@
 package dregex.impl.tree;
 
-import dregex.impl.Normalizer;
-
 public final class Wildcard extends AbstractRange {
 
     public static final Wildcard instance = new Wildcard();
@@ -16,11 +14,6 @@ public final class Wildcard extends AbstractRange {
     @Override
     public int to() {
         return Character.MAX_CODE_POINT;
-    }
-
-    @Override
-    public AbstractRange caseNormalize(Normalizer normalizer) {
-        return this;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.Normalizer;
+import dregex.impl.CaseNormalization;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -62,8 +62,13 @@ public class Juxt implements Node {
     }
 
     @Override
-    public Node caseNormalize(Normalizer normalizer) {
+    public Node caseNormalize(CaseNormalization normalizer) {
         return new Juxt(values.stream().map(v -> v.caseNormalize(normalizer)).collect(Collectors.toList()));
+    }
+
+    @Override
+    public Node unicodeNormalize() {
+        return new Juxt(values.stream().map(v -> v.unicodeNormalize()).collect(Collectors.toList()));
     }
 
     @Override

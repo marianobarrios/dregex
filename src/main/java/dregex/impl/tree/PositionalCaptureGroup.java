@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.Normalizer;
+import dregex.impl.CaseNormalization;
 
 public class PositionalCaptureGroup extends CaptureGroup {
 
@@ -14,7 +14,12 @@ public class PositionalCaptureGroup extends CaptureGroup {
     }
 
     @Override
-    public Node caseNormalize(Normalizer normalizer) {
+    public Node caseNormalize(CaseNormalization normalizer) {
         return new PositionalCaptureGroup(value.caseNormalize(normalizer));
+    }
+
+    @Override
+    public Node unicodeNormalize() {
+        return new PositionalCaptureGroup(value.unicodeNormalize());
     }
 }

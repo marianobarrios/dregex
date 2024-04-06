@@ -6,9 +6,9 @@ public class ParsedRegex {
 
     private final String literal;
     private final Node tree;
-    private final Normalizer norm;
+    private final CaseNormalization norm;
 
-    public ParsedRegex(String literal, Node tree, Normalizer norm) {
+    public ParsedRegex(String literal, Node tree, CaseNormalization norm) {
         this.literal = literal;
         this.tree = tree;
         this.norm = norm;
@@ -22,7 +22,7 @@ public class ParsedRegex {
         return tree;
     }
 
-    public Normalizer getNorm() {
+    public CaseNormalization getNorm() {
         return norm;
     }
 }
