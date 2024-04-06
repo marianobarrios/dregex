@@ -48,14 +48,14 @@ public class Compiler {
             }
         } else if (node instanceof CharSet) {
             var set = (CharSet) node;
-            addTransitionsFromNode(transitions, new Disj(set.ranges), from, to);
+            addTransitionsFromNode(transitions, Disj.of(set.ranges), from, to);
         } else if (node instanceof Juxt) {
             // this optimization should be applied before the lookarounds are expanded to intersections and differences
             var juxt = (Juxt) node;
-            addTransitionsFromJuxt(transitions, CompilerHelper.combineNegLookaheads(juxt), from, to);
+            addTransitionsFromJuxt(transitions, juxt, from, to);
         } else if (node instanceof Lookaround) {
             var la = (Lookaround) node;
-            addTransitionsFromNode(transitions, new Juxt(la), from, to);
+            addTransitionsFromJuxt(transitions, new Juxt(List.of(la)), from, to);
         } else if (node instanceof Disj) {
             var disj = (Disj) node;
             addTransitionsFromDisj(transitions, disj, from, to);
@@ -93,10 +93,11 @@ public class Compiler {
      * <p>
      * In the case of more than one lookaround, the transformation is applied recursively.
      * <p>
-     * *
-     * NOTE: Only lookahead is currently implemented
      */
     void addTransitionsFromJuxt(List<Nfa.Transition> transitions, Juxt juxt, SimpleState from, SimpleState to) {
+        // optimization
+        juxt = CompilerHelper.combineNegLookaheads(juxt);
+
         var lookaroundIdx = CompilerHelper.findLookaround(juxt.values);
         if (lookaroundIdx != -1) {
             var prefix = juxt.values.subList(0, lookaroundIdx);
@@ -108,10 +109,10 @@ public class Compiler {
                     Operation rightSide;
                     switch (lookaround.cond) {
                         case Positive:
-                            rightSide = new Intersection(new Juxt(suffix), new Juxt(lookaround.value, wildcard));
+                            rightSide = new Intersection(Juxt.of(suffix), Juxt.of(lookaround.value, wildcard));
                             break;
                         case Negative:
-                            rightSide = new Difference(new Juxt(suffix), new Juxt(lookaround.value, wildcard));
+                            rightSide = new Difference(Juxt.of(suffix), Juxt.of(lookaround.value, wildcard));
                             break;
                         default:
                             throw new IllegalStateException();
@@ -122,17 +123,17 @@ public class Compiler {
                         List<Node> nodes = new ArrayList<>(prefix.size() + 1);
                         nodes.addAll(prefix);
                         nodes.add(rightSide);
-                        addTransitionsFromNode(transitions, new Juxt(nodes), from, to);
+                        addTransitionsFromNode(transitions, Juxt.of(nodes), from, to);
                     }
                     break;
                 case Behind:
                     Operation leftSide;
                     switch (lookaround.cond) {
                         case Positive:
-                            leftSide = new Intersection(new Juxt(prefix), new Juxt(lookaround.value, wildcard));
+                            leftSide = new Intersection(Juxt.of(prefix), Juxt.of(lookaround.value, wildcard));
                             break;
                         case Negative:
-                            leftSide = new Difference(new Juxt(prefix), new Juxt(lookaround.value, wildcard));
+                            leftSide = new Difference(Juxt.of(prefix), Juxt.of(lookaround.value, wildcard));
                             break;
                         default:
                             throw new IllegalStateException();
@@ -143,7 +144,7 @@ public class Compiler {
                         List<Node> nodes = new ArrayList<>(suffix.size() + 1);
                         nodes.add(leftSide);
                         nodes.addAll(suffix);
-                        addTransitionsFromNode(transitions, new Juxt(nodes), from, to);
+                        addTransitionsFromNode(transitions, Juxt.of(nodes), from, to);
                     }
                     break;
                 default:
@@ -212,7 +213,7 @@ public class Compiler {
             List<Node> juxtValues = new ArrayList<>(rep.min + 1);
             juxtValues.addAll(Collections.nCopies(rep.min, rep.value));
             juxtValues.add(new Rep(0, Optional.empty(), rep.value));
-            addTransitionsFromNode(transitions, new Juxt(juxtValues), from, to);
+            addTransitionsFromNode(transitions, Juxt.of(juxtValues), from, to);
 
         } else if (rep.min == 1 && rep.max.isEmpty()) {
 
@@ -239,7 +240,7 @@ public class Compiler {
             List<Node> juxtValues = new ArrayList<>(x + 1);
             juxtValues.addAll(Collections.nCopies(x, rep.value));
             juxtValues.add(new Rep(1, Optional.of(rep.max.get() - x), rep.value));
-            addTransitionsFromNode(transitions, new Juxt(juxtValues), from, to);
+            addTransitionsFromNode(transitions, Juxt.of(juxtValues), from, to);
 
         } else if (rep.min == 1 && rep.max.isPresent() && rep.max.get() > 0) {
 

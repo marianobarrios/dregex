@@ -408,19 +408,19 @@ public class RegexParser {
                 }
             });
 
-    private final Parser<Juxt> quotedLiteral = between(
+    private final Parser<Node> quotedLiteral = between(
                     sequence(backslash, litChar('Q')),
                     regex(".").toScanner("").source().until(sequence(backslash, litChar('E'))),
                     sequence(backslash, litChar('E')))
             .map(literals -> {
-                return new Juxt(
+                return Juxt.of(
                         literals.stream().map(ch -> new Lit(ch.codePointAt(0))).collect(Collectors.toList()));
             });
 
-    private final Parser<Disj> unicodeLineBreak = sequence(backslash, litChar('R'))
+    private final Parser<Node> unicodeLineBreak = sequence(backslash, litChar('R'))
             .map(x -> {
-                return new Disj(
-                        new Juxt(new Lit(0xD), new Lit(0xA)),
+                return Disj.of(
+                        Juxt.of(new Lit(0xD), new Lit(0xA)),
                         new Lit(0xA),
                         new Lit(0xB),
                         new Lit(0xC),
@@ -567,21 +567,17 @@ public class RegexParser {
                 if (parts.isEmpty()) {
                     throw new AssertionError();
                 }
-                if (parts.size() == 1) {
-                    return parts.get(0);
-                } else {
-                    return new Juxt(parts);
-                }
+                return Juxt.of(parts);
             });
 
-    private final Parser<Node> emptyRegex = regex("").toScanner("").map(x -> new Juxt(List.of()));
+    private final Parser<Node> emptyRegex = regex("").toScanner("").map(x -> Juxt.of());
 
     private final Parser<Node> nonEmptyRegex =
             sequence(branch, sequence(litChar('|'), regexRef.lazy()).asOptional(), (left, optRight) -> {
                 if (optRight.isEmpty()) {
                     return left;
                 } else {
-                    return new Disj(left, optRight.orElseThrow());
+                    return Disj.of(left, optRight.orElseThrow());
                 }
             });
 
@@ -681,7 +677,7 @@ public class RegexParser {
         }
 
         var literals = regex.codePoints().mapToObj(ch -> new Lit(ch)).collect(Collectors.toList());
-        return new ParsedRegex(regex, new Juxt(literals).caseNormalize(normalizer), normalizer);
+        return new ParsedRegex(regex, Juxt.of(literals).caseNormalize(normalizer), normalizer);
     }
 
     /**

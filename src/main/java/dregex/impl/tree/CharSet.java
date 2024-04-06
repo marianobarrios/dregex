@@ -61,7 +61,7 @@ public class CharSet implements Node {
 
     @Override
     public Node unicodeNormalize() {
-        return new Disj(ranges.stream().map(r -> r.unicodeNormalize()).collect(Collectors.toList()));
+        return Disj.of(ranges.stream().map(r -> r.unicodeNormalize()).collect(Collectors.toList()));
     }
 
     @Override
