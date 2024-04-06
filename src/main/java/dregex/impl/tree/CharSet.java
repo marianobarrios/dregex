@@ -1,5 +1,6 @@
 package dregex.impl.tree;
 
+import dregex.impl.Normalizer;
 import dregex.impl.RangeOps;
 import java.util.Arrays;
 import java.util.List;
@@ -49,6 +50,11 @@ public class CharSet implements Node {
     @Override
     public int precedence() {
         return 1;
+    }
+
+    @Override
+    public Node caseNormalize(Normalizer normalizer) {
+        return new Disj(ranges.stream().map(r -> r.caseNormalize(normalizer)).collect(Collectors.toList()));
     }
 
     @Override

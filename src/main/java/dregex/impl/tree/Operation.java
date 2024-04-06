@@ -1,5 +1,6 @@
 package dregex.impl.tree;
 
+import dregex.impl.Normalizer;
 import java.util.Objects;
 
 public abstract class Operation implements Node {
@@ -18,6 +19,11 @@ public abstract class Operation implements Node {
     }
 
     public int precedence() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Node caseNormalize(Normalizer normalizer) {
         throw new UnsupportedOperationException();
     }
 

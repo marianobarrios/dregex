@@ -1,5 +1,6 @@
 package dregex.impl.tree;
 
+import dregex.impl.Normalizer;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -65,6 +66,11 @@ public class Rep implements Node {
     @Override
     public int precedence() {
         return 2;
+    }
+
+    @Override
+    public Node caseNormalize(Normalizer normalizer) {
+        return new Rep(min, max, value.caseNormalize(normalizer));
     }
 
     @Override

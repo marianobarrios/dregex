@@ -1,5 +1,7 @@
 package dregex.impl.tree;
 
+import dregex.impl.Normalizer;
+
 public final class Wildcard extends AbstractRange {
 
     public static final Wildcard instance = new Wildcard();
@@ -17,6 +19,11 @@ public final class Wildcard extends AbstractRange {
     }
 
     @Override
+    public AbstractRange caseNormalize(Normalizer normalizer) {
+        return this;
+    }
+
+    @Override
     public String toRegex() {
         return ".";
     }
@@ -29,6 +36,10 @@ public final class Wildcard extends AbstractRange {
     @Override
     public int precedence() {
         return 1;
+    }
+
+    public Node canonical() {
+        return this;
     }
 
     @Override

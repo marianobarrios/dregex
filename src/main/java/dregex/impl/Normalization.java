@@ -15,7 +15,8 @@ public enum Normalization implements Normalizer {
             for (int i = 0; i < str.length(); i++) {
                 char ch = str.charAt(i);
                 boolean isAsciiUpperCase = ch >= 'A' && ch <= 'Z';
-                builder.append(isAsciiUpperCase ? ch + 0x20 : ch);
+                // cast to prevent promotion to int and calling the wrong overload
+                builder.append(isAsciiUpperCase ? ((char) (ch + 0x20)) : ch);
             }
             return builder.toString();
         }
@@ -26,7 +27,8 @@ public enum Normalization implements Normalizer {
         public CharSequence normalize(CharSequence str) {
             var builder = new StringBuilder();
             str.codePoints().forEach(codePoint -> {
-                builder.append(Character.toLowerCase(codePoint));
+                // cast to prevent calling the wrong overload
+                builder.append((char) Character.toLowerCase(codePoint));
             });
             return builder.toString();
         }
