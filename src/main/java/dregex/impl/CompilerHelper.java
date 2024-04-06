@@ -20,7 +20,7 @@ public class CompilerHelper {
                     if (la1.cond == Condition.Negative && la2.cond == Condition.Negative) {
                         newValues.set(
                                 newValues.size() - 1,
-                                new Lookaround(Direction.Ahead, Condition.Negative, new Disj(la1.value, la2.value)));
+                                new Lookaround(Direction.Ahead, Condition.Negative, Disj.of(la1.value, la2.value)));
                         continue;
                     }
                 }

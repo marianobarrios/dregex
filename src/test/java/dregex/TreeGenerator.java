@@ -34,9 +34,8 @@ class TreeGenerator {
                         new Rep(2, Optional.empty(), node),
                         new Rep(2, Optional.of(3), node),
                         new Rep(0, Optional.of(1), node));
-                var doubl = generateFixedDepth(levels - 1).flatMap(secondNode -> {
-                    return Stream.of(new Disj(node, secondNode), new Juxt(node, secondNode));
-                });
+                var doubl = generateFixedDepth(levels - 1)
+                        .flatMap(secondNode -> Stream.of(Disj.of(node, secondNode), Juxt.of(node, secondNode)));
                 return Stream.concat(simple, doubl);
             });
         }
