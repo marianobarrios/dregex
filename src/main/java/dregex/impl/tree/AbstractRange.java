@@ -2,9 +2,7 @@ package dregex.impl.tree;
 
 import dregex.impl.CaseNormalization;
 import java.text.Normalizer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -38,12 +36,7 @@ public abstract class AbstractRange implements Node {
 
     @Override
     public Node caseNormalize(CaseNormalization normalizer) {
-        var ranges = caseNormalizeImpl(normalizer);
-        if (ranges.size() == 1) {
-            return ranges.get(0);
-        } else {
-            return new Disj(ranges);
-        }
+        return Disj.of(caseNormalizeImpl(normalizer));
     }
 
     public List<AbstractRange> caseNormalizeImpl(CaseNormalization normalizer) {
@@ -78,20 +71,31 @@ public abstract class AbstractRange implements Node {
 
     @Override
     public Node unicodeNormalize() {
-        var alternatives = IntStream.rangeClosed(from(), to())
-                .mapToObj(codePoint -> {
-                    var normCodePoints = Normalizer.normalize(Character.toString(codePoint), Normalizer.Form.NFD)
-                            .codePoints()
-                            .mapToObj(Lit::new)
-                            .collect(Collectors.toList());
-                    if (normCodePoints.size() > 1) {
-                        return new Juxt(normCodePoints);
-                    } else {
-                        return normCodePoints.get(0);
-                    }
-                })
-                .collect(Collectors.toList());
-        return new Disj(alternatives);
+        Map<Integer, List<Integer>> expansions = new TreeMap<>();
+        IntStream.rangeClosed(from(), to()).forEach(codePoint -> {
+            var normalized = Normalizer.normalize(Character.toString(codePoint), Normalizer.Form.NFD)
+                    .codePoints()
+                    .boxed()
+                    .collect(Collectors.toList());
+            if (normalized.size() > 1) {
+                expansions.put(codePoint, normalized);
+            }
+        });
+        List<Node> ret = new ArrayList<>();
+        int i = from();
+        for (var entry : expansions.entrySet()) {
+            int codePoint = entry.getKey();
+            List<Integer> normalization = entry.getValue();
+            if (i < codePoint) {
+                ret.add(AbstractRange.of(i, codePoint - 1));
+            }
+            ret.add(Juxt.of(normalization.stream().map(Lit::new).collect(Collectors.toList())));
+            i = codePoint + 1;
+        }
+        if (i <= to()) {
+            ret.add(AbstractRange.of(i, to()));
+        }
+        return Disj.of(ret);
     }
 
     public static AbstractRange of(int from, int to) {

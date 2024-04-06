@@ -25,12 +25,8 @@ public class Disj implements Node {
         return Objects.hash(values);
     }
 
-    public Disj(List<? extends Node> values) {
+    private Disj(List<? extends Node> values) {
         this.values = values;
-    }
-
-    public Disj(Node... values) {
-        this(Arrays.asList(values));
     }
 
     @Override
@@ -71,13 +67,13 @@ public class Disj implements Node {
                     .collect(Collectors.toList());
 
             if (sets.isEmpty()) {
-                return new Disj(nonSets);
+                return Disj.of(nonSets);
             } else if (nonSets.isEmpty()) {
                 return new CharSet(sets);
             } else {
                 List<Node> values = new ArrayList<>(nonSets);
                 values.add(new CharSet(sets));
-                return new Disj(values);
+                return Disj.of(values);
             }
         }
     }
@@ -99,11 +95,26 @@ public class Disj implements Node {
 
     @Override
     public Node caseNormalize(CaseNormalization normalizer) {
-        return new Disj(values.stream().map(v -> v.caseNormalize(normalizer)).collect(Collectors.toList()));
+        return Disj.of(values.stream().map(v -> v.caseNormalize(normalizer)).collect(Collectors.toList()));
     }
 
     @Override
     public Node unicodeNormalize() {
-        return new Disj(values.stream().map(v -> v.unicodeNormalize()).collect(Collectors.toList()));
+        return Disj.of(values.stream().map(v -> v.unicodeNormalize()).collect(Collectors.toList()));
+    }
+
+    public static Node of(Node... values) {
+        return of(Arrays.stream(values).collect(Collectors.toList()));
+    }
+
+    public static Node of(List<? extends Node> values) {
+        if (values.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        if (values.size() == 1) {
+            return values.get(0);
+        } else {
+            return new Disj(values);
+        }
     }
 }

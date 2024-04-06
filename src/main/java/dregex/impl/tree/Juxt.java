@@ -15,10 +15,6 @@ public class Juxt implements Node {
         this.values = values;
     }
 
-    public Juxt(Node... values) {
-        this(Arrays.asList(values));
-    }
-
     @Override
     public String toString() {
         return String.format("Juxt(%s)", values.stream().map(Object::toString).collect(Collectors.joining(",")));
@@ -82,5 +78,17 @@ public class Juxt implements Node {
     @Override
     public int hashCode() {
         return Objects.hash(values);
+    }
+
+    public static Node of(Node... values) {
+        return of(Arrays.stream(values).collect(Collectors.toList()));
+    }
+
+    public static Node of(List<? extends Node> values) {
+        if (values.size() == 1) {
+            return values.get(0);
+        } else {
+            return new Juxt(values);
+        }
     }
 }
