@@ -47,7 +47,7 @@ dependencies {
     implementation 'org.jparsec:jparsec:3.1'
 
     // log
-    implementation 'org.slf4j:slf4j-api:2.0.12'
+    implementation 'org.slf4j:slf4j-api:2.0.13'
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.5.4'
 
     // test framework
