@@ -24,14 +24,14 @@ class SerializerTest {
         generator.generate(3).forEach(tree -> {
             i.incrementAndGet();
             var canonicalTree = tree.canonical();
-            logger.trace("Generated tree: " + canonicalTree);
+            logger.trace("Generated tree: {}", canonicalTree);
             var serialized = canonicalTree.toRegex();
-            logger.debug("Serialized: " + serialized);
+            logger.debug("Serialized: {}", serialized);
             var parserRegex = RegexParser.parse(serialized, new RegexParser.Flags());
             var reparsed = parserRegex.getTree().canonical();
-            logger.trace("Reparsed: " + reparsed);
+            logger.trace("Reparsed: {}", reparsed);
             var reserialized = reparsed.toRegex();
-            logger.trace("Reserialized: " + reserialized);
+            logger.trace("Reserialized: {}", reserialized);
             assertEquals(reparsed, canonicalTree);
             assertEquals(serialized, reserialized);
         });

@@ -61,7 +61,7 @@ public class UnicodeDatabaseReader {
             line = line.trim();
 
             // slip empty
-            if (line.equals("")) {
+            if (line.isEmpty()) {
                 continue;
             }
 

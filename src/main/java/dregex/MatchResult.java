@@ -21,7 +21,7 @@ public class MatchResult {
 
     /**
      * Returns the one past last position in the input string that matched the regex. If the regex matched completely,
-     * the number returnes is the size of the input string.
+     * the number returns is the size of the input string.
      *
      * @return the position up to which the input string matched
      */

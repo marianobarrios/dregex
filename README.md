@@ -23,7 +23,7 @@ As mentioned, Perl-style expressions don't give any execution time guarantee. On
 
 ### Proposal
 
-Regular expressions were born as a very specific tool and, almost as an a accident, grew to one of the most versatile (and [abused](https://www.noulakaz.net/2007/03/18/a-regular-expression-to-check-for-prime-numbers/)) tools in the world of software. There is, however, a fundamental trade-off between the two prototypical implementations, which is usually ignored. Unbounded execution time is undesirable for many (if not all) interactive uses, as problems can happen whether either the regular expression or the text are supplied by the user. As example see:
+Regular expressions were born as a very specific tool and, almost as an accident, grew to one of the most versatile (and [abused](https://www.noulakaz.net/2007/03/18/a-regular-expression-to-check-for-prime-numbers/)) tools in the world of software. There is, however, a fundamental trade-off between the two prototypical implementations, which is usually ignored. Unbounded execution time is undesirable for many (if not all) interactive uses, as problems can happen whether either the regular expression or the text are supplied by the user. As example see:
 
 - [Coding horror: regex performance](https://blog.codinghorror.com/regex-performance/)
 - [Stack Exchange regex outage postmortem](http://stackstatus.net/post/147710624694/outage-postmortem-july-20-2016)
@@ -79,7 +79,7 @@ With one exception, all compile flags defined by `java.util.regex.Pattern` are s
 * Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine, as they, by definition, only affect capturing groups, not whether the expressions match or not.
 * Compile flag [MULTILINE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#MULTILINE), because it is meaningless for a pure-matching engine, that works always in multi-line mode.
 
-**Note**: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (with the exception of unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
+**Note**: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (except for unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 
 ## Set operations
 

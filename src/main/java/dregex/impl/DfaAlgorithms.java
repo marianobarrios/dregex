@@ -25,8 +25,8 @@ public class DfaAlgorithms {
     /**
      * Intersections, unions and differences between DFA are done using the "product construction"
      * The following pages include graphical examples of this technique:
-     * https://stackoverflow.com/q/7780521/4505326
-     * https://cs.stackexchange.com/a/7108
+     * <a href="https://stackoverflow.com/q/7780521/4505326">...</a>
+     * <a href="https://cs.stackexchange.com/a/7108">...</a>
      */
     private static Dfa productConstruction(Dfa left, Dfa right, BiPredicate<State, State> acceptingStateFilter) {
         Set<CharInterval> allChars = setUnion(left.allChars(), right.allChars());

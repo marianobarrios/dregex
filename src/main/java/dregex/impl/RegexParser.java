@@ -2,7 +2,6 @@ package dregex.impl;
 
 import static org.jparsec.Parsers.*;
 import static org.jparsec.pattern.Patterns.*;
-import static org.jparsec.pattern.Patterns.isChar;
 
 import dregex.InvalidRegexException;
 import dregex.impl.database.*;
@@ -412,23 +411,19 @@ public class RegexParser {
                     sequence(backslash, litChar('Q')),
                     regex(".").toScanner("").source().until(sequence(backslash, litChar('E'))),
                     sequence(backslash, litChar('E')))
-            .map(literals -> {
-                return Juxt.of(
-                        literals.stream().map(ch -> new Lit(ch.codePointAt(0))).collect(Collectors.toList()));
-            });
+            .map(literals -> Juxt.of(
+                    literals.stream().map(ch -> new Lit(ch.codePointAt(0))).collect(Collectors.toList())));
 
     private final Parser<Node> unicodeLineBreak = sequence(backslash, litChar('R'))
-            .map(x -> {
-                return Disj.of(
-                        Juxt.of(new Lit(0xD), new Lit(0xA)),
-                        new Lit(0xA),
-                        new Lit(0xB),
-                        new Lit(0xC),
-                        new Lit(0xD),
-                        new Lit(0x85),
-                        new Lit(0x2028),
-                        new Lit(0x2029));
-            });
+            .map(x -> Disj.of(
+                    Juxt.of(new Lit(0xD), new Lit(0xA)),
+                    new Lit(0xA),
+                    new Lit(0xB),
+                    new Lit(0xC),
+                    new Lit(0xD),
+                    new Lit(0x85),
+                    new Lit(0x2028),
+                    new Lit(0x2029)));
 
     private final Parser.Reference<Node> regexRef = Parser.newReference();
 
@@ -552,7 +547,7 @@ public class RegexParser {
                 throw new InvalidRegexException("reluctant quantifiers are not supported");
             });
 
-    private final Parser<Node> possesivelyQuantifiedBranch = sequence(regexAtom, quantifier, litChar('+'))
+    private final Parser<Node> possessivelyQuantifiedBranch = sequence(regexAtom, quantifier, litChar('+'))
             .map(ch -> {
                 throw new InvalidRegexException("possessive quantifiers are not supported");
             });
@@ -561,7 +556,7 @@ public class RegexParser {
             sequence(regexAtom, quantifier, (atom, q) -> new Rep(q.min, q.max, atom));
 
     private final Parser<Node> branch = or(
-                    lazyQuantifiedBranch, possesivelyQuantifiedBranch, quantifiedBranch, regexAtom)
+                    lazyQuantifiedBranch, possessivelyQuantifiedBranch, quantifiedBranch, regexAtom)
             .many1()
             .map(parts -> {
                 if (parts.isEmpty()) {

@@ -22,7 +22,7 @@ public class UnicodeScripts {
         }
     }
 
-    private static final Map<String, String> synomyms = Map.<String, String>ofEntries(
+    private static final Map<String, String> synonyms = Map.<String, String>ofEntries(
             Map.entry("COMMON", "ZYYY"),
             Map.entry("LATIN", "LATN"),
             Map.entry("GREEK", "GREK"),
@@ -192,7 +192,7 @@ public class UnicodeScripts {
                     .collect(Collectors.toList()));
             sets.put(block.toUpperCase(), chatSet);
         }
-        for (var entry : synomyms.entrySet()) {
+        for (var entry : synonyms.entrySet()) {
             var script = entry.getKey();
             var alias = entry.getValue();
             sets.put(alias.toUpperCase(), sets.get(script.toUpperCase()));

@@ -134,7 +134,7 @@ public class Regex {
     }
 
     /**
-     * Return whether this regular expression is equivalent to other. Two regular expressions are equivalent if they
+     * Return whether this regular expression is equivalent to others. Two regular expressions are equivalent if they
      * match exactly the same set of strings. This operation takes O(n⋅m) time, where n and m are the number of states of
      * the DFA of the operands.
      *
