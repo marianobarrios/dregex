@@ -35,7 +35,7 @@ class StringGenerator {
                     .collect(Collectors.toList());
         } else if (regex instanceof Rep) {
             var rep = (Rep) regex;
-            int max = rep.max.orElseGet(() -> Integer.MAX_VALUE - 1);
+            int max = rep.max.orElse(Integer.MAX_VALUE - 1);
             var count = 0;
             List<String> res = new ArrayList<>();
             for (int i = rep.min; i <= max; i++) {

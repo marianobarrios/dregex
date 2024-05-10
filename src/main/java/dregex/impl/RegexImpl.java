@@ -51,7 +51,7 @@ public class RegexImpl {
     public RegexImpl intersect(RegexImpl other) {
         checkUniverse(other);
         var start = System.nanoTime();
-        var ret = new SynteticRegex(
+        var ret = new SyntheticRegex(
                 DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.doIntersect(this.dfa, other.dfa)), universe);
         var time = Duration.ofNanos(System.nanoTime() - start);
         logger.trace("{} and {} intersected in {}", this, other, time);
@@ -61,7 +61,7 @@ public class RegexImpl {
     public RegexImpl diff(RegexImpl other) {
         checkUniverse(other);
         var start = System.nanoTime();
-        var ret = new SynteticRegex(
+        var ret = new SyntheticRegex(
                 DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.diff(this.dfa, other.dfa)), universe);
         var time = Duration.ofNanos(System.nanoTime() - start);
         logger.trace("{} and {} diffed in {}", this, other, time);
@@ -71,7 +71,7 @@ public class RegexImpl {
     public RegexImpl union(RegexImpl other) {
         checkUniverse(other);
         var start = System.nanoTime();
-        var ret = new SynteticRegex(
+        var ret = new SyntheticRegex(
                 DfaAlgorithms.rewriteWithSimpleStates(DfaAlgorithms.union(this.dfa, other.dfa)), universe);
         var time = Duration.ofNanos(System.nanoTime() - start);
         logger.trace("{} and {} unioned in {}", this, other, time);
@@ -108,6 +108,6 @@ public class RegexImpl {
      * expression that does not match anything.
      */
     public static RegexImpl nullRegex(Universe u) {
-        return new SynteticRegex(Dfa.nothingDfa, u);
+        return new SyntheticRegex(Dfa.nothingDfa, u);
     }
 }
