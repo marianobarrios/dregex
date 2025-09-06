@@ -57,6 +57,8 @@ Unless specified, the supported regular expression flavor attempts to be compati
 * Block quotes: `\Q`...`\E`
 * Lookaround (lookahead and lookbehind; both positive and negative) (see note below)
 
+The definition of Unicode character classes (Unicode blocks, scripts, general categories and binary properties) is tied to the library and not the JVM). The version currently supported is Unicode 16.0.0.
+
 #### Compile flags
 
 With one exception, all compile flags defined by `java.util.regex.Pattern` are supported, including in embedded form:
