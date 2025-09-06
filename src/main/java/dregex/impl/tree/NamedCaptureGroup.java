@@ -13,7 +13,7 @@ public class NamedCaptureGroup extends CaptureGroup {
 
     @Override
     public String toRegex() {
-        return String.format("(?<%s)", value.toRegex());
+        return String.format("(?<%s>%s)", name, value.toRegex());
     }
 
     @Override
