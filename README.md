@@ -172,7 +172,7 @@ There are two small dependencies: [SLF4J](https://www.slf4j.org/) and [jparsec](
 
 ## Similar efforts
 
-* [RE2](https://github.com/google/re2) is an efficient (linear) C++ library that implements a subset of Perl features, writen by Russ Cox. The author has written a [set of articles](http://swtch.com/~rsc/regexp/regexp1.html) explaining the problem.
+* [RE2](https://github.com/google/re2) is an efficient (linear) C++ library that implements a subset of Perl features, written by Russ Cox. The author has written a [set of articles](http://swtch.com/~rsc/regexp/regexp1.html) explaining the problem.
 * [TRE](https://github.com/laurikari/tre/) is an efficient C library and command-line tool that implements POSIX-compliant and approximate (fuzzy) regex matching, using "tagged DFA". It is written by Ville Laurikari.
 * [Plan 9 grep](https://9fans.github.io/plan9port/man/man1/grep.html) is an efficient DFA implementation that supports egrep syntax. It was written by Ken Thompson.
 * [regex-tdfa](https://github.com/haskell-hvr/regex-tdfa) is a "tagged DFA" implementation written in Haskell by Chris Kuklewicz.
