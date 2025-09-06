@@ -1,6 +1,6 @@
 # dregex - Deterministic Regular Expression Engine
 
-dregex is a Java library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features and yet retains linear matching time. It can, additionally, do set operations (union, intersection, and difference).
+dregex is a Java library that implements a regular expression engine using deterministic finite automata (DFA). It supports some Perl-style features yet retains linear matching time. Additionally, it can perform set operations (union, intersection, and difference).
 
 [![Build Status](https://github.com/marianobarrios/dregex/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/dregex/actions)
 
@@ -11,28 +11,28 @@ dregex is a Java library that implements a regular expression engine using deter
 
 ### History
 
-"Regular expressions" are a mathematically-defined concept, invented by Stephen Kleene in 1956. In the most minimalistic (and original) version these expressions define languages using just literal characters, alternation ("|") and repetition ("*"). They have well-understood properties; centrally, they can be matched against text using another well-understood abstract device, a Definite Finite Automaton (DFA). DFA have the important property of running on arbitrary text of length n in O(n) time and using O(1) space. Presented with a regular expression and a candidate text, a DFA decides whether the text matches the expression.
+"Regular expressions" are a mathematically defined concept, invented by Stephen Kleene in 1956. In their most minimalistic (and original) version, these expressions define languages using just literal characters, alternation ("|"), and repetition ("*"). They have well-understood properties; most importantly, they can be matched against text using another well-understood abstract device: a Deterministic Finite Automaton (DFA). DFAs have the important property of running on arbitrary text of length n in O(n) time and using O(1) space. Presented with a regular expression and a candidate text, a DFA decides whether the text matches the expression.
 
-Some years later, regular expressions entered actual usage in the UNIX world, when Ken Thompson included them as a feature in the editor [QED](https://en.wikipedia.org/wiki/QED_(text_editor)). After that, they became a standard language in the world of UNIX, appearing in a variety of programs, notably the still-used [grep](https://en.wikipedia.org/wiki/Grep) tool.
+Some years later, regular expressions entered actual usage when Ken Thompson included them as a feature in the editor [QED](https://en.wikipedia.org/wiki/QED_(text_editor)). After that, they became a standard in the UNIX world, appearing in a variety of programs, notably the still-used [grep](https://en.wikipedia.org/wiki/Grep) tool.
 
-Circa 1994, Henry Spencer wrote a [grep implementation](https://github.com/garyhouston/regexp.old) that used a Non-Deterministic Finite Automaton (NFA). Using NFA simplifies the compilation of expressions (that is, building the automata) at the cost of complicating the execution. More relevant, NFA-based (more precisely, recursive backtracking) makes it easy to add new features (many of which are impossible to do with a state-machine (DFA) based implementation). And that's precisely what started to happen when the library was used to implement regular expressions in Perl 5 in 1994.
+Around 1994, Henry Spencer wrote a [grep implementation](https://github.com/garyhouston/regexp.old) that used a Non-Deterministic Finite Automaton (NFA). Using a NFA simplifies the compilation of expressions (building the automata) at the cost of complicating the execution. More importantly, NFA-based engines (specifically, those using recursive backtracking) make it easy to add new features, many of which are impossible to do with a state-machine (DFA) based implementation. That's precisely what started to happen when the library was used to implement regular expressions in Perl 5 in 1994.
 
-After the release of Perl 5, the extended feature-set was quickly embraced by users, and Perl-style regular expression implementations became part of the standard libraries of essentially all popular programming languages (with the notable exception of Go) and also standard infrastructure components, like the Apache and Nginx web servers.
+After the release of Perl 5, the extended feature set was quickly embraced by users, and Perl-style regular expression implementations became part of the standard libraries of virtually all popular programming languages and also standard infrastructure components, like the Apache and Nginx web servers.
 
-As mentioned, Perl-style expressions don't give any execution time guarantee. On the other hand, there are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing to match the same text more than once). There are also some other features that, albeit not infeasible, complicate a DFA solution  significantly, like search and capturing groups.
+As mentioned, Perl-style expressions don't give any execution time guarantee. On the other hand, there are some features of Perl regular expressions that are impossible to express in a DFA, most notable backreferences (i.e., forcing a match of same text more than once). Other features, while not infeasible, significantly complicate a DFA solution, such as search and capturing groups.
 
 ### Proposal
 
-Regular expressions were born as a very specific tool and, almost as an accident, grew to one of the most versatile (and [abused](https://www.noulakaz.net/2007/03/18/a-regular-expression-to-check-for-prime-numbers/)) tools in the world of software. There is, however, a fundamental trade-off between the two prototypical implementations, which is usually ignored. Unbounded execution time is undesirable for many (if not all) interactive uses, as problems can happen whether either the regular expression or the text are supplied by the user. As example see:
+Regular expressions were born as a very specific tool and, almost by accident, grew to be one of the most versatile (and sometimes [abused](https://www.noulakaz.net/2007/03/18/a-regular-expression-to-check-for-prime-numbers/)) tools in the world of software. However, there is a fundamental trade-off between the two prototypical implementations that is often ignored. Unbounded execution time is undesirable for many (if not all) interactive uses, as problems can happen when either the regular expression or the text are supplied by the user. For examples, see:
 
 - [Coding horror: regex performance](https://blog.codinghorror.com/regex-performance/)
 - [Stack Exchange regex outage postmortem](http://stackstatus.net/post/147710624694/outage-postmortem-july-20-2016)
 
-For cases when advanced Perl-style features are not needed, and predictable performance is desired, using DFA-based matching is usually a compelling alternative, unfortunately made difficult by the scarcity of proper implementations in most languages. dregex offers an alternative for the Java ecosystem.
+For cases when advanced Perl-style features are not needed and predictable performance is desired, using DFA-based matching is a compelling alternative, unfortunately made difficult by the scarcity of proper implementations in most languages. dregex offers an alternative for the Java ecosystem.
 
 ## Supported regex flavor
 
-Unless specified, the regular expression flavor supported attempts to be compatible with the [Java flavor](https://docs.oracle.com/javase/9/docs/api/java/util/regex/Pattern.html).
+Unless specified, the supported regular expression flavor attempts to be compatible with the [Java flavor](https://docs.oracle.com/javase/9/docs/api/java/util/regex/Pattern.html).
 
 ### Supported features
 
@@ -75,17 +75,15 @@ With one exception, all compile flags defined by `java.util.regex.Pattern` are s
 * Searching (the engine matches only against the full input string)
 * Capturing groups
 * Backreferences
-* Anchors (`ˆ` and `$`), as they are redundant, as the expressions only operate over the complete text.
-* Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine, as they, by definition, only affect capturing groups, not whether the expressions match or not.
+* Anchors (`ˆ` and `$`), as they are redundant because the expressions only operate over the complete text.
+* Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine. By definition, they only affect capturing groups, not whether an expression matches.
 * Compile flag [MULTILINE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#MULTILINE), because it is meaningless for a pure-matching engine, that works always in multi-line mode.
 
-**Note**: for the sake of safety, the presence of unsupported features in a regular expression will cause it to fail to compile (except for unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
+**Note**: for the safety, the presence of unsupported features in a regular expression will cause it to fail the compilation (except for unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 
 ## Set operations
 
-On top of regular matching, dregex fully supports set operations of regular expressions. Set operations work on regular expressions themselves, that is, they don't involve strings.
-
-It possible to do union, intersection and difference:
+In addition to regular matching, dregex fully supports set operations on regular expressions. These operations work on regular expressions themselves, not on input strings. It possible to do union, intersection and difference:
 
 ```java
 List<Regex> regexes = Regex.compile(List.of("[a-z]+", "[A-Z]+", "[a-z]+|[A-Z]+"));
@@ -106,11 +104,11 @@ System.out.println(lower.matches("Aaa")); // false
 
 ```
 
-The motivating use case was detecting non-intersecting expressions. Once it can be established that a set of expressions don't intersect (that they are disjoint) it becomes possible to short-circuit evaluations. Moreover, they can be tested in any order, so it becomes possible to reorder based on matching stats. This can be especially important in cases when there is a matching of several expressions in a performance-critical path—load balancers being a prototypical example.
+The motivating use case was detecting non-intersecting expressions. Once it can be established that a set of expressions do not intersect (that they are disjoint) it becomes possible to short-circuit evaluations. Moreover, they can be tested in any order, allowing for reordering based on matching statistics. This is especially important in performance-critical paths where multiple expressions are matched, such as in load balancers.
 
 ## Note on lookaround
 
-Lookaround constructions are transformed into an equivalent DFA operation, and the result of it trivially transformed into a NFA again for insertion into the outer expression:
+Lookaround constructs are transformed into an equivalent DFA operation, and the result is then trivially converted back into an NFA for insertion into the outer expression:
 
 Lookahead:
 
@@ -122,25 +120,25 @@ Lookbehind:
 * `A(?<=B)` → `A ∩ .*B`
 * `A(?<!B)` → `A - .*B`
 
-In the case of more than one lookaround, the transformation is applied recursively.
+If there is more than one lookaround, the transformation is applied recursively.
 
-Lookaround expressions are supported anywhere in the regex, including inside repetition constructions. Nevertheless, there is a difference in the meaning of those lookarounds with respect to Perl-like engines. Consider:
+Lookaround expressions are supported anywhere in a regex, including inside repetition constructs. Nevertheless, their meaning differs from those in Perl-like engines. Consider:
 
 `((?!aa)a)+`
 
-This expression matches, in this engine, `a`, `aa`, `aaa` and so on, being effectively equivalent to `a+`, because the negative condition (`aa`) can never happen inside `a`. The fact that the expression is repeated does not change its inner logic. However, in Perl-like engines, the aforementioned regex does not match any `a` longer than one character, because those engines treat lookarounds specially, effectively running a sub-regex at the point of occurrence, irrespective of the context.
+This expression matches, in this engine, `a`, `aa`, `aaa` and so on, being effectively equivalent to `a+`, because the negative condition (`aa`) can never occur inside `a`. The fact that the expression is repeated does not change its inner logic. However, in Perl-like engines, the aforementioned regex does not match any `a` longer than one character, because those engines treat lookarounds specially, effectively running a sub-regex at the point of occurrence, irrespective of the context.
 
-The different behavior of this engine is, of course, a direct consequence of the way lookarounds are implemented. Nevertheless, it can be argued that this definition is conceptually simpler and, more importantly, easier to reason about in the context of complex expression. Regarding practical uses, looped lookarounds like the one in the example are quite rare anyway.
+The different behavior of this engine is a direct consequence of the way lookarounds are implemented. Nevertheless, it can be argued that this definition is conceptually simpler and, more importantly, easier to reason about in the context of a complex expression. Looped lookarounds like the one in the example are in practice quite rare anyway.
 
 ## Internals
 
 ### DFA construction
 
-The library parses the regular expressions and builds a NFA (Nondeterministic Finite Automaton) using a variation of the [Thompson algorithm](http://en.wikipedia.org/w/index.php?title=Thompson%27s_construction_algorithm&oldid=649249684). Then uses the "powerset construction" to build a DFA (Deterministic Finite Automaton). One the DFA is built, the matching algorithm is straightforward.
+The library parses the regular expressions and builds a NFA (Nondeterministic Finite Automaton) using a variation of the [Thompson algorithm](http://en.wikipedia.org/w/index.php?title=Thompson%27s_construction_algorithm&oldid=649249684). It then uses the "powerset construction" to build a DFA (Deterministic Finite Automaton). One the DFA is built, the matching algorithm is straightforward.
 
 ### Wildcards and character classes
 
-Character classes are expanded as disjunctions before NFA creation. However, because of the number of possible Unicode code points, internaly, non-overlapping code point intervals are used to avoid disjunctions with too many alternatives.
+Character classes are expanded as disjunctions before NFA creation. However, because of the number of possible Unicode code points, non-overlapping code point intervals are used internally to avoid disjunctions with too many alternatives.
 
 #### Example:
 
@@ -156,7 +154,7 @@ Intersections, unions and differences between regex are done using the "product 
 * [http://stackoverflow.com/q/7780521/4505326](http://stackoverflow.com/q/7780521/4505326)
 * [http://cs.stackexchange.com/a/7108](http://cs.stackexchange.com/a/7108)
 
-This is a relatively straightforward algorithm that is implemented using the already generated DFA.
+This is a relatively straightforward algorithm implemented using the already generated DFA.
 
 ## Requirements
 
@@ -176,3 +174,4 @@ There are two small dependencies: [SLF4J](https://www.slf4j.org/) and [jparsec](
 * [TRE](https://github.com/laurikari/tre/) is an efficient C library and command-line tool that implements POSIX-compliant and approximate (fuzzy) regex matching, using "tagged DFA". It is written by Ville Laurikari.
 * [Plan 9 grep](https://9fans.github.io/plan9port/man/man1/grep.html) is an efficient DFA implementation that supports egrep syntax. It was written by Ken Thompson.
 * [regex-tdfa](https://github.com/haskell-hvr/regex-tdfa) is a "tagged DFA" implementation written in Haskell by Chris Kuklewicz.
+* [regex](https://github.com/rust-lang/regex) is a Rust crate implemented with similar principles.
