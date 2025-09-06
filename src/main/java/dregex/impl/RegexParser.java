@@ -9,6 +9,7 @@ import dregex.impl.tree.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.jparsec.Parser;
 import org.jparsec.error.ParserException;
@@ -427,40 +428,57 @@ public class RegexParser {
 
     private final Parser.Reference<Node> regexRef = Parser.newReference();
 
+    static class GroupModifiers {
+        Direction direction;
+        Optional<Condition> condition;
+    }
+
+    private final Parser<GroupModifiers> groupModifiers = sequence(
+            litChar('?'),
+            litChar('<').asOptional(),
+            or(litChar(':'), litChar('='), litChar('!')),
+            (q, dir, cond) -> {
+                var ret = new GroupModifiers();
+                if (dir.isPresent()) {
+                    ret.direction = Direction.Behind;
+                } else {
+                    ret.direction = Direction.Ahead;
+                }
+                switch ((char) cond.intValue()) {
+                    case ':':
+                        if (dir.isPresent()) {
+                            throw new InvalidRegexException("Invalid grouping: <: ");
+                        } else {
+                            ret.condition = Optional.empty();
+                        }
+                        break;
+                    case '=':
+                        ret.condition = Optional.of(Condition.Positive);
+                        break;
+                    case '!':
+                        ret.condition = Optional.of(Condition.Negative);
+                        break;
+                    default:
+                        throw new IllegalArgumentException();
+                }
+                return ret;
+            });
+
     private final Parser<Node> group = sequence(
             litChar('('),
-            tuple(litChar('?'), litChar('<').asOptional(), or(litChar(':'), litChar('='), litChar('!')))
-                    .asOptional(),
+            groupModifiers.asOptional(),
             regexRef.lazy(),
             litChar(')'),
-            (paren1, optModifiers, value, paren2) -> {
-                if (optModifiers.isEmpty()) {
+            (paren1, groupModifiers, value, paren2) -> {
+                if (groupModifiers.isEmpty()) {
                     // Naked parenthesis
                     return new PositionalCaptureGroup(value);
                 } else {
-                    var modifiers = optModifiers.orElseThrow();
-                    char typeOfCapture = (char) modifiers.c.intValue();
-
-                    Direction direction;
-                    if (modifiers.b.isPresent()) {
-                        direction = Direction.Behind;
+                    var modifiers = groupModifiers.orElseThrow();
+                    if (modifiers.condition.isEmpty()) {
+                        return value;
                     } else {
-                        direction = Direction.Ahead;
-                    }
-
-                    switch (typeOfCapture) {
-                        case ':':
-                            if (modifiers.b.isPresent()) {
-                                throw new InvalidRegexException("Invalid grouping: <: ");
-                            } else {
-                                return value;
-                            }
-                        case '=':
-                            return new Lookaround(direction, Condition.Positive, value);
-                        case '!':
-                            return new Lookaround(direction, Condition.Negative, value);
-                        default:
-                            throw new IllegalArgumentException();
+                        return new Lookaround(modifiers.direction, modifiers.condition.orElseThrow(), value);
                     }
                 }
             });
