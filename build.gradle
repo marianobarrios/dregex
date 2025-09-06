@@ -52,7 +52,7 @@ dependencies {
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.5.18'
 
     // test framework
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.4'
 }
 
 testing {
