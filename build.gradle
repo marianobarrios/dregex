@@ -55,13 +55,6 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
 }
 
-spotless {
-    java {
-        // remove when spotless moved to this Palantir version
-        palantirJavaFormat("2.38.0")
-    }
-}
-
 test {
     useJUnitPlatform()
 }
