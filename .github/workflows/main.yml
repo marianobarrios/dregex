@@ -12,10 +12,15 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: ${{ matrix.java-version }}
+          # The target JDK is used to build, the latest one to run Gradle itself (we cannot use Java 11 for Gradle)
+          java-version: |
+            ${{ matrix.java-version }}
+            21
 
       - name: build
         run: ./gradlew check
+        env:
+          JAVA_TOOLCHAIN: ${{ matrix.java-version }}
 
       - uses: actions/upload-artifact@v4
         if: always()

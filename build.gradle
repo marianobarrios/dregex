@@ -7,6 +7,16 @@ plugins {
     id "com.github.spotbugs" version "6.3.0"
 }
 
+var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
+
+java {
+    if (javaToolchain != null) {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(javaToolchain)
+        }
+    }
+}
+
 compileJava {
     sourceCompatibility = '11'
     targetCompatibility = '11'
