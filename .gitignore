@@ -1,4 +1,3 @@
 /build/
 /*.log
-/.idea/
-/.gradle
+/.gradle/
