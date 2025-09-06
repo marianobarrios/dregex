@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jvm-test-suite'
     id 'signing'
     id 'maven-publish'
     id "com.diffplug.spotless" version "7.2.1"
@@ -52,11 +53,14 @@ dependencies {
 
     // test framework
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
 }
 
-test {
-    useJUnitPlatform()
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+        }
+    }
 }
 
 javadoc {
