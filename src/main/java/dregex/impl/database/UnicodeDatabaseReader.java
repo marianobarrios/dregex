@@ -87,7 +87,7 @@ public class UnicodeDatabaseReader {
     public static SortedMap<String, Range> getBlocks(Reader reader) throws IOException {
         SortedMap<Range, String> data = parseDatabase(reader);
         SortedMap<String, Range> ret = new TreeMap<>();
-        for (Map.Entry<Range, String> entry : data.entrySet()) {
+        for (var entry : data.entrySet()) {
             ret.put(entry.getValue(), entry.getKey());
         }
         return ret;
@@ -96,7 +96,7 @@ public class UnicodeDatabaseReader {
     public static SortedMap<String, List<Range>> getScripts(Reader reader) throws IOException {
         SortedMap<Range, String> data = parseDatabase(reader);
         SortedMap<String, List<Range>> ret = new TreeMap<>();
-        for (Map.Entry<Range, String> entry : data.entrySet()) {
+        for (var entry : data.entrySet()) {
             List<Range> list = ret.computeIfAbsent(entry.getValue(), x -> new ArrayList<>());
             list.add(entry.getKey());
         }
@@ -107,12 +107,12 @@ public class UnicodeDatabaseReader {
         SortedMap<Range, String> data = parseDatabase(reader);
         SortedMap<String, List<Range>> ret = new TreeMap<>();
         // process categories (two letters)
-        for (Map.Entry<Range, String> entry : data.entrySet()) {
+        for (var entry : data.entrySet()) {
             List<Range> list = ret.computeIfAbsent(entry.getValue(), x -> new ArrayList<>());
             list.add(entry.getKey());
         }
         // process category groups (first letter)
-        for (Map.Entry<Range, String> entry : data.entrySet()) {
+        for (var entry : data.entrySet()) {
             var categoryGroup = entry.getValue().substring(0, 1); // first letter of the two
             List<Range> list = ret.computeIfAbsent(categoryGroup, x -> new ArrayList<>());
             list.add(entry.getKey());
