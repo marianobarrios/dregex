@@ -45,13 +45,13 @@ Unless specified, the supported regular expression flavor attempts to be compati
 * Simple negated character classes: `[^abc]`
 * Ranges in character classes: `[a-z]`
 * Special character classes, including negated versions: `\w`, `\s`, `\d`, `\W`, `\S`, `\D`
-* POSIX character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)), e.g., `\p{Lower}`, `\p{Punct}`, `\P{Lower}`
-* Unicode character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)):
-	* [Blocks](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ubc), e.g., `\p{InGreek}`, `\p{block=Greek}`, `\p{blk=Greek}`
-	* [Scripts](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#usc), e.g., `\p{IsLatin}`, `\p{script=Latin}`, `\p{sc=Latin}`
-	* [General categories](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ucc), e.g., `\p{Lu}`, `\p{IsLu}`, `\p{general_category=Lu}`, `\p{gc=Lu}`
-	* [Binary properties](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#ubpc), e.g., `\p{IsAlphabetic}`
-* Java-defined character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)), e.g., `\p{javaLowerCase}`, `\p{javaWhitespace}` 
+* POSIX character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html)), e.g., `\p{Lower}`, `\p{Punct}`, `\P{Lower}`
+* Unicode character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html)):
+	* [Blocks](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#ubc), e.g., `\p{InGreek}`, `\p{block=Greek}`, `\p{blk=Greek}`
+	* [Scripts](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#usc), e.g., `\p{IsLatin}`, `\p{script=Latin}`, `\p{sc=Latin}`
+	* [General categories](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#ucc), e.g., `\p{Lu}`, `\p{IsLu}`, `\p{general_category=Lu}`, `\p{gc=Lu}`
+	* [Binary properties](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#ubpc), e.g., `\p{IsAlphabetic}`
+* Java-defined character classes (using the syntax and definition of [java.util.regex.Pattern](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html)), e.g., `\p{javaLowerCase}`, `\p{javaWhitespace}` 
 * Special character classes inside regular character classes: `[\d\s]`, `[\D]`
 * Unicode line breaks: `\R`
 * Block quotes: `\Q`...`\E`
@@ -63,14 +63,14 @@ The definition of Unicode character classes (Unicode blocks, scripts, general ca
 
 With one exception, all compile flags defined by `java.util.regex.Pattern` are supported, including in embedded form:
 
-* [LITERAL](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#LITERAL)
-* [COMMENTS](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#COMMENTS) (also in embedded form: `(?x)`). Note: The flag intentionally behaves ignoring exactly the same set of white space characters as the standard Java implementation, that is, only ASCII white space, not Unicode. 
-* [DOTALL](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#DOTALL) (also in embedded form: `(?s)`)
-* [UNIX_LINES](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNIX_LINES) (also in embedded form: `(?d)`)
-* [UNICODE_CHARACTER_CLASS](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNICODE_CHARACTER_CLASS) (also in embedded form: `(?U)`)
-* [CASE_INSENSITIVE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#CASE_INSENSITIVE) (also in embedded form: `(?i)`)
-* [UNICODE_CASE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#UNICODE_CASE) (also in embedded form: `(?u)`)
-* [CANON_EQ](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#CANON_EQ)
+* [LITERAL](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#LITERAL)
+* [COMMENTS](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#COMMENTS) (also in embedded form: `(?x)`). Note: The flag intentionally behaves ignoring exactly the same set of white space characters as the standard Java implementation, that is, only ASCII white space, not Unicode. 
+* [DOTALL](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#DOTALL) (also in embedded form: `(?s)`)
+* [UNIX_LINES](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#UNIX_LINES) (also in embedded form: `(?d)`)
+* [UNICODE_CHARACTER_CLASS](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#UNICODE_CHARACTER_CLASS) (also in embedded form: `(?U)`)
+* [CASE_INSENSITIVE](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#CASE_INSENSITIVE) (also in embedded form: `(?i)`)
+* [UNICODE_CASE](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#UNICODE_CASE) (also in embedded form: `(?u)`)
+* [CANON_EQ](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#CANON_EQ)
 
 ### Not supported
 
@@ -79,7 +79,7 @@ With one exception, all compile flags defined by `java.util.regex.Pattern` are s
 * Backreferences
 * Anchors (`ˆ` and `$`), as they are redundant because the expressions only operate over the complete text.
 * Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine. By definition, they only affect capturing groups, not whether an expression matches.
-* Compile flag [MULTILINE](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html#MULTILINE), because it is meaningless for a pure-matching engine, that works always in multi-line mode.
+* Compile flag [MULTILINE](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#MULTILINE), because it is meaningless for a pure-matching engine, that works always in multi-line mode.
 
 **Note**: for the safety, the presence of unsupported features in a regular expression will cause it to fail the compilation (except for unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 
