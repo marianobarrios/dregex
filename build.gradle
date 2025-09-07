@@ -7,20 +7,14 @@ plugins {
     id "com.github.spotbugs" version "6.3.0"
 }
 
-var javaToolchain = System.getenv('JAVA_TOOLCHAIN')
-
-java {
-    if (javaToolchain != null) {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(javaToolchain)
-        }
-    }
+compileJava {
+    options.release = 11
+    options.compilerArgs.add('-Xlint:all')
 }
 
-compileJava {
-    sourceCompatibility = '11'
-    targetCompatibility = '11'
-    options.compilerArgs.add('-Xlint')
+compileTestJava {
+    options.release = 11
+    options.compilerArgs.add('-Xlint:all')
 }
 
 spotbugs {
@@ -65,13 +59,29 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.4'
 }
 
+var testJavaToolchain = System.getenv('TEST_JAVA_TOOLCHAIN')
+
 testing {
     suites {
         test {
             useJUnitJupiter()
+            targets {
+                all {
+                    testTask.configure {
+                        if (testJavaToolchain != null) {
+                            javaLauncher.set(
+                                    javaToolchains.launcherFor {
+                                        languageVersion.set(JavaLanguageVersion.of(testJavaToolchain))
+                                    }
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
+
 
 javadoc {
     exclude "dregex/impl"
