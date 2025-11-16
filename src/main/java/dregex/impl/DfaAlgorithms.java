@@ -1,6 +1,11 @@
 package dregex.impl;
 
 import dregex.MatchResult;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -206,6 +211,64 @@ public class DfaAlgorithms {
             i += 1;
         }
         return new MatchResult(dfa.accepting.contains(current), i);
+    }
+
+    public static MatchResult matchInputStream(Dfa dfa, InputStream inputStream) throws IOException {
+        // Start from the initial state of the DFA
+        State currentState = dfa.initial;
+
+        // Current position in the input stream
+        int position = 0;
+
+        // Read the input stream character by character
+        try (InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+            int ch;
+            while ((ch = reader.read()) != -1) {
+                // Read the next Unicode code point (handles surrogate pairs)
+                int codePoint = readCodePoint(reader, ch);
+                if (codePoint == -1) break; // End of stream or invalid surrogate pair
+
+                // Get the next DFA state based on the current state and input character
+                State nextState = getNextState(dfa, currentState, codePoint);
+
+                if (nextState == null) {
+                    // If not accepting, return failure at current position
+                    return new MatchResult(false, position);
+                }
+
+                // Move to the next state and increment position
+                currentState = nextState;
+                position++;
+            }
+        }
+
+        // After reading the stream, check if the current state is accepting
+        return new MatchResult(dfa.accepting.contains(currentState), position);
+    }
+
+    // Reads a Unicode code point from the stream, handling surrogate pairs if needed
+    private static int readCodePoint(InputStreamReader reader, int firstChar) throws IOException {
+        char c1 = (char) firstChar;
+        if (Character.isHighSurrogate(c1)) {
+            int ch2 = reader.read();
+            if (ch2 == -1) return -1; // Incomplete surrogate pair
+            char c2 = (char) ch2;
+            return Character.toCodePoint(c1, c2);
+        }
+        return c1;
+    }
+
+    // Retrieves the next DFA state based on the current state and input code point
+    private static State getNextState(Dfa dfa, State current, int codePoint) {
+        TreeMap<CharInterval, State> transitions = dfa.defTransitions.get(current);
+        if (transitions == null) return null;
+
+        // Find the transition whose interval includes the code point
+        var entry = transitions.floorEntry(new CharInterval(codePoint, codePoint));
+        if (entry != null && codePoint <= entry.getKey().to) {
+            return entry.getValue();
+        }
+        return null;
     }
 
     /**

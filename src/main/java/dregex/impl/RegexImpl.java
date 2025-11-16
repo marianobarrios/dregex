@@ -2,6 +2,8 @@ package dregex.impl;
 
 import dregex.IncompatibleRegexException;
 import dregex.MatchResult;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.Normalizer;
 import java.time.Duration;
 import org.slf4j.Logger;
@@ -46,6 +48,10 @@ public class RegexImpl {
                 .forEach(
                         c -> builder.appendCodePoint(universe.getNormalization().normalize(c)));
         return DfaAlgorithms.matchString(dfa, builder.toString());
+    }
+
+    public MatchResult matchAndReport(InputStream inputStream) throws IOException {
+        return DfaAlgorithms.matchInputStream(dfa, inputStream);
     }
 
     public RegexImpl intersect(RegexImpl other) {
