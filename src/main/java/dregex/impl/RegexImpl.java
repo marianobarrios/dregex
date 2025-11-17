@@ -38,14 +38,18 @@ public class RegexImpl {
     }
 
     public MatchResult matchAndReport(CharSequence string) {
+        // Unicode normalization
         if (universe.hasCanonicalEquivalence()) {
             string = Normalizer.normalize(string, Normalizer.Form.NFD);
         }
-        var builder = new StringBuilder();
-        string.codePoints()
-                .forEach(
-                        c -> builder.appendCodePoint(universe.getNormalization().normalize(c)));
-        return DfaAlgorithms.matchString(dfa, builder.toString());
+
+        // Case normalization
+        var caseNormalization = universe.getNormalization();
+        var builder = new StringBuilder(string.length());
+        string.codePoints().forEach(c -> builder.appendCodePoint(caseNormalization.normalize(c)));
+        string = builder.toString();
+
+        return DfaAlgorithms.matchString(dfa, string);
     }
 
     public RegexImpl intersect(RegexImpl other) {

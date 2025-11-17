@@ -12,7 +12,6 @@ public enum CaseNormalization {
         @Override
         public int normalize(int codePoint) {
             boolean isAsciiUpperCase = codePoint >= 'A' && codePoint <= 'Z';
-            // cast to prevent promotion to int and calling the wrong overload
             return isAsciiUpperCase ? codePoint + 0x20 : codePoint;
         }
     },
