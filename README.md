@@ -104,6 +104,9 @@ Regex lower = all.diff(upper);
 System.out.println(lower.matches("aaa")); // true
 System.out.println(lower.matches("Aaa")); // false
 
+System.out.println(lower.matches(new ByteArrayInputStream("aaa".getBytes(StandardCharsets.UTF_8)))); // true
+System.out.println(lower.matches(new ByteArrayInputStream("Aaa".getBytes(StandardCharsets.UTF_8)))); // false
+
 ```
 
 The motivating use case was detecting non-intersecting expressions. Once it can be established that a set of expressions do not intersect (that they are disjoint) it becomes possible to short-circuit evaluations. Moreover, they can be tested in any order, allowing for reordering based on matching statistics. This is especially important in performance-critical paths where multiple expressions are matched, such as in load balancers.
