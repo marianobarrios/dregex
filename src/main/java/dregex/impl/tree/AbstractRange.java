@@ -71,13 +71,10 @@ public abstract class AbstractRange implements Node {
 
     @Override
     public Node unicodeNormalize() {
-        Map<Integer, List<Integer>> expansions = new TreeMap<>();
+        Map<Integer, int[]> expansions = new TreeMap<>();
         IntStream.rangeClosed(from(), to()).forEach(codePoint -> {
-            var normalized = Normalizer.normalize(Character.toString(codePoint), Normalizer.Form.NFD)
-                    .codePoints()
-                    .boxed()
-                    .collect(Collectors.toList());
-            if (normalized.size() > 1) {
+            var normalized = Normalizer.normalize(Character.toString(codePoint), Normalizer.Form.NFD).codePoints().toArray();
+            if (normalized.length > 1) {
                 expansions.put(codePoint, normalized);
             }
         });
@@ -85,11 +82,11 @@ public abstract class AbstractRange implements Node {
         int i = from();
         for (var entry : expansions.entrySet()) {
             int codePoint = entry.getKey();
-            List<Integer> normalization = entry.getValue();
+            int[] normalization = entry.getValue();
             if (i < codePoint) {
                 ret.add(AbstractRange.of(i, codePoint - 1));
             }
-            ret.add(Juxt.of(normalization.stream().map(Lit::new).collect(Collectors.toList())));
+            ret.add(Juxt.of(Arrays.stream(normalization).mapToObj(Lit::new).collect(Collectors.toList())));
             i = codePoint + 1;
         }
         if (i <= to()) {
