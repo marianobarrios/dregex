@@ -8,6 +8,7 @@ import dregex.impl.Universe;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
@@ -1244,6 +1245,20 @@ class MatchTest {
         {
             var r = Regex.compile("[a-c](?<!a|b)");
             assertTrue(r.matches("c"));
+        }
+    }
+
+    @Test
+    void testSimpleFileInputStream() throws IOException {
+        var compiledRegex = Regex.compile("(\\{\"time\"\\s*:\\s*\"(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\",\"severityText\"\\s*:\\s*(\"INFO\"|\"ERROR\"|\"WARNING\"),\"service.name\"\\s*:\\s*(\"auth-service\"|\"payment-service\"|\"storage-service\"),\"traceId\"\\s*:\\s*\"[a-z]{3}\\d{3}\",\"spanId\"\\s*:\\s*\"[a-z]{3}\\d{3}\"}\\s*)*");
+
+        String resourceName = "log.json";
+
+        // Load resource using the context class loader
+        try (InputStream inputStream = Thread.currentThread()
+                .getContextClassLoader()
+                .getResourceAsStream(resourceName)) {
+            assertTrue(compiledRegex.matches(inputStream));
         }
     }
 }
