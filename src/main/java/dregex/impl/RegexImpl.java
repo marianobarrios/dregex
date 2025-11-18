@@ -4,6 +4,7 @@ import dregex.IncompatibleRegexException;
 import dregex.MatchResult;
 import java.text.Normalizer;
 import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +46,9 @@ public class RegexImpl {
 
         // Case normalization
         var caseNormalization = universe.getNormalization();
-        var builder = new StringBuilder(string.length());
-        string.codePoints().forEach(c -> builder.appendCodePoint(caseNormalization.normalize(c)));
-        string = builder.toString();
+        var normalized = string.codePoints().map(caseNormalization::normalize).toArray();
 
-        return DfaAlgorithms.matchString(dfa, string);
+        return DfaAlgorithms.matchString(dfa, normalized);
     }
 
     public RegexImpl intersect(RegexImpl other) {

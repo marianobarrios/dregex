@@ -181,12 +181,10 @@ public class DfaAlgorithms {
         return new Dfa(mapping.get(dfa.initial), newTransitions, newAccepting, false);
     }
 
-    public static MatchResult matchString(Dfa dfa, CharSequence string) {
+    public static MatchResult matchString(Dfa dfa, int[] codePoints) {
         var current = dfa.initial;
         int i = 0;
-        var it = string.codePoints().iterator();
-        while (it.hasNext()) {
-            int codePoint = it.next();
+        for (int codePoint : codePoints) {
             TreeMap<CharInterval, State> currentTrans = dfa.defTransitions.get(current);
             State newState = null;
             if (currentTrans != null) {
