@@ -1,6 +1,0 @@
-{"time":"2025-10-30T14:58:43Z","severityText":"INFO","service.name":"auth-service","traceId":"abc123","spanId":"def456"}
-{"time":"2025-10-30T14:59:01Z","severityText":"ERROR","service.name":"payment-service","traceId":"ghi789","spanId":"jkl012"}
-{"time":"2025-10-30T15:58:43Z","severityText":"INFO","service.name":"auth-service","traceId":"abc124","spanId":"def457"}
-{"time":"2025-10-30T15:59:01Z","severityText":"ERROR","service.name":"payment-service","traceId":"ghi799","spanId":"jkl013"}
-{"time":"2025-10-30T16:58:43Z","severityText":"INFO","service.name":"auth-service","traceId":"abc125","spanId":"def458"}
-{"time":"2025-10-30T16:59:01Z","severityText":"ERROR","service.name":"payment-service","traceId":"ghi889","spanId":"jkl022"}

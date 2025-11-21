@@ -1250,9 +1250,9 @@ class MatchTest {
 
     @Test
     void testSimpleFileInputStream() throws IOException {
-        var compiledRegex = Regex.compile("(\\{\"time\"\\s*:\\s*\"(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\",\"severityText\"\\s*:\\s*(\"INFO\"|\"ERROR\"|\"WARNING\"),\"service.name\"\\s*:\\s*(\"auth-service\"|\"payment-service\"|\"storage-service\"),\"traceId\"\\s*:\\s*\"[a-z]{3}\\d{3}\",\"spanId\"\\s*:\\s*\"[a-z]{3}\\d{3}\"}\\s*)*");
+        var compiledRegex = Regex.compile("(time:\\s(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z),\\sseverityText:\\s(INFO|ERROR|WARNING),\\sservice.name:\\s(auth-service|payment-service|storage-service),\\straceId:\\s[a-z]{3}\\d{3},\\sspanId\\s*:\\s*[a-z]{3}\\d{3}\\s*)*");
 
-        String resourceName = "log.json";
+        String resourceName = "log.txt";
 
         // Load resource using the context class loader
         try (InputStream inputStream = Thread.currentThread()
