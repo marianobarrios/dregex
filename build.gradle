@@ -119,7 +119,7 @@ publishing {
                 }
                 scm {
                     connection = 'scm:git@github.com:marianobarrios/dregex.git'
-                    url = 'scm:git@github.com:marianobarrios/dregex.git'
+                    url = 'https://github.com/marianobarrios/dregex/'
                 }
             }
         }
