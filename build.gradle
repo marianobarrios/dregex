@@ -1,11 +1,14 @@
 plugins {
     id 'java'
     id 'jvm-test-suite'
-    id 'signing'
-    id 'maven-publish'
-    id "com.diffplug.spotless" version "8.1.0"
+    id "com.diffplug.spotless" version "7.2.1" // 8.1.0 conflicts with jreleaser
     id "com.github.spotbugs" version "6.4.7"
+    id 'maven-publish'
+    id 'org.jreleaser' version '1.21.0'
 }
+
+group = 'com.github.marianobarrios'
+version = System.getenv('VERSION')
 
 compileJava {
     options.release = 11
@@ -95,9 +98,7 @@ java {
 publishing {
     publications {
         dregex(MavenPublication) {
-            groupId = 'com.github.marianobarrios'
             artifactId = 'dregex'
-            version = '0.9.0-SNAPSHOT'
             from components.java
             pom {
                 name = 'dregex'
@@ -126,15 +127,25 @@ publishing {
     }
     repositories {
         maven {
-            url = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-            credentials {
-                username = project.findProperty('sonatypeUsername')
-                password = project.findProperty('sonatypePassword')
-            }
+            url = layout.buildDirectory.dir('staging-deploy')
         }
     }
 }
 
-signing {
-    sign publishing.publications.dregex
+jreleaser {
+    signing {
+        active = 'ALWAYS'
+        armored = true
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'RELEASE'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
+            }
+        }
+    }
 }
