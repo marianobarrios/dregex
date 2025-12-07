@@ -16,7 +16,7 @@ jobs:
           # available to run the tests, to check compatibility.
           java-version: |
             ${{ matrix.java-version }}
-            21
+            25
 
       - name: build
         run: ./gradlew check
