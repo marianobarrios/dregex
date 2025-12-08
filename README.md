@@ -4,7 +4,8 @@ dregex is a Java library that implements a regular expression engine using deter
 
 [![Build Status](https://github.com/marianobarrios/dregex/actions/workflows/main.yml/badge.svg)](https://github.com/marianobarrios/dregex/actions)
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.marianobarrios/dregex)
+
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.marianobarrios/dregex.svg?label=Maven%20Central)](https://central.sonatype.com/search?namespace=com.github.marianobarrios&name=dregex&sort=name)
 [![javadoc](https://javadoc.io/badge2/com.github.marianobarrios/dregex/javadoc.svg)](https://javadoc.io/doc/com.github.marianobarrios/dregex)
 
 ## Rationale
