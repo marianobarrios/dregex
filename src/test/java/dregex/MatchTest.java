@@ -5,6 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dregex.impl.RegexImpl;
 import dregex.impl.Universe;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
@@ -104,6 +109,98 @@ class MatchTest {
             assertTrue(r.matches("d"));
         }
     }
+    @Test
+    void testInputStreamClassesSimple() throws IOException {
+
+        assertFalse(RegexImpl.nullRegex(Universe.Empty).matchesAtLeastOne());
+
+        {
+            var r = Regex.compile("");
+            assertTrue(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile(" ");
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream(" ".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("  ".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile(".");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("aa".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[a-d]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("aa".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("x".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[^a]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[^ab]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("c".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[ab-c]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("c".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("d".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[a-bc]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("c".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("d".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[^ab-c]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("c".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("d".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[^a-bc]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("c".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("d".getBytes(StandardCharsets.UTF_8))));
+        }
+    }
 
     @Test
     void testCharacterClassesSpecialCharactersInside() {
@@ -186,6 +283,90 @@ class MatchTest {
             assertFalse(r.matches("-"));
             assertFalse(r.matches("a"));
             assertTrue(r.matches("b"));
+        }
+    }
+
+    @Test
+    void testInputStreamClassesSpecialCharactersInside() throws IOException {
+
+        // Special characters inside input stream classes
+        assertTrue(Regex.compile("[.]").matches(new ByteArrayInputStream(".".getBytes(StandardCharsets.UTF_8))));
+        assertTrue(Regex.compile("[(]").matches(new ByteArrayInputStream("(".getBytes(StandardCharsets.UTF_8))));
+        assertTrue(Regex.compile("[)]").matches(new ByteArrayInputStream(")".getBytes(StandardCharsets.UTF_8))));
+        assertTrue(Regex.compile("[$]").matches(new ByteArrayInputStream("$".getBytes(StandardCharsets.UTF_8))));
+        assertTrue(Regex.compile("[[]").matches(new ByteArrayInputStream("[".getBytes(StandardCharsets.UTF_8))));
+        assertTrue(Regex.compile("[\\]]").matches(new ByteArrayInputStream("]".getBytes(StandardCharsets.UTF_8))));
+
+        // Dash is interpreted literally inside character classes when it is the first or the last element
+
+        {
+            var r = Regex.compile("[-]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("-".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("X".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[-a]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("-".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("x".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[a-]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("-".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("x".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[-a-]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("-".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("x".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[^-]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("-".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[^-a]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("-".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[^a-]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("-".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("[^-a-]");
+            assertTrue(r.matchesAtLeastOne());
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("-".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("b".getBytes(StandardCharsets.UTF_8))));
         }
     }
 
@@ -295,6 +476,71 @@ class MatchTest {
             var compiled = Regex.compile(java.util.List.of("\\d", "[^\\D\\W]"));
             assertTrue(compiled.get(0).equiv(compiled.get(1)));
         }
+    }
+
+    @Test
+    void testInputStreamClassesShorthand() throws IOException{
+
+        {
+            var r = Regex.compile("\\d");
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("0".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("9".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("\\w");
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("0".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("9".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("A".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("_".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream(":".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("\\s");
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream(" ".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("\t".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("\n".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("\r".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("\f".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("\\D");
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("0".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("9".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("\\W");
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("0".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("9".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("A".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("_".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream(":".getBytes(StandardCharsets.UTF_8))));
+        }
+
+        {
+            var r = Regex.compile("\\S");
+            assertFalse(r.matches(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream(" ".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("\\t".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("\\n".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("\\r".getBytes(StandardCharsets.UTF_8))));
+            assertFalse(r.matches(new ByteArrayInputStream("\\f".getBytes(StandardCharsets.UTF_8))));
+            assertTrue(r.matches(new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))));
+        }
+
     }
 
     @Test
@@ -999,6 +1245,20 @@ class MatchTest {
         {
             var r = Regex.compile("[a-c](?<!a|b)");
             assertTrue(r.matches("c"));
+        }
+    }
+
+    @Test
+    void testSimpleFileInputStream() throws IOException {
+        var compiledRegex = Regex.compile("(time:\\s(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z),\\sseverityText:\\s(INFO|ERROR|WARNING),\\sservice.name:\\s(auth-service|payment-service|storage-service),\\straceId:\\s[a-z]{3}\\d{3},\\sspanId\\s*:\\s*[a-z]{3}\\d{3}\\s*)*");
+
+        String resourceName = "log.txt";
+
+        // Load resource using the context class loader
+        try (InputStream inputStream = Thread.currentThread()
+                .getContextClassLoader()
+                .getResourceAsStream(resourceName)) {
+            assertTrue(compiledRegex.matches(inputStream));
         }
     }
 }
