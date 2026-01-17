@@ -56,7 +56,7 @@ dependencies {
 
     // log
     implementation 'org.slf4j:slf4j-api:2.0.17'
-    testRuntimeOnly 'ch.qos.logback:logback-classic:1.5.24'
+    testRuntimeOnly 'ch.qos.logback:logback-classic:1.5.25'
 
     // test framework
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.2'
