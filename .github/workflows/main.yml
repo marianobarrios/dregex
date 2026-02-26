@@ -23,7 +23,7 @@ jobs:
         env:
           TEST_JAVA_TOOLCHAIN: ${{ matrix.java-version }}
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-log (Java ${{ matrix.java-version }})
