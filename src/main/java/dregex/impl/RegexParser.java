@@ -700,7 +700,7 @@ public class RegexParser {
         // normalize case
         CaseNormalization normalizer;
         if (flags.caseInsensitive) {
-            if (flags.unicodeClasses | flags.unicodeCase) {
+            if (flags.unicodeClasses || flags.unicodeCase) {
                 normalizer = CaseNormalization.UnicodeLowerCase;
             } else {
                 normalizer = CaseNormalization.LowerCase;
