@@ -50,6 +50,8 @@ class EquivalenceTest {
     @Test
     void testLookaround() {
         assertTrue(equiv("(?!a|b)(?!c).*", "(?!a|b|c).*"));
+        assertTrue(equiv("(?!a)(?!b)(?!c).*", "(?!a|b|c).*"));
+        assertTrue(equiv("(?!a)(?!b)(?!c)(?!d).*", "(?!a|b|c|d).*"));
         assertTrue(equiv("a(?!b)", "a"));
         assertTrue(equiv("(?!b).|b", "."));
         assertTrue(equiv("a(?!b).|ab", "a."));
