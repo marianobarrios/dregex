@@ -499,7 +499,7 @@ public class RegexParser {
                 case All:
                     return Wildcard.instance;
                 case JavaLines:
-                    return new CharSet(new Lit('\n'), new Lit('\r'), new Lit(0x85), new Lit(0x2028), new Lit(0x2829))
+                    return new CharSet(new Lit('\n'), new Lit('\r'), new Lit(0x85), new Lit(0x2028), new Lit(0x2029))
                             .complement();
                 case UnixLines:
                     return new CharSet(new Lit('\n')).complement();
