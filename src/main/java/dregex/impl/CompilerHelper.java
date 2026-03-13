@@ -13,8 +13,8 @@ public class CompilerHelper {
     public static Juxt combineNegLookaheads(Juxt juxt) {
         List<Node> newValues = new ArrayList<>();
         for (int i = 0; i < juxt.values.size(); i++) {
-            if (i > 0 && juxt.values.get(i) instanceof Lookaround && juxt.values.get(i - 1) instanceof Lookaround) {
-                var la1 = (Lookaround) juxt.values.get(i - 1);
+            if (!newValues.isEmpty() && juxt.values.get(i) instanceof Lookaround && newValues.get(newValues.size() - 1) instanceof Lookaround) {
+                var la1 = (Lookaround) newValues.get(newValues.size() - 1);
                 var la2 = (Lookaround) juxt.values.get(i);
                 if (la1.dir == Direction.Ahead && la2.dir == Direction.Ahead) {
                     if (la1.cond == Condition.Negative && la2.cond == Condition.Negative) {
