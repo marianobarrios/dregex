@@ -60,8 +60,8 @@ public class RegexParser {
     private final Parser<Integer> octalNumber =
             times(1, 3, IS_OCTAL_DIGIT).toScanner("octal number").source().map(s -> Integer.parseInt(s, 8));
 
-    private final Parser<Long> decimalNumber =
-            many1(CharPredicates.IS_DIGIT).toScanner("decimal number").source().map(s -> Long.parseLong(s));
+    private final Parser<Integer> decimalNumber =
+            many1(CharPredicates.IS_DIGIT).toScanner("decimal number").source().map(s -> Integer.parseInt(s));
 
     private final Parser<Lit> controlEscape = sequence(
                     backslash, litChar('c'), isChar(CharPredicates.ALWAYS).toScanner(""))
@@ -546,15 +546,15 @@ public class RegexParser {
                     if (max.isPresent()) {
                         var maxVal2 = max.orElseThrow();
                         // Quantifiers of the for {min,max}
-                        if (minVal <= maxVal2) return new Quantification(minVal.intValue(), maxVal2.intValue());
+                        if (minVal <= maxVal2) return new Quantification(minVal, maxVal2);
                         else throw new InvalidRegexException("invalid range in quantifier");
                     } else {
                         // Quantifiers of the form {min,}
-                        return new Quantification(minVal.intValue());
+                        return new Quantification(minVal);
                     }
                 } else {
                     // Quantifiers of the form "{n}", the value is captured as "min", despite being also the max
-                    return new Quantification(minVal.intValue(), minVal.intValue());
+                    return new Quantification(minVal, minVal);
                 }
             });
 
