@@ -17,7 +17,7 @@ class CommentsTest {
         flags.comments = true;
         var comments = RegexParser.parse(withComments, flags);
 
-        var universe = new Universe(java.util.List.of(normal.getTree(), comments.getTree()), normal.getNorm(), false);
+        var universe = new Universe(java.util.List.of(normal.getTree(), comments.getTree()), false);
         var cNormal = new CompiledRegex(withoutComments, normal.getTree(), universe);
         var cComments = new CompiledRegex(withComments, comments.getTree(), universe);
         return cNormal.equiv(cComments);

@@ -179,7 +179,7 @@ public class Regex {
     public static Regex compile(String regex, int flags) {
         var parsedFlags = flagsFromBits(flags);
         var parsedRegex = RegexParser.parse(regex, parsedFlags);
-        var universe = new Universe(List.of(parsedRegex.getTree()), parsedRegex.getNorm(), parsedFlags.canonicalEq);
+        var universe = new Universe(List.of(parsedRegex.getTree()), parsedFlags.canonicalEq);
         return new Regex(new CompiledRegex(regex, parsedRegex.getTree(), universe));
     }
 
@@ -222,7 +222,6 @@ public class Regex {
                 regexes.stream().map(r -> RegexParser.parse(r, parsedFlags)).collect(Collectors.toList());
         var universe = new Universe(
                 parsedRegexes.stream().map(pr -> pr.getTree()).collect(Collectors.toList()),
-                parsedRegexes.get(0).getNorm(),
                 parsedFlags.canonicalEq);
         return parsedRegexes.stream()
                 .map(pr -> new Regex(new CompiledRegex(pr.getLiteral(), pr.getTree(), universe)))

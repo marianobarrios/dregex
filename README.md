@@ -73,6 +73,8 @@ With one exception, all compile flags defined by `java.util.regex.Pattern` are s
 * [UNICODE_CASE](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#UNICODE_CASE) (also in embedded form: `(?u)`)
 * [CANON_EQ](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#CANON_EQ)
 
+There is a special limitation with respect to embedded flags: they are only supported at the beginning of the pattern.
+
 ### Not supported
 
 * Searching (the engine matches only against the full input string)
@@ -80,7 +82,7 @@ With one exception, all compile flags defined by `java.util.regex.Pattern` are s
 * Backreferences
 * Anchors (`ˆ` and `$`), as they are redundant because the expressions only operate over the complete text.
 * Reluctant (`+?`, `*?`, `??`, `{...}?`) and possessive (`++`, `*+`, `?+`, `{...}+`) quantifiers , because they are meaningless for a pure-matching engine. By definition, they only affect capturing groups, not whether an expression matches.
-* Compile flag [MULTILINE](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#MULTILINE), because it is meaningless for a pure-matching engine, that works always in multi-line mode.
+* Compile flag [MULTILINE](https://docs.oracle.com//en/java/javase/11/docs/api/java.base/java/util/regex/Pattern.html#MULTILINE), because it is meaningless for a pure-matching engine, which works always in multi-line mode.
 
 **Note**: for the safety, the presence of unsupported features in a regular expression will cause it to fail the compilation (except for unnamed capturing groups, as they have no syntax: they are just a pair of parenthesis).
 

@@ -22,19 +22,17 @@ import java.util.stream.Stream;
  */
 public class Universe {
 
-    public static final Universe Empty = new Universe(List.of(), CaseNormalization.NoNormalization, false);
+    public static final Universe Empty = new Universe(List.of(), false);
 
     private final List<Node> parsedTrees;
 
-    private final CaseNormalization caseNormalization;
 
     private final boolean canonicalEquivalence;
 
     private final Map<AbstractRange, List<CharInterval>> alphabet;
 
-    public Universe(List<Node> parsedTrees, CaseNormalization caseNormalization, boolean canonicalEquivalence) {
+    public Universe(List<Node> parsedTrees, boolean canonicalEquivalence) {
         this.parsedTrees = List.copyOf(parsedTrees);
-        this.caseNormalization = caseNormalization;
         this.canonicalEquivalence = canonicalEquivalence;
         var ranges = parsedTrees.stream().flatMap(t -> collect(t)).collect(Collectors.toList());
         this.alphabet = Map.copyOf(CharInterval.calculateNonOverlapping(ranges));
@@ -42,10 +40,6 @@ public class Universe {
 
     public List<Node> getParsedTrees() {
         return parsedTrees;
-    }
-
-    public CaseNormalization getNormalization() {
-        return caseNormalization;
     }
 
     public boolean hasCanonicalEquivalence() {

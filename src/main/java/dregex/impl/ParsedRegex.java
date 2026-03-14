@@ -6,12 +6,10 @@ public class ParsedRegex {
 
     private final String literal;
     private final Node tree;
-    private final CaseNormalization norm;
 
-    public ParsedRegex(String literal, Node tree, CaseNormalization norm) {
+    public ParsedRegex(String literal, Node tree) {
         this.literal = literal;
         this.tree = tree;
-        this.norm = norm;
     }
 
     public String getLiteral() {
@@ -20,9 +18,5 @@ public class ParsedRegex {
 
     public Node getTree() {
         return tree;
-    }
-
-    public CaseNormalization getNorm() {
-        return norm;
     }
 }

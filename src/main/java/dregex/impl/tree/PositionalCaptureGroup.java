@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.CaseNormalization;
+import dregex.impl.CaseExpansion;
 
 public class PositionalCaptureGroup extends CaptureGroup {
 
@@ -14,8 +14,8 @@ public class PositionalCaptureGroup extends CaptureGroup {
     }
 
     @Override
-    public Node caseNormalize(CaseNormalization normalizer) {
-        return new PositionalCaptureGroup(value.caseNormalize(normalizer));
+    public Node caseExpansion(CaseExpansion caseExpansion) {
+        return new PositionalCaptureGroup(value.caseExpansion(caseExpansion));
     }
 
     @Override

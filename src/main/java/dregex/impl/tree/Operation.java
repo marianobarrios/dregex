@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.CaseNormalization;
+import dregex.impl.CaseExpansion;
 import java.util.Objects;
 
 public abstract class Operation implements Node {
@@ -23,7 +23,7 @@ public abstract class Operation implements Node {
     }
 
     @Override
-    public Node caseNormalize(CaseNormalization normalizer) {
+    public Node caseExpansion(CaseExpansion caseExpansion) {
         throw new UnsupportedOperationException();
     }
 

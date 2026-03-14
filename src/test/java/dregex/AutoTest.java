@@ -2,7 +2,6 @@ package dregex;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dregex.impl.CaseNormalization;
 import dregex.impl.CompiledRegex;
 import dregex.impl.Universe;
 import java.time.Duration;
@@ -32,7 +31,7 @@ class AutoTest {
             totalTrees.incrementAndGet();
             var regexString = tree.toRegex();
             var regex = new Regex(new CompiledRegex(
-                    regexString, tree, new Universe(List.of(tree), CaseNormalization.NoNormalization, false)));
+                    regexString, tree, new Universe(List.of(tree), false)));
             var strings = StringGenerator.generate(tree, 3, 3);
             totalStrings.addAndGet(strings.size());
             logger.debug("Testing: {}, generated: {}", regexString, strings.size());

@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.CaseNormalization;
+import dregex.impl.CaseExpansion;
 
 public interface Node {
 
@@ -10,7 +10,7 @@ public interface Node {
 
     int precedence();
 
-    Node caseNormalize(CaseNormalization normalizer);
+    Node caseExpansion(CaseExpansion caseExpansion);
 
     Node unicodeNormalize();
 }
