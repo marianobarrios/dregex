@@ -22,6 +22,11 @@ public class TestCaseExpansion {
         assertArrayEqualIgnoreOrder(new int[]{'a', 'A'}, CaseExpansion.Unicode.expand('A'));
         assertArrayEqualIgnoreOrder(new int[]{'á', 'Á'}, CaseExpansion.Unicode.expand('á'));
         assertArrayEqualIgnoreOrder(new int[]{'á', 'Á'}, CaseExpansion.Unicode.expand('Á'));
+
+        // Title-case characters have three distinct forms: upper (Ǆ U+01C4), title (ǅ U+01C5), lower (ǆ U+01C6)
+        assertArrayEqualIgnoreOrder(new int[]{'Ǆ', 'ǅ', 'ǆ'}, CaseExpansion.Unicode.expand('Ǆ'));
+        assertArrayEqualIgnoreOrder(new int[]{'Ǆ', 'ǅ', 'ǆ'}, CaseExpansion.Unicode.expand('ǅ'));
+        assertArrayEqualIgnoreOrder(new int[]{'Ǆ', 'ǅ', 'ǆ'}, CaseExpansion.Unicode.expand('ǆ'));
     }
 
     private static void assertArrayEqualIgnoreOrder(int[] left, int[] right) {
