@@ -1000,5 +1000,15 @@ class MatchTest {
             var r = Regex.compile("[a-c](?<!a|b)");
             assertTrue(r.matches("c"));
         }
+
+        {
+            var r = Regex.compile("ab(?<=b)");
+            assertTrue(r.matches("ab"));
+        }
+
+        {
+            var r = Regex.compile("ab(?<!b)");
+            assertFalse(r.matches("ab"));
+        }
     }
 }

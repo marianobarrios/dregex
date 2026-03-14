@@ -130,10 +130,10 @@ public class Compiler {
                     Operation leftSide;
                     switch (lookaround.cond) {
                         case Positive:
-                            leftSide = new Intersection(Juxt.of(prefix), Juxt.of(lookaround.value, wildcard));
+                            leftSide = new Intersection(Juxt.of(prefix), Juxt.of(wildcard, lookaround.value));
                             break;
                         case Negative:
-                            leftSide = new Difference(Juxt.of(prefix), Juxt.of(lookaround.value, wildcard));
+                            leftSide = new Difference(Juxt.of(prefix), Juxt.of(wildcard, lookaround.value));
                             break;
                         default:
                             throw new IllegalStateException();
