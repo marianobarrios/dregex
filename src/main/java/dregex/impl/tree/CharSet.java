@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.CaseNormalization;
+import dregex.impl.CaseExpansion;
 import dregex.impl.RangeOps;
 import java.util.Arrays;
 import java.util.List;
@@ -53,9 +53,9 @@ public class CharSet implements Node {
     }
 
     @Override
-    public CharSet caseNormalize(CaseNormalization normalizer) {
+    public CharSet caseExpansion(CaseExpansion caseExpansion) {
         return new CharSet(ranges.stream()
-                .flatMap(r -> r.caseNormalizeImpl(normalizer).stream())
+                .flatMap(r -> r.caseExpansionImpl(caseExpansion).stream())
                 .collect(Collectors.toList()));
     }
 

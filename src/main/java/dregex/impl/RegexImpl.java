@@ -44,11 +44,7 @@ public class RegexImpl {
             string = Normalizer.normalize(string, Normalizer.Form.NFD);
         }
 
-        // Case normalization
-        var caseNormalization = universe.getNormalization();
-        var normalized = string.codePoints().map(caseNormalization::normalize).toArray();
-
-        return DfaAlgorithms.matchString(dfa, normalized);
+        return DfaAlgorithms.matchString(dfa, string.codePoints().toArray());
     }
 
     public RegexImpl intersect(RegexImpl other) {

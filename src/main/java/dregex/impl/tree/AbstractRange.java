@@ -1,10 +1,11 @@
 package dregex.impl.tree;
 
-import dregex.impl.CaseNormalization;
+import dregex.impl.CaseExpansion;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.Arrays;
 
 /**
  * A single char, non empty, i.e, excluding epsilon values
@@ -35,18 +36,18 @@ public abstract class AbstractRange implements Node {
     public abstract String toCharClassLit();
 
     @Override
-    public Node caseNormalize(CaseNormalization normalizer) {
-        return Disj.of(caseNormalizeImpl(normalizer));
+    public Node caseExpansion(CaseExpansion caseExpansion) {
+        return Disj.of(caseExpansionImpl(caseExpansion));
     }
 
-    public List<AbstractRange> caseNormalizeImpl(CaseNormalization normalizer) {
+    public List<AbstractRange> caseExpansionImpl(CaseExpansion caseExpansion) {
         // optimization
-        if (normalizer == CaseNormalization.NoNormalization) {
+        if (caseExpansion == CaseExpansion.NoExpansion) {
             return List.of(this);
         }
 
         List<Integer> codePoints = IntStream.rangeClosed(from(), to())
-                .map(c -> normalizer.normalize(c))
+                .flatMap(c -> Arrays.stream(caseExpansion.expand(c)))
                 .boxed()
                 .collect(Collectors.toSet())
                 .stream()

@@ -607,7 +607,7 @@ public class RegexParser {
     private static final java.util.regex.Pattern embeddedFlagPattern =
             java.util.regex.Pattern.compile("\\(\\?([a-z]*)\\)");
 
-    public static class Flags {
+    public static class Flags implements Cloneable {
         public DotMatch dotMatch = DotMatch.All;
         public boolean literal = false;
         public boolean comments = false;
@@ -616,9 +616,21 @@ public class RegexParser {
         public boolean unicodeCase = false;
         public boolean canonicalEq = false;
         public boolean multiline = false;
+
+        @Override
+        public Flags clone() {
+            try {
+                var clone = (Flags) super.clone();
+                // primitives don't need custom cloning
+                return clone;
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError();
+            }
+        }
     }
 
     public static ParsedRegex parse(String regex, Flags flags) {
+        flags = flags.clone(); // clone before mutations
         if (flags.literal) {
             return parseLiteralRegex(regex, flags);
         } else {
@@ -656,8 +668,8 @@ public class RegexParser {
                         default:
                             throw new InvalidRegexException(String.format("invalid embedded flag: %s", flag));
                     }
-                    effRegex = effRegex.substring(matcher.end());
                 }
+                effRegex = effRegex.substring(matcher.end());
             }
             if (flags.multiline) {
                 throw new InvalidRegexException(
@@ -678,19 +690,19 @@ public class RegexParser {
      * Parse a quoted regex. They don't really need parsing.
      */
     private static ParsedRegex parseLiteralRegex(String regex, Flags flags) {
-        CaseNormalization normalizer;
+        CaseExpansion caseExpansion;
         if (flags.caseInsensitive) {
             if (flags.unicodeCase) {
-                normalizer = CaseNormalization.UnicodeLowerCase;
+                caseExpansion = CaseExpansion.Unicode;
             } else {
-                normalizer = CaseNormalization.LowerCase;
+                caseExpansion = CaseExpansion.Ascii;
             }
         } else {
-            normalizer = CaseNormalization.NoNormalization;
+            caseExpansion = CaseExpansion.NoExpansion;
         }
 
         var literals = regex.codePoints().mapToObj(ch -> new Lit(ch)).collect(Collectors.toList());
-        return new ParsedRegex(regex, Juxt.of(literals).caseNormalize(normalizer), normalizer);
+        return new ParsedRegex(regex, Juxt.of(literals).caseExpansion(caseExpansion));
     }
 
     /**
@@ -698,15 +710,15 @@ public class RegexParser {
      */
     private static ParsedRegex parseRegexImpl(String regex, Flags flags) {
         // normalize case
-        CaseNormalization normalizer;
+        CaseExpansion caseExpansion;
         if (flags.caseInsensitive) {
             if (flags.unicodeClasses || flags.unicodeCase) {
-                normalizer = CaseNormalization.UnicodeLowerCase;
+                caseExpansion = CaseExpansion.Unicode;
             } else {
-                normalizer = CaseNormalization.LowerCase;
+                caseExpansion = CaseExpansion.Ascii;
             }
         } else {
-            normalizer = CaseNormalization.NoNormalization;
+            caseExpansion = CaseExpansion.NoExpansion;
         }
 
         // parsing proper
@@ -717,7 +729,7 @@ public class RegexParser {
             if (flags.canonicalEq) {
                 tree = tree.unicodeNormalize();
             }
-            return new ParsedRegex(regex, tree.caseNormalize(normalizer), normalizer);
+            return new ParsedRegex(regex, tree.caseExpansion(caseExpansion));
         } catch (ParserException e) {
             throw new InvalidRegexException(e.getMessage());
         }

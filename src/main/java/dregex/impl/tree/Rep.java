@@ -1,6 +1,6 @@
 package dregex.impl.tree;
 
-import dregex.impl.CaseNormalization;
+import dregex.impl.CaseExpansion;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -69,8 +69,8 @@ public class Rep implements Node {
     }
 
     @Override
-    public Node caseNormalize(CaseNormalization normalizer) {
-        return new Rep(min, max, value.caseNormalize(normalizer));
+    public Node caseExpansion(CaseExpansion caseExpansion) {
+        return new Rep(min, max, value.caseExpansion(caseExpansion));
     }
 
     @Override
