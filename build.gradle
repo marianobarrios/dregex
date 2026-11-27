@@ -59,7 +59,7 @@ dependencies {
     testRuntimeOnly 'ch.qos.logback:logback-classic:1.6.8'
 
     // test framework
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.14.5'
 }
 
 var testJavaToolchain = System.getenv('TEST_JAVA_TOOLCHAIN')
